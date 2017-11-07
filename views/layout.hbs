@@ -2,9 +2,48 @@
 <html>
   <head>
     <title>{{title}}</title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
+    <link rel="stylesheet" href="/stylesheets/journal-square-bootstrap.min.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="manifest" href="/cer/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <style>[aria-hidden="true"]{display: none;}</style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
   </head>
   <body>
-    {{{body}}}
+    {{{navbar}}}
+    <div class="jumbotron" role="banner">
+      <div class="container">
+        <h1>{{pageTitle}}</h1>
+        {{{searchContent}}}
+      </div>
+    </div>
+    <div class="container">
+      <noscript>
+        <div class="alert alert-danger" role="alert">
+           <strong>Uh oh!</strong> Use of this database requires JavaScript. Please enable Javascript and reload the page.
+        </div>
+      </noscript>
+      {{{resultContent}}}
+    </div>
+    <footer class="text-center">Copyright &copy; 2016 by <a href="http://creationeducation.org">Creation Education Resources</a>.{{{footerFunctions}}}</footer>
   </body>
 </html>
+
+{{!-- 
+{
+  title: "Website Title",
+  navbar: "HTML content of nav bar",
+  pageTitle: "Header at top of page",
+  searchContent: "HTML content of the top portion, used for user input",
+  resultContent: "HTML content of the bottom portion, used for displaying results",
+  footerFunctions: "HTML content of additional content/links to include in footer"
+}
+--}}
