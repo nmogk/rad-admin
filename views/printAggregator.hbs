@@ -1,0 +1,96 @@
+{{#> layout title="Print References"}}
+
+    {{#*inline header-block}}
+        <style media="print" type="text/css">
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #printSet * {
+                    visibility: visible;
+                    float: none;
+                }
+                #printSet {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                }
+                a {
+                    display: none;
+                }
+            }
+        </style>
+    {{/inline}} 
+
+    {{#*inline search-area}}
+        <p>Use this page to collect references to print. Each reference you select on the main search results page for printing will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
+        <a href="#" class="btn btn-primary" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</a><a href="#" class="btn btn-default" onclick="clearPrintList()"><span class="glyphicon glyphicon-trash"></span> Clear</a>
+    {{/inline}}  
+
+    {{#*inline results-area}}
+        <div class="panel-group" id="printSet" role="tablist">
+            <!-- ko foreach: refs -->
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab">
+                    <a href="#" class="close" data-bind="click: $parent.removeOne" aria-label="close" tabindex=0>&times;</a>
+                    <div class="row">
+                        <div class="col-sm-4"><h5><span data-bind="text: author">Author</span></h5></div>
+                        <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
+                        <div class="col-sm-1"><h5><span data-bind="text: date">Date</span></h5></div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-4"><h4>Reference</h4><span data-bind="text: reference"></span></div>
+                        <div class="col-sm-6"><h4>Source</h4><span data-bind="text: source"></span></div>
+                        <div class="col-sm-2"><h4>Page</h4><span data-bind="text: page"></span></div>
+                    </div>
+                    <h4>Abstract</h4>
+                    <p data-bind="text: abstract"></p>
+                </div>
+            </div>
+            <!-- /ko -->
+        </div>
+    {{/inline}} 
+
+    {{#*inline scripts-block}}
+        <script>
+            var store = 'printRefs';
+
+            // Deletes the contents of the localStorage key and refreshes the page
+            function clearPrintList(){
+                localStorage[store] = null;
+                window.location.reload(false);
+            }
+
+            // Very simple (static) view model to display references
+            function PrinterViewModel(){
+                var self = this;
+
+                self.refs = ko.observableArray();
+
+                if(localStorage[store]){
+                    var refsArray = JSON.parse(localStorage[store]);
+                    for (var i = 0; refsArray && i < refsArray.length; i++) {
+                        self.refs.push(refsArray[i]);
+                    }
+                }
+
+                // Remove an individual entry from the print list by ID.
+                // Updates the localStorage list
+                self.removeOne = function (ref) {
+                    self.refs.remove(ref);
+                    localStorage[store] = JSON.stringify(self.refs())
+                }
+            }
+
+            if(typeof(Storage) !== "undefined" ){
+                ko.applyBindings(new PrinterViewModel(), $('#printSet')[0]);
+            } else {
+                alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
+            }
+
+        </script>
+    {{/inline}}
+
+{{/layout}}

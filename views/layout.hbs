@@ -1,7 +1,20 @@
+{{!-- To extend this layout, call this template as a partial block with the following optionally defined:
+  {{nav}} // Flag for adding the nav bar at the top of the page
+  {{title}} // Page title
+{{#> layout title="Research Assistance Database" nav=0}}
+    {{#*inline header-block}}{{/inline}}  // Additional header lines as needed
+    {{#*inline search-area}}{{/inline}}   // Content for search area inside jumbotron
+    {{#*inline results-area}}{{/inline}}  // Content for results area inside main container
+    {{#*inline modal-block}}{{/inline}}   // Block for modal dialogue definitions
+    {{#*inline footer-block}}{{/inline}}  // Overrides the default footer
+    {{#*inline scripts-block}}{{/inline}} // Allows addition of scripts at end of file
+{{/layout}}
+--}}
+
 <!DOCTYPE html>
 <html>
   <head>
-    <title>{{title}}</title>
+    <title>{{title}} | {{#if nav}}RAD Admin{{#else}}CER{{/if}}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
@@ -13,45 +26,20 @@
     <link rel="manifest" href="/cer/manifest.json">
     <meta name="theme-color" content="#ffffff">
     <style>[aria-hidden="true"]{display: none;}</style>
-    {{#if navbar}}<style>body { padding-top: 70px; }</style>{{/if}}
+    {{#if nav}}<style>body { padding-top: 70px; }</style>{{/if}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
-    {{{headerContent}}}
+    {{#> header-block}}{{/header-block}}
   </head>
   <body>
-    {{#if navbar}}
-      <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">RAD Admin</a>
-          </div>
-          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-              <li><a href="../refs">References</a></li>
-              <li><a href="../sources">Sources</a></li>
-              <li><a href="../campaigns">Campaigns</a></li>
-              <li><a href="../site">Website</a></li>
-              {{#if users}}<li><a href="../users">Users</a></li>{{/if}}
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-              <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{Username}}</a></li>
-              <li><a href="#"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+    {{#if nav}}
+      {{> navbar}}
     {{/if}}
     <div class="jumbotron" role="banner">
       <div class="container">
-        <h1>{{pageTitle}}</h1>
-        {{{searchContent}}}
+        <h1>{{title}}</h1>
+        {{#> search-area}}{{/search-area}}
       </div>
     </div>
     <div class="container">
@@ -60,22 +48,15 @@
            <strong>Uh oh!</strong> Use of this database requires JavaScript. Please enable Javascript and reload the page.
         </div>
       </noscript>
-      {{{resultContent}}}
+      {{#> results-area}}{{/results-area}}
+
+      {{#> modal-block}}{{/modal-block}}
     </div>
-    <footer class="text-center">Copyright &copy; 2016 by <a href="http://creationeducation.org">Creation Education Resources</a>.{{{footerFunctions}}}</footer>
+    <footer class="text-center">
+      {{#> footer-block}}
+        {{> footerBasic}}
+      {{/footer-block}}
+    </footer>
+    {{#> scripts-block}}{{/scripts-block}}
   </body>
 </html>
-
-{{!-- 
-{
-  title: "Website Title",
-  headerContent: "HTML of additional header items",
-  navbar: true/false, //Toggle to include navbar
-  users: true/false, //Toggle to enable users navbar item
-  username: "Name of user",
-  pageTitle: "Header at top of page",
-  searchContent: "HTML content of the top portion, used for user input",
-  resultContent: "HTML content of the bottom portion, used for displaying results",
-  footerFunctions: "HTML content of additional content/links to include in footer"
-}
---}}

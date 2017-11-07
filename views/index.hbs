@@ -1,2 +1,126 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+{{!--
+    This is the default search page for public facing users
+--}}
+
+{{#> layout title="Research Assistance Database"}}
+    
+    {{#*inline search-area}}
+        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" onclick="showStory()">Read</a> our story. <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">Get searching help</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
+
+        <form role="search" class="form-horizontal">
+          <div class="form-group">
+            <label class="control-label col-sm-2">Query:</label>
+            <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-sm-2">Results per page:</label>
+            <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
+            <div class="col-sm-6 checkbox">
+              <label><input id="boostCheck" type="checkbox" name="boost" value="1"> Disable date boost</label>
+            </div>
+          </div> {{!TODO: ensure max is consistent with server max }}
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button></div></div>
+        </form>
+    {{/inline}}
+    
+    {{#*inline results-area}}
+        <div id="story" role="complementary" aria-hidden="true" aria-live="assertive">
+            {{> backstoryContents}}            
+            <div class="text-center">
+                <button class="btn btn-default" onclick="hideStory()">Return to Search Results</button>
+            </div>
+        </div>
+
+        {{! Results header }}
+        <div id="mainDisplay" aria-hidden="true" role="main">
+          <div id="res-head" class="panel-body">
+            <div>
+              <span data-bind="text: summary"></span>
+            </div>
+            <div class="row">
+              <h4>
+                <span class="col-sm-3">Author</span>
+                <span class="col-sm-6">Title</span>
+                <span class="col-sm-2">Date</span>
+                <span class="col-sm-1"><a href="#" data-bind="click: downloadList" data-toggle="tooltip" title="Download results (.csv)" style="color: #000000;"><span class="glyphicon glyphicon-arrow-down"></span></a></span>
+              </h4>
+            </div>
+            <hr>
+            <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any references. Make sure all words are spelled correctly. Try a less complex search or alternate search terms. Suggestions:
+              <dl data-bind="foreach: spellings">
+                <dt data-bind="text: term"></dt>
+                <dd data-bind="foreach: suggestions">
+                  <span data-bind="text: $data"></span><span data-bind="ifnot: $index">, </span>
+                </dd>
+              </dl>
+            </div>
+          </div>
+
+          {{! Results group }}
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" aria-live="assertive">
+          
+            <!-- ko foreach: refs -->
+            <div class="panel panel-default">
+              <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
+              <div class="row">
+                  <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
+                    <div class="col-sm-3"><h5><span data-bind="text: author">Author</span></h5></div>
+                    <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
+                    <div class="col-sm-2"><h5><span data-bind="text: date">Date</span></h5></div>
+                  </a>
+                  <div class="dropdown col-sm-1" aria-haspopup="true">
+                    <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
+                    <span class="glyphicon glyphicon-option-vertical"></span></button>
+                    <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
+                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: $parent.goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-sm-5"><h4>Reference</h4><span data-bind="text: reference"></span></div>
+                    <div class="col-sm-5"><h4>Source</h4><span data-bind="text: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: $parent.sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
+                    <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="text: page"></span></div>
+                    <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
+                  </div>
+                  <h4>Abstract</h4>
+                  <p data-bind="text: abst" style="white-space:pre-wrap"></p>
+                </div>
+              </div>
+            </div>
+            <!-- /ko -->
+            <div id="paginationAlert" class="alert alert-warning" aria-hidden="true" aria-live="polite">
+              <a href='#' class='close' data-dismiss='alert' aria-label='close' tabindex=0>&times;</a>
+              <strong>Warning!</strong> A 'start' value which is not evenly divisible by 'rows' or a very large 'rows' value will cause pagination to behave non-intuitively.
+            </div>
+          </div>
+          <div id="pages" class="text-center" role="navigation" aria-live="polite">
+            <p id="pageSummary" data-bind="text: summary"></p>
+          </div>
+        </div>
+    {{/inline}}
+
+    {{#*inline modal-block}}
+        {{> sourceModal}}
+        {{> citationModal}}
+        {{> searchHelp}}   
+        {{> restHelp}}      
+    {{/inline}}
+    
+    {{#*inline footer-block}}
+        {{> footerBasic}} Search via <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#restApi">REST API</a>.
+    {{/inline}}
+    
+    {{#*inline scripts-block}}
+        <script src="FileSaver.min.js"></script>
+        <script src="Blob.js"></script>
+        {{! This script refers to specific elements on the page, so must be loaded last}}
+        <script src="rad.js"></script>
+    {{/inline}}
+
+{{/layout}}
