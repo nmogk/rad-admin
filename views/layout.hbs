@@ -13,12 +13,40 @@
     <link rel="manifest" href="/cer/manifest.json">
     <meta name="theme-color" content="#ffffff">
     <style>[aria-hidden="true"]{display: none;}</style>
+    {{#if navbar}}<style>body { padding-top: 70px; }</style>{{/if}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
   </head>
   <body>
-    {{{navbar}}}
+    {{#if navbar}}
+      <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">RAD Admin</a>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+              <li><a href="../refs">References</a></li>
+              <li><a href="../sources">Sources</a></li>
+              <li><a href="../campaigns">Campaigns</a></li>
+              <li><a href="../site">Website</a></li>
+              {{#if users}}<li><a href="../users">Users</a></li>{{/if}}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{Username}}</a></li>
+              <li><a href="#"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    {{/if}}
     <div class="jumbotron" role="banner">
       <div class="container">
         <h1>{{pageTitle}}</h1>
@@ -40,7 +68,9 @@
 {{!-- 
 {
   title: "Website Title",
-  navbar: "HTML content of nav bar",
+  navbar: true/false, //Toggle to include navbar
+  users: true/false, //Toggle to enable users navbar item
+  username: "Name of user",
   pageTitle: "Header at top of page",
   searchContent: "HTML content of the top portion, used for user input",
   resultContent: "HTML content of the bottom portion, used for displaying results",
