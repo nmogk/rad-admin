@@ -1,28 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Research Assistance Database | CER</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
-  <link rel="stylesheet" href="journal-square-bootstrap.min.css">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-  <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
-  <link rel="manifest" href="/cer/manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  <style>[aria-hidden="true"]{display: none;}</style>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
-</head>
-<body>
-    <div class="jumbotron" role="banner">
-      <div class="container">
-        <h1>Research Assistance Database</h1>
-        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" onclick="showStory()">Read</a> our story. <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">Get searching help</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
+{{!--
+    This is the administration page for references
+--}}
 
+{{#> layout title="References" nav=1}}
+    
+    {{#*inline "search-area"}}
+        
         <form role="search" class="form-horizontal">
           <div class="form-group">
             <label class="control-label col-sm-2">Query:</label>
@@ -34,299 +17,95 @@
             <div class="col-sm-6 checkbox">
               <label><input id="boostCheck" type="checkbox" name="boost" value="1"> Disable date boost</label>
             </div>
-          </div> <!--TODO: ensure max is consistent with server max -->
+          </div> {{!TODO: ensure max is consistent with server max }}
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button></div></div>
+            <div class="col-sm-offset-2 col-sm-10"><button type="button" class="btn btn-info"><span class="glyphicon glyphicon-plus"></span> Add new reference</button></div></div>
         </form>
-      </div>
-    </div>
-
-  <div class="container">
-    <noscript>
-      <div class="alert alert-danger" role="alert">
-         <strong>Uh oh!</strong> Use of this database requires JavaScript. Please enable Javascript and reload the page.
-      </div>
-    </noscript>
-
-    <div id="story" role="complementary" aria-hidden="true" aria-live="assertive">
-      <h2>The Behind-the-Scenes Story</h2>
-      <p>Back in the mid-1990's, when we just started our creation ministry, Rich went to the Institute for Creation Research for his graduate degree, a Masters in Science Education, which he obtained in 1997.  The problem that he faced while he was working on his Master's Thesis was that he had difficulty finding what creationists had previously written on the topic.  He realized that the lack of such a search engine constituted a huge hole in creationist research capability.</p>
-      <p>Our personal library of creationist material was continually growing.  As it grew, it became more difficult to remember what we had.  Rich realized the answer was a database.  While a spreadsheet listing titles and references was available, its utility was limited.  The limited utility was both in the format and the lack of abstracts. An article abstract is essential to the research process.</p>
-      <p>Knowing the answer is one thing, being able to implement it is another.  Ginger’s mother came to the rescue!  The most time consuming part of building such a database is the inputting of the data.  It was very helpful to have Ginger’s mother (Maxine Shankle) who loved to type and liked to spend winters in Florida.  When Rich suggested putting the information about the material in our personal library into a database, she readily agreed.</p>
-      <p>After a couple of winters of inputting the data, Rich was surprised to see over 1600 records.  He did not realize he had so much information. He realized that the information would be useful to others, so he had it prepared it to run word or phrase searches and to print reports.  The database was debuted at the fourth International Conference on Creationism.</p>
-      <p>Over the years, we had many volunteers help with putting RAD on CDs for sale, constructing the website search engines and others who helped with inputting data.  Maxine Shankle moved to FL in 2003 and did most of the data input.</p>
-      <h2>Today</h2>
-      <p>After Ginger’s mother passed away in December 2008, Ginger Overman, CER board member, Kathy Bear, and Lynette Faulkner (the wife of CER board member Dr. Danny Faulkner) have “picked up the mantle” and are inputting the data.  The RAD is an amazing search engine that now contains over 23,000 records and includes the title, author, publishing information, the reference and page numbers, and the source (where to find the item).  It includes abstracts of articles, book reviews, essays, viewpoints, interviews, letters to the editor, biographies, etc.  It is currently updated through 2014.</p>
-      <p>Examples of entire publications:</p>
-      <ul>
-        <li>Answers Magazine</li>
-        <li>Answers Research Journal</li>
-        <li>Creation Answers</li>
-        <li>Creation Digest</li>
-        <li>Creation Magazine</li>
-        <li>Creation Illustrated</li>
-        <li>Creation Matters</li>
-        <li>Creation Research Society Quarterly</li>
-        <li>Creation Social Science &amp; Humanities Quarterly</li>
-        <li>International Conference on Creationism</li>
-        <li>Impact (ICR)</li>
-        <li>Journal of Creation (Formerly TJ)</li>
-        <li>Origins (Geoscience Research Institute)</li>
-        <li>Origins Magazine (United Kingdom)</li>
-        <li>Reason &amp; Revelation</li>
-        <li>Think &amp; Believe</li>
-        <li>And many more &hellip;</li>
-      </ul>
-
-      <p>Donations to help support the Research Assistance Database can be sent to: Creation Education Resources, 108 McVickers Rd., Middleburg, FL  32068. Donations can be made by check, Visa, or MasterCard. If you have any questions about the database, please contact Rich or Ginger Overman at 904-213-1177 or by email at <a href="mailto:cer@creationeducation.org">cer@creationeducation.org</a>.</p>
-      <h2>Testimonials</h2>
-      <h3>Dr. Danny Faulkner, Stellar Astronomer</h3>
-      <p>As a creation scientist, I use the Research Assistance Database all the time.  The RAD allows me quickly to search the entire creation literature for any topic, author, or title.  I can easily find references that I’m looking for, or I can see what other creationists have already written on a topic.  The RAD usually is my first step in researching a subject in creation.  All serious creationists need this valuable resource.</p>
-      <h3>Dr. Wayne Frair</h3>
-      <p>This RAD contains a wealth of resource references, and I personally have been aided in locating important sources of information useful for my speaking and writing.</p>
-      <div class="text-center">
-        <button class="btn btn-default" onclick="hideStory()">Return to Search Results</button>
-      </div>
-    </div>
-
-    <!-- Results header -->
-    <div id="mainDisplay" aria-hidden="true" role="main">
-      <div id="res-head" class="panel-body">
-        <div>
-          <span data-bind="text: summary"></span>
-        </div>
-        <div class="row">
-          <h4>
-            <span class="col-sm-3">Author</span>
-            <span class="col-sm-6">Title</span>
-            <span class="col-sm-2">Date</span>
-            <span class="col-sm-1"><a href="#" data-bind="click: downloadList" data-toggle="tooltip" title="Download results (.csv)" style="color: #000000;"><span class="glyphicon glyphicon-arrow-down"></span></a></span>
-          </h4>
-        </div>
-        <hr>
-        <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any references. Make sure all words are spelled correctly. Try a less complex search or alternate search terms. Suggestions:
-          <dl data-bind="foreach: spellings">
-            <dt data-bind="text: term"></dt>
-            <dd data-bind="foreach: suggestions">
-              <span data-bind="text: $data"></span><span data-bind="ifnot: $index">, </span>
-            </dd>
-          </dl>
-        </div>
-      </div>
-
-      <!-- Results group -->
-      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" aria-live="assertive">
- 
-        <!-- ko foreach: refs -->
-        <div class="panel panel-default">
-          <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
-          <div class="row">
-              <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
-                <div class="col-sm-3"><h5><span data-bind="text: author">Author</span></h5></div>
-                <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
-                <div class="col-sm-2"><h5><span data-bind="text: date">Date</span></h5></div>
-              </a>
-              <div class="dropdown col-sm-1" aria-haspopup="true">
-                <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
-                <span class="glyphicon glyphicon-option-vertical"></span></button>
-                <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                  <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: $parent.goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
-                </ul>
-              </div>
+    {{/inline}}
+    
+    {{#*inline "results-area"}}
+        
+        {{! Results header }}
+        <div id="mainDisplay" aria-hidden="true" role="main">
+          <div id="res-head" class="panel-body">
+            <div>
+              <span data-bind="text: summary"></span>
+            </div>
+            <div class="row">
+              <h4>
+                <span class="col-sm-3">Author</span>
+                <span class="col-sm-6">Title</span>
+                <span class="col-sm-2">Date</span>
+                <span class="col-sm-1"><a href="#" {{! TODO data-bind="click: downloadList"}} data-toggle="tooltip" title="Add current references to campaign" style="color: #000000;"><span class="glyphicon glyphicon-list-alt"></span></a></span>
+              </h4>
+            </div>
+            <hr>
+            <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any references. Make sure all words are spelled correctly. Try a less complex search or alternate search terms. Suggestions:
+              <dl data-bind="foreach: spellings">
+                <dt data-bind="text: term"></dt>
+                <dd data-bind="foreach: suggestions">
+                  <span data-bind="text: $data"></span><span data-bind="ifnot: $index">, </span>
+                </dd>
+              </dl>
             </div>
           </div>
-          <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
-            <div class="panel-body">
+
+          {{! Results group }}
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" aria-live="assertive">
+          
+            <!-- ko foreach: refs -->
+            <div class="panel panel-default">
+              <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
               <div class="row">
-                <div class="col-sm-5"><h4>Reference</h4><span data-bind="text: reference"></span></div>
-                <div class="col-sm-5"><h4>Source</h4><span data-bind="text: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: $parent.sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
-                <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="text: page"></span></div>
-                <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
+                  <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
+                    <div class="col-sm-3"><h5><span data-bind="text: author">Author</span></h5></div>
+                    <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
+                    <div class="col-sm-2"><h5><span data-bind="text: date">Date</span></h5></div>
+                  </a>
+                  <div class="dropdown col-sm-1" aria-haspopup="true">
+                    <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
+                    <span class="glyphicon glyphicon-option-vertical"></span></button>
+                    <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
+                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.goSource"}}><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.generateCitation"}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" target="_blank" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-search"></span> View source for editing</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-trash"></span> Delete</a></li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-              <h4>Abstract</h4>
-              <p data-bind="text: abst" style="white-space:pre-wrap"></p>
+              <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-sm-5"><h4>Reference</h4><span data-bind="text: reference"></span></div>
+                    <div class="col-sm-5"><h4>Source</h4><span data-bind="text: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: $parent.sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
+                    <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="text: page"></span></div>
+                    <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
+                  </div>
+                  <h4>Abstract</h4>
+                  <p data-bind="text: abst" style="white-space:pre-wrap"></p>
+                </div>
+              </div>
+            </div>
+            <!-- /ko -->
+            <div id="paginationAlert" class="alert alert-warning" aria-hidden="true" aria-live="polite">
+              <a href='#' class='close' data-dismiss='alert' aria-label='close' tabindex=0>&times;</a>
+              <strong>Warning!</strong> A 'start' value which is not evenly divisible by 'rows' or a very large 'rows' value will cause pagination to behave non-intuitively.
             </div>
           </div>
-        </div>
-        <!-- /ko -->
-        <div id="paginationAlert" class="alert alert-warning" aria-hidden="true" aria-live="polite">
-          <a href='#' class='close' data-dismiss='alert' aria-label='close' tabindex=0>&times;</a>
-          <strong>Warning!</strong> A 'start' value which is not evenly divisible by 'rows' or a very large 'rows' value will cause pagination to behave non-intuitively.
-        </div>
-      </div>
-      <div id="pages" class="text-center" role="navigation" aria-live="polite">
-        <p id="pageSummary" data-bind="text: summary"></p>
-      </div>
-    </div>
-
-    <div class="modal fade" id="sourceModal" role="dialog" tabindex=0>
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
-            <h4 class="modal-title"><span data-bind="text: name">Name</span></h4>
-          </div>
-          <div class="modal-body">
-            <dl>
-              <dt>Address</dt>
-              <dd><span data-bind="text: address"></span></dd>
-              <dt>Website</dt>
-              <dd><span  data-bind="text: web"></span></dd>
-              <dt>Email</dt>
-              <dd><span  data-bind="text: email"></span></dd>
-              <dt>Phone</dt>
-              <dd><span  data-bind="text: phone"></span></dd>
-              <dt>Fax</dt>
-              <dd><span  data-bind="text: fax"></span></dd>
-            </dl>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <div id="pages" class="text-center" role="navigation" aria-live="polite">
+            <p id="pageSummary" data-bind="text: summary"></p>
           </div>
         </div>
-      </div>
-    </div>
+    {{/inline}}
 
-    <div class="modal fade" id="citationModal" role="dialog" tabindex=0>
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
-            <h4 class="modal-title">Chicago Formatted Citation</h4>
-          </div>
-          <div class="modal-body">
-            <p>
-              <span data-bind="text: author"></span>. &quot;<span data-bind="text: title"></span>.&quot; <i data-bind="text: reference"></i> (<span data-bind="text: year"></span>): <span data-bind="text: page"></span>.
-            </p>
-            <hr>
-            <p>Select the formatted citation above and use <kbd>ctrl</kbd> + <kbd>c</kbd> to copy.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    {{#*inline "modal-block"}}
+           
+    {{/inline}}
+    
+    {{#*inline "scripts-block"}}
+        <script src="javascripts/rad.js"></script> {{! This is temporary only to check the layout}}
+    {{/inline}}
 
-    <div class="modal fade" id="searchHelp" role="dialog" tabindex=0>
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
-            <h4 class="modal-title">Search Help</h4>
-          </div>
-          <div class="modal-body">
-            <h3>Query Input</h3>
-              <h4>Basic Search</h4>
-                <p>Input desired search terms. Results may or may not contain all terms, and are sorted by relevance. To ensure that a term appears in a result (rarely needed), prefix it with "+". Similarly, to search for references which do not contain a term, prefix it with "-".</p>
-                <p><b>Example:</b><input class="form-control" value="mutation program -weasel" readonly>Will search for references with both "mutation" and "program", but without the term "weasel", with the best matches first.</p>
-              <h4>Searching for Phrases</h4>
-                <p>Phrases placed in quotes will be searched together, rather than as separate terms.</p>
-                <p><b>Example:</b><input class="form-control" value="&quot;Tectonically-Associated Biological Provinces&quot;" readonly>Will search for the entire phrase.</p>
-              <h4>Searching Specific Fields</h4>
-                <p>You can search the contents of a specific field by including a field name, a colon, then the search term. Do not include spaces before or after the colon. If your search term contains spaces, use quotes as above. If no field is specified, then all of the text-based fields are searched by default. Available fields are:</p> <ul>
-                  <li>title</li>
-                  <li>author</li>
-                  <li>abstract</li>
-                  <li>reference <span class="text-muted">(Journal, series, or media type which contains the result)</span></li>
-                  <li>source <span class="text-muted">(The publishing organization)</span></li>
-                  <li>page <span class="text-muted">(Page number, page length, or runtime as relevant)</span></li>
-                  <li>year</li>
-                  <li>dt <span class="text-muted">(Text formatted date. Note: formats are not consistent)</span></li>
-                  <li>id <span class="text-muted">(Each entry has a unique ID. Use this to get one specific result.)</span></li>
-                </ul>
-                <p><b>Example:</b><input class="form-control" value="title:&quot;Anisotropic Synchrony Convention&quot;" readonly>Will search for references with "Anisotropic Synchrony Convention" in the title (a great read, by the way.)</p>
-              <h4>Boolean Operators</h4>
-                <p>Search terms may be combined into a more advanced query by using the logical operators AND, OR, and NOT (must be capitalized). Terms may be grouped into sub-queries by surrounding them with parentheses.</p>
-                <p><b>Example:</b><input class="form-control" value="(radiometric AND dating) OR geochronology" readonly>Will search for references which have both the terms "radiometric" and "dating" or the single term "geochronology".</p>
-              <h3>Other Search Inputs</h3>
-                <h4>Results per page</h4>
-                  <p>To speed up searches, a small number of references is returned at once, and further results can be seen by selecting other pages of results. The number of results returned can be controlled with the "Results per page" field.</p>
-                <h4>Disable date boost</h4>
-                  <p>By default, newer references are boosted slightly based on the year they were published, so that more recent work has been highlighted. Select the check box to disable this feature and get results which are listed in order of term relevance only. This can be useful for topics that have terms which overlap with other topics, or with topics that haven't had articles published in a while.</p>
-            <h3>Displayed Results</h3>
-              <p>Results are layed out in a tabular format in three columns of author, title and date, with each row being a separate reference. Don't worry. We will tell you if your search did not return any results. To see the abstract and other detailed information, click on the desired row. It will expand in place to show the additional information.</p>
-              <h4>Download Results (<span class="glyphicon glyphicon-arrow-down"></span>)</h4>
-                <p>All of the currently displayed results can be downloaded at once to a <code>.csv</code> file, which can be opened or edited in a spreadsheet application. The downloaded file is RFC 4180 compliant and encoded in UTF-8. Some spreadsheet applications may not implement such files correctly, so you may encounter character encoding issues or problems with abstracts containing line breaks.</p>
-              <h4>Operations Menu (<span class="glyphicon glyphicon-option-vertical"></span>)</h4>
-                <h5>Go to source</h5>
-                  <p>This operation will take you to the website of the result's source (publishing organization) if it has one. It will open in a new window (you may have to allow it as a "popup"). The website is associated with the organization, not the specific result, so you will have to search their site to take you to the specific article.</p>
-                <h5>Copy citation</h5>
-                  <p>This operation will open a dialogue which contains a formatted reference for the search result you selected. The style is Chicago. Simply select and copy the citation and paste it in the desired location. This will only generate sensible results for references which are journal articles.</p>
-                <h5>Print</h5>
-                  <p>This operation allows you to build a list of references to print. When you select this operation, the result that you have selected will be opened in a new tab in a list with all of the others that you have selected. Once that is done, you can continue searching as normal in the main tab. Select as many references for printing as you want. The list will persist across browser restarts (so you can pick up where you left off).</p>
-            <h3>Share a Search</h3>
-              <p>The address bar contains all of the information needed to run your current search. You can share it as a link, or you can interact with the search server by modifying the address directly.</p>
-            <hr>
-            <p>See <a href="https://cwiki.apache.org/confluence/display/solr/The+Standard+Query+Parser#TheStandardQueryParser-SpecifyingTermsfortheStandardQueryParser" target="_blank">here</a> for a full search syntax reference and more advanced features including wildcards, range queries, and fuzzy searches.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal fade" id="restApi" role="dialog" tabindex=0>
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
-            <h4 class="modal-title">REST API</h4>
-          </div>
-          <div class="modal-body">
-            <h3>Getting Started</h3>
-              <p>The Research Assistance Database can be accessed programmatically through a RESTful interface. See <a target="_blank" href="http://www.restapitutorial.com/">here</a> for a brief introduction to REST. Using the REST API provides a lot of flexibility for interacting with the database. A full reference on searching the Solr database can be found <a target="_blank" href="https://cwiki.apache.org/confluence/display/solr/Searching">here</a>.</p>
-              <p>The best way to learn how to use the REST API is to try it out. Use your browser's address bar, or command line <code>curl</code> to see what is returned by the server.</p>
-            <h3>Endpoint and Methods</h3>
-              <p>There is one endpoint available for references and one for sources. Only GET requests are allowed. Searching the database is performed through query parameters. Query parameters are specified after the host information and must begin with <code>?</code> with <code>key=value</code> pairs separated by <code>&amp;</code>.</p>
-              <input class="form-control" value="http://rad.creationeducation.org:8008/solr/rad/refs" readonly>
-              <input class="form-control" value="http://rad.creationeducation.org:8008/solr/source/select" readonly>
-              <h4>Authentication</h4>
-                <p>No authentication is required to access the provided resources.</p>
-            <h3>Query Parameters</h3>
-              <p>Searches are primarily specified in the <code>q</code> query parameter. See <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">here</a> for a description of the full features. In general, if it works in the search bar of the webpage, it will work in a direct search. The <code>qt</code> and <code>stream</code> query parameters are disallowed.</p>
-              <h4>Return Types</h4>
-                <p>By default, results are returned in json format. To get XML back, include <code>wt=xml</code> as a query parameter. Additionally specifying <code>indent=on</code> will cause the response to be returned in a more readable layout.</p>
-              <h4>Pagination</h4>
-                <p>Pagination is used on returned results since the number of returned results is potentially very large. By default, ten results are returned at a time. This can be specified using the <code>rows</code> query parameter. Use the <code>start</code> parameter to begin the page at a different record. A value of zero starts at the beginning. The total number of records found is returned in <code>results.response.numFound</code>.</p>
-            <h3>Response Format</h3>
-              <p>Returned results have a header which describes the inputs to the search as well has a response object which contains the search results. An example is shown below.</p>
-            <pre>{
-  "responseHeader": {
-    "zkConnected": true,
-    "status": 0,
-    "QTime": 0,
-    "params": {
-      "q": "superposition",
-      "indent": "on",
-      "rows": "40",
-      "wt": "json"}},
-  "response": {"numFound": 8, "start": 0, "docs": [...]},
-  "spellcheck": {"suggestions": [...]}
-}</pre>
-            <h3>Examples</h3>
-              <h4>Browser</h4>
-                <input class="form-control" value="http://rad.creationeducation.org:8008/solr/rad/refs?q=evolution&rows=40&start=80&indent=on" readonly>
-              <h4>curl</h4>
-                <input class="form-control" value='curl -s "http://rad.creationeducation.org:8008/solr/rad/refs?q=superposition&rows=40"' readonly>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <footer class="text-center">Copyright &copy; 2016 by <a href="http://creationeducation.org">Creation Education Resources</a>. <a href="mailto:cer@creationeducation.org">Contact us</a>. Search via <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#restApi">REST API</a>.</footer>
-
-  <script src="FileSaver.min.js"></script>
-  <script src="Blob.js"></script>
-  <!-- This script refers to specific elements on the page, so must be loaded last -->
-  <script src="rad.js"></script>
-
-</body>
-</html>
+{{/layout}}
