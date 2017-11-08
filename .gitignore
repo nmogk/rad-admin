@@ -28,3 +28,5 @@ node_modules
 
 # Debug log from npm
 npm-debug.log
+
+view-source_localhost_3000.html
