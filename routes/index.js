@@ -1,9 +1,12 @@
 var express = require('express');
 var router = express.Router();
+var fs = require("fs");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index');
+  var contents = fs.readFileSync("database.json");
+  var dbMeta = JSON.parse(contents);
+  res.render('index', dbMeta);
 });
 
 router.get('/printAggregator.html', function(req, res, next) {

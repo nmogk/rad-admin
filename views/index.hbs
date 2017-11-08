@@ -22,12 +22,13 @@
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button></div></div>
         </form>
+        
     {{/inline}}
     
     {{#*inline "results-area"}}
         <div id="story" role="complementary" aria-hidden="true" aria-live="assertive">
             {{> backstoryContents}}  
-                      
+
             <div class="text-center">
                 <button class="btn btn-default" onclick="hideStory()">Return to Search Results</button>
             </div>
@@ -117,6 +118,8 @@
     {{/inline}}
     
     {{#*inline "footer-block"}}
+        {{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}}
+
         {{> footerBasic}} Search via <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#restApi">REST API</a>.
     {{/inline}}
     

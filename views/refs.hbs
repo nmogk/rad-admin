@@ -19,9 +19,17 @@
             </div>
           </div> {{!TODO: ensure max is consistent with server max }}
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button></div></div>
-            <div class="col-sm-offset-2 col-sm-10"><button type="button" class="btn btn-info"><span class="glyphicon glyphicon-plus"></span> Add new reference</button></div></div>
+            <div class="col-sm-offset-2 col-sm-5">
+              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="glyphicon glyphicon-search"></span> Search</button>
+              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for empty fields"><span class="glyphicon glyphicon-minus-sign"></span></button>
+              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
+            </div>
+            <div class="col-xs-offset-right-2 col-sm-3 text-right">
+              <button type="button" class="btn btn-info"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
+            </div>
+          </div>
         </form>
+        
     {{/inline}}
     
     {{#*inline "results-area"}}
@@ -101,7 +109,16 @@
     {{/inline}}
 
     {{#*inline "modal-block"}}
-           
+        {{> sourceModal}}
+
+        {{!--{{> adminHelp}}--}}
+
+    {{/inline}}
+
+    {{#*inline "footer-block"}}
+        {{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}}
+      
+        {{> footerBasic}} <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a> with this application.
     {{/inline}}
     
     {{#*inline "scripts-block"}}
