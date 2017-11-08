@@ -1,0 +1,50 @@
+<div class="modal fade" id="restApi" role="dialog" tabindex=0>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+        <h4 class="modal-title">REST API</h4>
+      </div>
+      <div class="modal-body">
+        <h3>Getting Started</h3>
+          <p>The Research Assistance Database can be accessed programmatically through a RESTful interface. See <a target="_blank" href="http://www.restapitutorial.com/">here</a> for a brief introduction to REST. Using the REST API provides a lot of flexibility for interacting with the database. A full reference on searching the Solr database can be found <a target="_blank" href="https://cwiki.apache.org/confluence/display/solr/Searching">here</a>.</p>
+          <p>The best way to learn how to use the REST API is to try it out. Use your browser's address bar, or command line <code>curl</code> to see what is returned by the server.</p>
+        <h3>Endpoint and Methods</h3>
+          <p>There is one endpoint available for references and one for sources. Only GET requests are allowed. Searching the database is performed through query parameters. Query parameters are specified after the host information and must begin with <code>?</code> with <code>key=value</code> pairs separated by <code>&amp;</code>.</p>
+          <input class="form-control" value="http://rad.creationeducation.org:8008/solr/rad/refs" readonly>
+          <input class="form-control" value="http://rad.creationeducation.org:8008/solr/source/select" readonly>
+          <h4>Authentication</h4>
+            <p>No authentication is required to access the provided resources.</p>
+        <h3>Query Parameters</h3>
+          <p>Searches are primarily specified in the <code>q</code> query parameter. See <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">here</a> for a description of the full features. In general, if it works in the search bar of the webpage, it will work in a direct search. The <code>qt</code> and <code>stream</code> query parameters are disallowed.</p>
+          <h4>Return Types</h4>
+            <p>By default, results are returned in json format. To get XML back, include <code>wt=xml</code> as a query parameter. Additionally specifying <code>indent=on</code> will cause the response to be returned in a more readable layout.</p>
+          <h4>Pagination</h4>
+            <p>Pagination is used on returned results since the number of returned results is potentially very large. By default, ten results are returned at a time. This can be specified using the <code>rows</code> query parameter. Use the <code>start</code> parameter to begin the page at a different record. A value of zero starts at the beginning. The total number of records found is returned in <code>results.response.numFound</code>.</p>
+        <h3>Response Format</h3>
+          <p>Returned results have a header which describes the inputs to the search as well has a response object which contains the search results. An example is shown below.</p>
+        <pre>{
+  "responseHeader": {
+    "zkConnected": true,
+    "status": 0,
+    "QTime": 0,
+    "params": {
+      "q": "superposition",
+      "indent": "on",
+      "rows": "40",
+      "wt": "json"}},
+  "response": {"numFound": 8, "start": 0, "docs": [...]},
+  "spellcheck": {"suggestions": [...]}
+}</pre>
+        <h3>Examples</h3>
+          <h4>Browser</h4>
+            <input class="form-control" value="http://rad.creationeducation.org:8008/solr/rad/refs?q=evolution&rows=40&start=80&indent=on" readonly>
+          <h4>curl</h4>
+            <input class="form-control" value='curl -s "http://rad.creationeducation.org:8008/solr/rad/refs?q=superposition&rows=40"' readonly>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

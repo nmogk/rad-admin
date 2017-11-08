@@ -1,0 +1,58 @@
+<div class="modal fade" id="searchHelp" role="dialog" tabindex=0>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+        <h4 class="modal-title">Search Help</h4>
+      </div>
+      <div class="modal-body">
+        <h3>Query Input</h3>
+          <h4>Basic Search</h4>
+            <p>Input desired search terms. Results may or may not contain all terms, and are sorted by relevance. To ensure that a term appears in a result (rarely needed), prefix it with "+". Similarly, to search for references which do not contain a term, prefix it with "-".</p>
+            <p><b>Example:</b><input class="form-control" value="mutation program -weasel" readonly>Will search for references with both "mutation" and "program", but without the term "weasel", with the best matches first.</p>
+          <h4>Searching for Phrases</h4>
+            <p>Phrases placed in quotes will be searched together, rather than as separate terms.</p>
+            <p><b>Example:</b><input class="form-control" value="&quot;Tectonically-Associated Biological Provinces&quot;" readonly>Will search for the entire phrase.</p>
+          <h4>Searching Specific Fields</h4>
+            <p>You can search the contents of a specific field by including a field name, a colon, then the search term. Do not include spaces before or after the colon. If your search term contains spaces, use quotes as above. If no field is specified, then all of the text-based fields are searched by default. Available fields are:</p> <ul>
+              <li>title</li>
+              <li>author</li>
+              <li>abstract</li>
+              <li>reference <span class="text-muted">(Journal, series, or media type which contains the result)</span></li>
+              <li>source <span class="text-muted">(The publishing organization)</span></li>
+              <li>page <span class="text-muted">(Page number, page length, or runtime as relevant)</span></li>
+              <li>year</li>
+              <li>dt <span class="text-muted">(Text formatted date. Note: formats are not consistent)</span></li>
+              <li>id <span class="text-muted">(Each entry has a unique ID. Use this to get one specific result.)</span></li>
+            </ul>
+            <p><b>Example:</b><input class="form-control" value="title:&quot;Anisotropic Synchrony Convention&quot;" readonly>Will search for references with "Anisotropic Synchrony Convention" in the title (a great read, by the way.)</p>
+          <h4>Boolean Operators</h4>
+            <p>Search terms may be combined into a more advanced query by using the logical operators AND, OR, and NOT (must be capitalized). Terms may be grouped into sub-queries by surrounding them with parentheses.</p>
+            <p><b>Example:</b><input class="form-control" value="(radiometric AND dating) OR geochronology" readonly>Will search for references which have both the terms "radiometric" and "dating" or the single term "geochronology".</p>
+          <h3>Other Search Inputs</h3>
+            <h4>Results per page</h4>
+              <p>To speed up searches, a small number of references is returned at once, and further results can be seen by selecting other pages of results. The number of results returned can be controlled with the "Results per page" field.</p>
+            <h4>Disable date boost</h4>
+              <p>By default, newer references are boosted slightly based on the year they were published, so that more recent work has been highlighted. Select the check box to disable this feature and get results which are listed in order of term relevance only. This can be useful for topics that have terms which overlap with other topics, or with topics that haven't had articles published in a while.</p>
+        <h3>Displayed Results</h3>
+          <p>Results are layed out in a tabular format in three columns of author, title and date, with each row being a separate reference. Don't worry. We will tell you if your search did not return any results. To see the abstract and other detailed information, click on the desired row. It will expand in place to show the additional information.</p>
+          <h4>Download Results (<span class="glyphicon glyphicon-arrow-down"></span>)</h4>
+            <p>All of the currently displayed results can be downloaded at once to a <code>.csv</code> file, which can be opened or edited in a spreadsheet application. The downloaded file is RFC 4180 compliant and encoded in UTF-8. Some spreadsheet applications may not implement such files correctly, so you may encounter character encoding issues or problems with abstracts containing line breaks.</p>
+          <h4>Operations Menu (<span class="glyphicon glyphicon-option-vertical"></span>)</h4>
+            <h5>Go to source</h5>
+              <p>This operation will take you to the website of the result's source (publishing organization) if it has one. It will open in a new window (you may have to allow it as a "popup"). The website is associated with the organization, not the specific result, so you will have to search their site to take you to the specific article.</p>
+            <h5>Copy citation</h5>
+              <p>This operation will open a dialogue which contains a formatted reference for the search result you selected. The style is Chicago. Simply select and copy the citation and paste it in the desired location. This will only generate sensible results for references which are journal articles.</p>
+            <h5>Print</h5>
+              <p>This operation allows you to build a list of references to print. When you select this operation, the result that you have selected will be opened in a new tab in a list with all of the others that you have selected. Once that is done, you can continue searching as normal in the main tab. Select as many references for printing as you want. The list will persist across browser restarts (so you can pick up where you left off).</p>
+        <h3>Share a Search</h3>
+          <p>The address bar contains all of the information needed to run your current search. You can share it as a link, or you can interact with the search server by modifying the address directly.</p>
+        <hr>
+        <p>See <a href="https://cwiki.apache.org/confluence/display/solr/The+Standard+Query+Parser#TheStandardQueryParser-SpecifyingTermsfortheStandardQueryParser" target="_blank">here</a> for a full search syntax reference and more advanced features including wildcards, range queries, and fuzzy searches.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

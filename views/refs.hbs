@@ -1,12 +1,15 @@
 {{!--
-    This is the default search page for public facing users
+    This is the administration page for references
 --}}
 
-{{#> layout title="Research Assistance Database"}}
+{{#> layout title="References" nav=1 refActive=1}}
     
-    {{#*inline "search-area"}}
-        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" onclick="showStory()">Read</a> our story. <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">Get searching help</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
+    {{#*inline "custom-title"}}
+        {{!--<h2>{{title}}</h2>--}}
+    {{/inline}}
 
+    {{#*inline "search-area"}}
+        
         <form role="search" class="form-horizontal">
           <div class="form-group">
             <label class="control-label col-sm-2">Query:</label>
@@ -20,20 +23,21 @@
             </div>
           </div> {{!TODO: ensure max is consistent with server max }}
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button></div></div>
+            <div class="col-sm-offset-2 col-sm-5">
+              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="glyphicon glyphicon-search"></span> Search</button>
+              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for empty fields"><span class="glyphicon glyphicon-minus-sign"></span></button>
+              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
+            </div>
+            <div class="col-xs-offset-right-2 col-sm-3 text-right">
+              <button type="button" class="btn btn-info"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
+            </div>
+          </div>
         </form>
         
     {{/inline}}
     
     {{#*inline "results-area"}}
-        <div id="story" role="complementary" aria-hidden="true" aria-live="assertive">
-            {{> backstoryContents}}  
-
-            <div class="text-center">
-                <button class="btn btn-default" onclick="hideStory()">Return to Search Results</button>
-            </div>
-        </div>
-
+        
         {{! Results header }}
         <div id="mainDisplay" aria-hidden="true" role="main">
           <div id="res-head" class="panel-body">
@@ -45,7 +49,7 @@
                 <span class="col-sm-3">Author</span>
                 <span class="col-sm-6">Title</span>
                 <span class="col-sm-2">Date</span>
-                <span class="col-sm-1"><a href="#" data-bind="click: downloadList" data-toggle="tooltip" title="Download results (.csv)" style="color: #000000;"><span class="glyphicon glyphicon-arrow-down"></span></a></span>
+                <span class="col-sm-1"><a href="#" {{! TODO data-bind="click: downloadList"}} data-toggle="tooltip" title="Add current references to campaign" style="color: #000000;"><span class="glyphicon glyphicon-list-alt"></span></a></span>
               </h4>
             </div>
             <hr>
@@ -75,9 +79,10 @@
                     <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
                     <span class="glyphicon glyphicon-option-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: $parent.goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.goSource"}}><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.generateCitation"}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" target="_blank" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-trash"></span> Delete</a></li>
                     </ul>
                   </div>
                 </div>
@@ -110,24 +115,18 @@
     {{#*inline "modal-block"}}
         {{> sourceModal}}
 
-        {{> citationModal}}
+        {{!--{{> adminHelp}}--}}
 
-        {{> searchHelp}}   
-        
-        {{> restHelp}}      
     {{/inline}}
-    
+
     {{#*inline "footer-block"}}
         {{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}}
-
-        {{> footerBasic}} Search via <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#restApi">REST API</a>. <a href="/refs">Administration</a>.
+      
+        {{> footerBasic}} <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a>!
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script src="javascripts/FileSaver.min.js"></script>
-        <script src="javascripts/Blob.js"></script>
-        {{! This script refers to specific elements on the page, so must be loaded last}}
-        <script src="javascripts/rad.js"></script>
+        <script src="javascripts/rad.js"></script> {{! This is temporary only to check the layout}}
     {{/inline}}
 
 {{/layout}}
