@@ -2,6 +2,7 @@
   {{nav}} // Flag for adding the nav bar at the top of the page
   {{title}} // Page title
 {{#> layout title="Research Assistance Database" nav=0}}
+    {{#*inline "custom-title"}}{{/inline}}  // Define to customize the title layout on the page (not the page title)
     {{#*inline "header-block"}}{{/inline}}  // Additional header lines as needed
     {{#*inline "search-area"}}{{/inline}}   // Content for search area inside jumbotron
     {{#*inline "results-area"}}{{/inline}}  // Content for results area inside main container
@@ -20,6 +21,7 @@ I am following the patterns from this site: https://cloudfour.com/thinks/the-hid
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="/stylesheets/journal-square-bootstrap.min.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png">
@@ -40,7 +42,7 @@ I am following the patterns from this site: https://cloudfour.com/thinks/the-hid
     {{/if}}
     <div class="jumbotron" role="banner">
       <div class="container">
-        <h1>{{title}}</h1>
+        {{#> custom-title}}<h1>{{title}}</h1>{{/custom-title}}
         {{#> search-area}}{{/search-area}}
       </div>
     </div>
@@ -54,11 +56,13 @@ I am following the patterns from this site: https://cloudfour.com/thinks/the-hid
 
       {{#> modal-block}}{{/modal-block}}
     </div>
+
     <footer class="text-center">
       {{#> footer-block}}
         {{> footerBasic}}
       {{/footer-block}}
     </footer>
+
     {{#> scripts-block}}{{/scripts-block}}
   </body>
 </html>

@@ -6,4 +6,8 @@ router.get('/', function(req, res, next) {
   res.render('index');
 });
 
+router.get('/printAggregator.html', function(req, res, next) {
+  res.render('printAggregator');
+});
+
 module.exports = router;
