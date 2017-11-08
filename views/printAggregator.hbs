@@ -1,6 +1,6 @@
 {{#> layout title="Print References"}}
 
-    {{#*inline header-block}}
+    {{#*inline "header-block"}}
         <style media="print" type="text/css">
             @media print {
                 body * {
@@ -22,12 +22,12 @@
         </style>
     {{/inline}} 
 
-    {{#*inline search-area}}
+    {{#*inline "search-area"}}
         <p>Use this page to collect references to print. Each reference you select on the main search results page for printing will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
         <a href="#" class="btn btn-primary" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</a><a href="#" class="btn btn-default" onclick="clearPrintList()"><span class="glyphicon glyphicon-trash"></span> Clear</a>
     {{/inline}}  
 
-    {{#*inline results-area}}
+    {{#*inline "results-area"}}
         <div class="panel-group" id="printSet" role="tablist">
             <!-- ko foreach: refs -->
             <div class="panel panel-default">
@@ -53,7 +53,7 @@
         </div>
     {{/inline}} 
 
-    {{#*inline scripts-block}}
+    {{#*inline "scripts-block"}}
         <script>
             var store = 'printRefs';
 

@@ -2,12 +2,12 @@
   {{nav}} // Flag for adding the nav bar at the top of the page
   {{title}} // Page title
 {{#> layout title="Research Assistance Database" nav=0}}
-    {{#*inline header-block}}{{/inline}}  // Additional header lines as needed
-    {{#*inline search-area}}{{/inline}}   // Content for search area inside jumbotron
-    {{#*inline results-area}}{{/inline}}  // Content for results area inside main container
-    {{#*inline modal-block}}{{/inline}}   // Block for modal dialogue definitions
-    {{#*inline footer-block}}{{/inline}}  // Overrides the default footer
-    {{#*inline scripts-block}}{{/inline}} // Allows addition of scripts at end of file
+    {{#*inline "header-block"}}{{/inline}}  // Additional header lines as needed
+    {{#*inline "search-area"}}{{/inline}}   // Content for search area inside jumbotron
+    {{#*inline "results-area"}}{{/inline}}  // Content for results area inside main container
+    {{#*inline "modal-block"}}{{/inline}}   // Block for modal dialogue definitions
+    {{#*inline "footer-block"}}{{/inline}}  // Overrides the default footer
+    {{#*inline "scripts-block"}}{{/inline}} // Allows addition of scripts at end of file
 {{/layout}}
 
 I am following the patterns from this site: https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803-7 
