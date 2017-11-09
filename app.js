@@ -14,7 +14,7 @@ var index         = require('./routes/index');
 var users         = require('./routes/users');
 var refs          = require('./routes/refs');
 
-var sqlPool       = require('./config/database.js');
+var bookshelf     = require('./config/database.js');
 
 var app = express();
 
