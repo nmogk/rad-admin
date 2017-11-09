@@ -6,7 +6,6 @@ var cookieParser  = require('cookie-parser');
 var bodyParser    = require('body-parser');
 var hbs           = require('hbs');
 
-var mysql         = require('mysql');
 var passport      = require('passport');
 var flash         = require('connect-flash');
 var session       = require('express-session');
@@ -15,13 +14,11 @@ var index         = require('./routes/index');
 var users         = require('./routes/users');
 var refs          = require('./routes/refs');
 
-var configDB      = require('./config/database.js');
+var sqlPool       = require('./config/database.js');
 
 var app = express();
 
 // Configuration ===============================================================
-
-var sqlPool = require('./config/database.js')(mysql);
 
 // require('./config/passport')(passport); // pass passport for configuration
 
@@ -56,8 +53,15 @@ function isLoggedIn(req, res, next) {
       // if they aren't redirect them to the login page
       res.redirect('/login');
   }
-  
-  
+
+// Route middleware to only allow users with an invitation key to access.
+// Meant to control user sign ups
+function invitationKey(req, res, next) {
+    if (req.isAuthenticated())
+        return next();
+    
+    res.redirect('/');
+}
 
 //require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
 
@@ -68,9 +72,9 @@ app.use('/signup',  signup);
 
 app.use('/profile',   isLoggedIn, profile);
 app.use('/refs',      isLoggedIn, refs);
-//app.use('sources',    isLoggedIn, sources);
-//app.use('campaigns',  isLoggedIn, campaigns);
-//app.use('site',       isLoggedIn, site);
+//app.use('/sources',   isLoggedIn, sources);
+//app.use('/campaigns', isLoggedIn, campaigns);
+//app.use('/site',      isLoggedIn, site);
 //app.use('/users',     isLoggedIn, users);
 
 // catch 404 and forward to error handler
