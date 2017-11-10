@@ -1,3 +1,8 @@
-var bcrypt = require('bcrypt-node');
+var bookshelf = require('../config/database');
 
-var self = this;
+var model = bookshelf.Model.extend({
+    tablename: 'users',
+    hasSecurePassword: true,
+});
+
+module.exports = model;

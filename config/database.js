@@ -8,4 +8,9 @@ var knex = require('knex')({
         charset  : 'utf8'
 }});
 
-module.exports = require('bookshelf')(knex);
+var bookshelf = require('bookshelf')(knex);
+var securePassword = require('bookshelf-secure-password');
+
+bookshelf.plugin(securePassword);
+
+module.exports = bookshelf;
