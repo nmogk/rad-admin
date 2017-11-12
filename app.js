@@ -13,6 +13,10 @@ var session       = require('express-session');
 var index         = require('./routes/index');
 var users         = require('./routes/users');
 var refs          = require('./routes/refs');
+var login         = require('./routes/login');
+var signup        = require('./routes/signup');
+var logout        = require('./routes/logout');
+var profile       = require('./routes/profile');
 
 var bookshelf     = require('./config/database.js');
 
@@ -20,7 +24,7 @@ var app = express();
 
 // Configuration ===============================================================
 
-// require('./config/passport')(passport); // pass passport for configuration
+require('./config/passport')(passport); // pass passport for configuration
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
