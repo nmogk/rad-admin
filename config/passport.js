@@ -1,4 +1,5 @@
 var LocalStrategy   = require('passport-local').Strategy;
+var OneTime         = require('passport-totp'); // One-time time sensitive key
 var User            = require('../models/user');
 var passport        = require('passport');
 
