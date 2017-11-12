@@ -1,1 +1,20 @@
-Profile
+{{#> layout title="Profile {{username}}" nav=1}}
+    {{#*inline "custom-title"}}<h1>{{username}}</h1>{{/inline}}  
+    
+    {{#*inline "search-area"}}
+        <a class="btn btn-primary" ><span class="glyphicon glyphicon-wrench"></span> Update Password</a><a class="btn btn-link" ><span class="glyphicon glyphicon-trash"></span> Delete Account</a>
+    {{/inline}}   
+
+
+    {{#*inline "results-area"}}
+        <dl>
+            <dt>Display Name: <button class="btn btn-link"><span class="glyphicon glyphicon-pencil"></span> Change</button></dt>
+            <dd>{{#if dispname}}{{dispname}}{{else}}(Not added yet){{/if}}</dd>
+            <dt>Email: <button class="btn btn-link"><span class="glyphicon glyphicon-pencil"></span> Change</button></dt>
+            <dd>{{email}}</dd>
+        </dl>
+    {{/inline}}  
+
+    {{#*inline "modal-block"}}{{/inline}} 
+    {{#*inline "scripts-block"}}{{/inline}} 
+{{/layout}}
