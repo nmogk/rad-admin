@@ -1,59 +1,60 @@
 var LocalStrategy   = require('passport-local').Strategy;
 var User            = require('../models/user');
+var passport        = require('passport');
 
-module.exports = function(passport) {
-    // =========================================================================
-    // passport session setup ==================================================
-    // =========================================================================
-    // required for persistent login sessions
-    // passport needs ability to serialize and unserialize users out of session
+// =========================================================================
+// passport session setup ==================================================
+// =========================================================================
+// required for persistent login sessions
+// passport needs ability to serialize and unserialize users out of session
 
-    // used to serialize the user for the session
-    passport.serializeUser(function(user, done) {
-        done(null, user.id);
+// used to serialize the user for the session
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+});
+
+// used to deserialize the user
+passport.deserializeUser(function(id, done) {
+    new User({'id': id})
+        .fetch()
+        .then(function (user){
+            done(null, user);
+        })
+        .catch(function (err){
+            done(err);
+        })
+});
+
+
+// =========================================================================
+// LOCAL SIGNUP ============================================================
+// =========================================================================
+// we are using named strategies since we have one for login and one for signup
+// by default, if there was no name, it would just be called 'local'
+passport.use('local-signup', new LocalStrategy({
+    // by default, local strategy uses username and password, we will override with email
+    usernameField : 'email',
+    passwordField : 'password',
+    passReqToCallback : true // allows us to pass back the entire request to the callback
+},
+function(req, email, password, done) {
+    let user = new User({email: email});
+    user.fetch({require: true})
+    .then(function (err){
+        done(null, false, req.flash('signupMessage', 'That email is already taken'));
+    })
+    .catch(function (err){
+        user.set({password: password});
+        user.save() // {method: 'insert'}
+        .then(function (user){
+            done(null, user);
+        })
+        .catch(function (err){
+            done(err);
+        });
     });
 
-    // used to deserialize the user
-    passport.deserializeUser(function(id, done) {
-        new User({'id': id})
-            .fetch()
-            .then(function (user){
-                done(null, user);
-            })
-            .catch(function (err){
-                done(err);
-            })
+    
+}));
 
-    });
-
-    // =========================================================================
-    // LOCAL SIGNUP ============================================================
-    // =========================================================================
-    // we are using named strategies since we have one for login and one for signup
-    // by default, if there was no name, it would just be called 'local'
-
-    passport.use('local-signup', new LocalStrategy({
-        // by default, local strategy uses username and password, we will override with email
-        usernameField : 'email',
-        passwordField : 'password',
-        passReqToCallback : true // allows us to pass back the entire request to the callback
-    },
-    function(req, email, password, done) {
-
-        let user = new User({email: email, password: password});
-
-        user.fetch().then(function (err){
-            done(err, false, req.flash('signupMessage', 'That email is already taken'));
-        });
-
-        user.save({method: 'insert'})
-            .then(function (user){
-                done(null, user);
-            })
-            .catch(function (err){
-                done(err);
-        });
-
-    }));
-
-};
+module.exports =  passport;

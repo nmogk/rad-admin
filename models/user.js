@@ -1,7 +1,7 @@
 var bookshelf = require('../config/database');
 
 var model = bookshelf.Model.extend({
-    tablename: 'users',
+    tableName: 'users',
     hasSecurePassword: true,
 });
 

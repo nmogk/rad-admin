@@ -4,7 +4,7 @@ var router = express.Router();
 // =====================================
 // LOGOUT ==============================
 // =====================================
-app.get('/', function(req, res) {
+router.get('/', function(req, res) {
     req.logout();
     res.redirect('/');
 });

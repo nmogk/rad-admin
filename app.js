@@ -5,26 +5,15 @@ var logger        = require('morgan');
 var cookieParser  = require('cookie-parser');
 var bodyParser    = require('body-parser');
 var hbs           = require('hbs');
-
-var passport      = require('passport');
 var flash         = require('connect-flash');
 var session       = require('express-session');
 
-var index         = require('./routes/index');
-var users         = require('./routes/users');
-var refs          = require('./routes/refs');
-var login         = require('./routes/login');
-var signup        = require('./routes/signup');
-var logout        = require('./routes/logout');
-var profile       = require('./routes/profile');
-
+var passport      = require('./config/passport');
 var bookshelf     = require('./config/database.js');
 
 var app = express();
 
 // Configuration ===============================================================
-
-require('./config/passport')(passport); // pass passport for configuration
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -39,6 +28,7 @@ app.use(cookieParser()); // read cookies (needed for auth)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // required for passport
+// TODO. ensure secure usage of session secret.
 app.use(session({ secret: '89S8e1rDYIfjXMpWYgGp8hcfINnvSa' })); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
@@ -67,19 +57,18 @@ function invitationKey(req, res, next) {
     res.redirect('/');
 }
 
-//require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
+app.use('/',        require('./routes/index'));
+app.use('/login',   require('./routes/login'));
+app.use('/logout',  require('./routes/logout'));
+app.use('/signup',  require('./routes/signup'));
+//app.use('/signup', invitationKey, require('./routes/signup'));
 
-app.use('/',        index);
-app.use('/login',   login);
-app.use('/logout',  logout);
-app.use('/signup',  signup);
-
-app.use('/profile',   isLoggedIn, profile);
-app.use('/refs',      isLoggedIn, refs);
-//app.use('/sources',   isLoggedIn, sources);
-//app.use('/campaigns', isLoggedIn, campaigns);
-//app.use('/site',      isLoggedIn, site);
-//app.use('/users',     isLoggedIn, users);
+app.use('/profile',   isLoggedIn, require('./routes/profile'));
+app.use('/refs',      isLoggedIn, require('./routes/refs'));
+//app.use('/sources',   isLoggedIn, require('./routes/sources'));
+//app.use('/campaigns', isLoggedIn, require('./routes/campaigns'));
+//app.use('/site',      isLoggedIn, require('./routes/site'));
+//app.use('/users',     isLoggedIn, require('./routes/users'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
