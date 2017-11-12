@@ -3,7 +3,7 @@ var knex = require('knex')({
     connection : {
         host     : 'localhost',
         user     : 'rad_user',
-        password : 'g9LCDifwYZOWH8Irqboo7if3wykmHF',
+        password : 'g9LCDifwYZOWH8Irqboo7if3wykmHF', // This is for the test system only. Localized upon installation.
         database : 'rad_admin',
         charset  : 'utf8'
 }});

@@ -42,7 +42,7 @@ module.exports = function(passport) {
 
         let user = new User({email: email, password: password});
 
-        user.fetch().catch(function (err){
+        user.fetch().then(function (err){
             done(err, false, req.flash('signupMessage', 'That email is already taken'));
         });
 
