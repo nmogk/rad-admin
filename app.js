@@ -57,6 +57,11 @@ function invitationKey(req, res, next) {
     res.redirect('/');
 }
 
+// Private directory is for scripts that will only be transferred if the user is logged in.
+app.all('/private/*', isLoggedIn);
+app.use('/private', express.static(path.join(__dirname, 'private')));
+
+
 app.use('/',        require('./routes/index'));
 app.use('/login',   require('./routes/login'));
 app.use('/logout',  require('./routes/logout'));
