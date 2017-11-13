@@ -23,7 +23,7 @@ hbs.registerPartials(__dirname + '/views/partials');
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev')); // log every request to the console
 app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
 
 // required for passport

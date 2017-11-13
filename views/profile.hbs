@@ -2,7 +2,7 @@
     {{#*inline "custom-title"}}<h1>{{username}}</h1>{{/inline}}  
     
     {{#*inline "search-area"}}
-        <a class="btn btn-primary" ><span class="glyphicon glyphicon-wrench"></span> Update Password</a><a class="btn btn-link" ><span class="glyphicon glyphicon-trash"></span> Delete Account</a>
+        <a class="btn btn-primary" ><span class="glyphicon glyphicon-wrench"></span> Update Password</a><a href="#" class="btn btn-link" data-toggle="modal" data-target="#deleteModal"><span class="glyphicon glyphicon-trash"></span> Delete Account</a>
     {{/inline}}   
 
 
@@ -28,7 +28,7 @@
             <div class="modal-body">
               <div class="form-group">
                 <label class="control-label">Display Name:</label>
-                <input id="name" class="form-control" type="text" placeholder="{{#if dispname}}{{dispname}}{{else}}Type Name here{{/if}}">
+                <input name="name" class="form-control" type="text" placeholder="{{#if dispname}}{{dispname}}{{else}}Type Name here{{/if}}">
               </div> 
             </div>
             <div class="modal-footer">
@@ -51,7 +51,7 @@
             <div class="modal-body">
               <div class="form-group">
                 <label class="control-label">Display Name:</label>
-                <input id="email" class="form-control" type="email" placeholder="{{email}}">
+                <input name="email" class="form-control" type="email" placeholder="{{email}}">
               </div> 
             </div>
             <div class="modal-footer">
@@ -62,7 +62,35 @@
         </div>
       </div>
     </div>  
+
+    <div class="modal fade" id="deleteModal" role="dialog" tabindex=0>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+            <h4 class="modal-title">Delete Account</h4>
+          </div>
+            <div class="modal-body">
+              <p>Are you sure you want to delete? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="sendDelete()" class="btn btn-danger">Delete</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+      </div>
+    </div>  
     
     {{/inline}} 
-    {{#*inline "scripts-block"}}{{/inline}} 
+    {{#*inline "scripts-block"}}
+        <script>
+
+            function sendDelete(){
+                $.ajax({
+                    method: 'DELETE'
+                });
+            }
+
+        </script>
+    {{/inline}} 
 {{/layout}}

@@ -20,11 +20,27 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/', function(req, res, next) {
-    if(req.updateField === 'password' || req.updateField === 'email' || req.updateField === 'name'){
-        req.user.set(updateField, updateValue);
-        req.user.save()
-        .then(res.render('profile', getReplacements(req.user)));
+    if(req.body.name){
+        req.user.set("name", req.body.name);
+    } else if (req.body.email) {
+        req.user.set("email", req.body.email);
+    } else if (req.body.password) {
+        req.user.set("password", req.body.password);
     }
+
+    req.user.save()
+    .done(function (user){
+        res.render('profile', getReplacements(req.user));
+    });
+    
+});
+
+router.delete('/', function (req, res, next){
+    console.log("Delete request");
+    req.user.destroy().then(function (user){
+        console.log("Success");
+        res.redirect('../login');
+    });
 });
 
 module.exports = router;
