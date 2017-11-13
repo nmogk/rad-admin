@@ -1,0 +1,5 @@
+When deploying software, the following localizations need to be made:
+
+Updated database user password in config/database.js and migration.js
+
+New session secret in app.js
