@@ -25,17 +25,15 @@ app.use(logger('dev')); // log every request to the console
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser()); // read cookies (needed for auth)
-app.use(express.static(path.join(__dirname, 'public')));
 
 // required for passport
-// TODO. ensure secure usage of session secret.
 app.use(session({ secret: '89S8e1rDYIfjXMpWYgGp8hcfINnvSa' })); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
 
 
-// routes ======================================================================
+// custom middleware =============================================================
 
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
@@ -57,8 +55,12 @@ function invitationKey(req, res, next) {
     res.redirect('/');
 }
 
+// routes ======================================================================
+
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Private directory is for scripts that will only be transferred if the user is logged in.
-app.all('/private/*', isLoggedIn);
+app.all('/private/*', isLoggedIn); // This must come before the next line
 app.use('/private', express.static(path.join(__dirname, 'private')));
 
 

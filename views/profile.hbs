@@ -1,4 +1,4 @@
-{{#> layout title="Profile {{username}}" nav=1}}
+{{#> layout title="Profile" nav=1}}
     {{#*inline "custom-title"}}<h1>{{username}}</h1>{{/inline}}  
     
     {{#*inline "search-area"}}
@@ -8,13 +8,61 @@
 
     {{#*inline "results-area"}}
         <dl>
-            <dt>Display Name: <button class="btn btn-link"><span class="glyphicon glyphicon-pencil"></span> Change</button></dt>
+            <dt>Display Name: <a href='#' class="btn btn-link" data-toggle="modal" data-target="#dispNameModal"><span class="glyphicon glyphicon-pencil"></span> Change</a></dt>
             <dd>{{#if dispname}}{{dispname}}{{else}}(Not added yet){{/if}}</dd>
-            <dt>Email: <button class="btn btn-link"><span class="glyphicon glyphicon-pencil"></span> Change</button></dt>
+            <dt>Email: <a href="#" class="btn btn-link" data-toggle="modal" data-target="#emailModal"><span class="glyphicon glyphicon-pencil"></span> Change</a></dt>
             <dd>{{email}}</dd>
         </dl>
     {{/inline}}  
 
-    {{#*inline "modal-block"}}{{/inline}} 
+    {{#*inline "modal-block"}}
+
+    <div class="modal fade" id="dispNameModal" role="dialog" tabindex=0>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+            <h4 class="modal-title">Change Display Name</h4>
+          </div>
+          <form class="form-horizontal" method="post">
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="control-label">Display Name:</label>
+                <input id="name" class="form-control" type="text" placeholder="{{#if dispname}}{{dispname}}{{else}}Type Name here{{/if}}">
+              </div> 
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="emailModal" role="dialog" tabindex=0>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+            <h4 class="modal-title">Change Email Address</h4>
+          </div>
+          <form class="form-horizontal" method="post">
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="control-label">Display Name:</label>
+                <input id="email" class="form-control" type="email" placeholder="{{email}}">
+              </div> 
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>  
+    
+    {{/inline}} 
     {{#*inline "scripts-block"}}{{/inline}} 
 {{/layout}}
