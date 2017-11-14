@@ -9,7 +9,7 @@ var flash         = require('connect-flash');
 var session       = require('express-session');
 
 var passport      = require('./config/passport');
-var bookshelf     = require('./config/database.js');
+var bookshelf     = require('./config/bookshelf');
 
 var app = express();
 

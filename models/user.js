@@ -1,4 +1,4 @@
-var bookshelf = require('../config/database');
+var bookshelf = require('../config/bookshelf');
 
 var model = bookshelf.Model.extend({
     tableName: 'users',
