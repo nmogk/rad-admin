@@ -1,15 +1,17 @@
-var express       = require('express');
-var path          = require('path');
-var favicon       = require('serve-favicon');
-var logger        = require('morgan');
-var cookieParser  = require('cookie-parser');
-var bodyParser    = require('body-parser');
-var hbs           = require('hbs');
-var flash         = require('connect-flash');
-var session       = require('express-session');
+var express          = require('express');
+var path             = require('path');
+var favicon          = require('serve-favicon');
+var logger           = require('morgan');
+var cookieParser     = require('cookie-parser');
+var bodyParser       = require('body-parser');
+var hbs              = require('hbs');
+var flash            = require('connect-flash');
+var session          = require('express-session');
+var KnexSessionStore = require('connect-session-knex')(session);
 
-var passport      = require('./config/passport');
-var bookshelf     = require('./config/bookshelf');
+var passport         = require('./config/passport');
+var bookshelf        = require('./config/bookshelf');
+var knex             = require('./config/database');
 
 var app = express();
 
@@ -26,8 +28,16 @@ app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
 
-// required for passport
-app.use(session({ secret: '89S8e1rDYIfjXMpWYgGp8hcfINnvSa' })); // session secret
+// Session setup required for passport
+var store = new KnexSessionStore({
+    knex: knex,
+    createtable: true
+});
+
+app.use(session({ 
+    secret: '89S8e1rDYIfjXMpWYgGp8hcfINnvSa',
+    store: store
+ })); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
