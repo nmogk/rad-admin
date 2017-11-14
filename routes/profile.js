@@ -36,10 +36,8 @@ router.post('/', function(req, res, next) {
 });
 
 router.delete('/', function (req, res, next){
-    console.log("Delete request");
     req.user.destroy().then(function (user){
-        console.log("Success");
-        res.redirect('../login');
+        res.end();
     });
 });
 
