@@ -36,7 +36,13 @@ var store = new KnexSessionStore({
 
 app.use(session({ 
     secret: '89S8e1rDYIfjXMpWYgGp8hcfINnvSa',
-    store: store
+    store: store,
+    saveUninitialized: false,
+    resave: false,
+    cookie: {
+        //secure: true, // Only use for https connections. Uncomment when https is implemented]
+        maxAge: 86400000 // 1 day for now
+    }
  })); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
