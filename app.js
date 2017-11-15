@@ -35,7 +35,7 @@ var store = new KnexSessionStore({
 });
 
 app.use(session({ 
-    secret: '89S8e1rDYIfjXMpWYgGp8hcfINnvSa',
+    secret: process.env.SESSIONKEY,
     store: store,
     saveUninitialized: false,
     resave: false,
