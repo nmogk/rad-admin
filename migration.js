@@ -1,3 +1,4 @@
+require('dotenv').config();
 var knex = require('./config/database');
 var Schema = require('./models/schema');
 var sequence = require('when/sequence');

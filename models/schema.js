@@ -12,6 +12,11 @@ var schema = {
         name: {type: 'string', maxlength: 150, nullable: false},
         description: {type: 'text', fieldType: 'text'},
         refs: {type: 'json'}
+    },
+    invitations: {
+        token: {type: 'string', maxlength: 150, primary: true},
+        expires: {type: 'date', nullable: false},
+        user_id: {type: 'integer', unsigned: true, references: 'users.id'}
     }
     
   };
