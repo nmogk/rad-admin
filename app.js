@@ -40,7 +40,7 @@ app.use(session({
     saveUninitialized: false,
     resave: false,
     cookie: {
-        //secure: true, // Only use for https connections. Uncomment when https is implemented]
+        secure: true,
         maxAge: 86400000 // 1 day for now
     }
  })); // session secret
@@ -63,7 +63,7 @@ function isLoggedIn(req, res, next) {
   }
 
 // Route middleware to only allow users with an invitation key to access.
-// Meant to control user sign ups
+// Meant to control user sign ups TODO, haven't put this together yet
 function invitationKey(req, res, next) {
     if (req.isAuthenticated())
         return next();
@@ -71,9 +71,25 @@ function invitationKey(req, res, next) {
     res.redirect('/');
 }
 
+var forceSsl = function (req, res, next) {
+    if (req.path === '/' || req.connection.encrypted) {
+        return next();
+    }
+
+    var host = req.get('Host');
+    var colonidx = host.indexOf(':');
+    if (colonidx !== -1) {
+      host = host.slice(0, colonidx);
+    }
+
+    var redirect = ['https://', host, ':', process.env.HTTPSPORT, req.url].join('')
+    return res.redirect(redirect);
+ };
+
 // routes ======================================================================
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(forceSsl);
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
