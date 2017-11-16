@@ -41,7 +41,7 @@ passport.use('local-signup', new LocalStrategy({
 function(req, email, password, done) {
     let user = new User({email: email});
     user.fetch({require: true})
-    .then(function (err){
+    .then(function (user){
         return done(null, false, req.flash('signupMessage', 'That email is already taken'));
     })
     .catch(function (err){

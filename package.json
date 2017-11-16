@@ -6,7 +6,10 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "asynch": "^0.5.2",
+    "aws-sdk": "^2.151.0",
     "bcrypt-node": "^0.1.0",
+    "bluebird": "^3.5.1",
     "body-parser": "~1.18.2",
     "bookshelf": "^0.10.4",
     "bookshelf-secure-password": "^3.0.1",
@@ -23,6 +26,7 @@
     "lodash": "^4.17.4",
     "morgan": "~1.9.0",
     "mysql": "^2.15.0",
+    "nodemailer": "^4.4.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "passport-totp": "0.0.2",
