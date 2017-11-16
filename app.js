@@ -100,6 +100,7 @@ app.use('/',        require('./routes/index'));
 app.use('/login',   require('./routes/login'));
 app.use('/logout',  require('./routes/logout'));
 app.use('/signup',  require('./routes/signup'));
+app.use('/reset',   require('./routes/reset'));
 //app.use('/signup', invitationKey, require('./routes/signup'));
 
 app.use('/profile',   isLoggedIn, require('./routes/profile'));

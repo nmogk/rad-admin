@@ -7,7 +7,7 @@ var User = require('../models/user');
 var Reset = require('../models/invitations');
 var Promise = require('bluebird');
 var crypto = Promise.promisifyAll(require('crypto'));
-var aws = require('../config/aws');
+var mail = require('../config/mailer');
 
 // =====================================
 // LOGIN ===============================
@@ -43,7 +43,7 @@ router.post('/forgot', function (req, res, next) {
             return invite.attach(user);
         })
         .catch(function (err){
-            req.flash('error', 'No account with that email address exists.');
+            req.flash('loginMessage', 'No account with that email address exists.');
             return res.redirect('/login');
         });
     })
@@ -53,21 +53,7 @@ router.post('/forgot', function (req, res, next) {
     .then(function (invite){
         // Email stuff
         let user = invite.related('user');
-        var sesTransporter = nodemailer.createTransport({
-            SES: new aws.SES()
-        });
-        var mailOptions = {
-          to: user.email,
-          from: 'passwordreset@rad.creationeducation.org',
-          subject: 'Account Password Reset',
-          text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-            'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-            'https://' + req.get('Host') + '/reset/' + invite.token + '\n\n' +
-            'If you did not request this, please ignore this email and your password will remain unchanged.\n'
-        };
-        sesTransporter.sendMail(mailOptions, function(err) {
-          req.flash('info', 'An e-mail has been sent to ' + user.email + ' with further instructions.');
-        });
+        mail.sendResetMail(req, user.email, invite.token);
     })
     .catch(function (err) {
         return next(err);

@@ -6,7 +6,6 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "asynch": "^0.5.2",
     "aws-sdk": "^2.151.0",
     "bcrypt-node": "^0.1.0",
     "bluebird": "^3.5.1",
@@ -29,7 +28,6 @@
     "nodemailer": "^4.4.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
-    "passport-totp": "0.0.2",
     "password-validator": "^4.0.0",
     "serve-favicon": "~2.4.5",
     "when": "^3.7.8"
