@@ -1,7 +1,7 @@
 var LocalStrategy   = require('passport-local').Strategy;
-var OneTime         = require('passport-totp'); // One-time time sensitive key
 var User            = require('../models/user');
 var passport        = require('passport');
+var validator       = require('../config/passValidator');
 
 // =========================================================================
 // passport session setup ==================================================
@@ -42,9 +42,12 @@ function(req, email, password, done) {
     let user = new User({email: email});
     user.fetch({require: true})
     .then(function (user){
-        return done(null, false, req.flash('signupMessage', 'That email is already taken'));
+        return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
     })
     .catch(function (err){
+        if(! validator.validate(password)) {
+            return done(null, false, req.flash('signupMessage', 'Password is not strong enough. Passwords must have 8-72 characters and contain at least one numeral, uppercase, and lowercase letters.'));
+        }
         user.set({password: password});
         user.save() // {method: 'insert'}
         .then(function (user){
