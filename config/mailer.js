@@ -1,13 +1,14 @@
 var self = this;
 
+var nodemailer = require('nodemailer');
 self.AWS = require('aws-sdk');
 
-AWS.config.update({
+self.AWS.config.update({
     region: 'us-east-1'
 });
 
 self.sesTransporter = nodemailer.createTransport({
-    SES: new aws.SES()
+    SES: new self.AWS.SES()
 });
 
 self.sendResetMail = function(req, email, token){
@@ -20,9 +21,7 @@ self.sendResetMail = function(req, email, token){
           'https://' + req.get('Host') + '/reset/' + token + '\n\n' +
           'If you did not request this, please ignore this email and your password will remain unchanged.\n'
     };
-    sesTransporter.sendMail(mailOptions, function(err) {
-        req.flash('loginMessage', 'An e-mail has been sent to ' + email + ' with further instructions.');
-    });
+    return self.sesTransporter.sendMail(mailOptions);
 };
 
 self.sendPassChangeConfirmation = function(email){
@@ -33,7 +32,7 @@ self.sendPassChangeConfirmation = function(email){
         text: 'Hello,\n\n' +
             'This is a confirmation that the password for your account ' + email + ' has just been changed.\n'
     };
-    smtpTransport.sendMail(mailOptions, function(err) {
+    self.sesTransporter.sendMail(mailOptions, function(err) {
         req.flash('loginMessage', 'Success! Your password has been changed.');
     });
 };

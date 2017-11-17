@@ -78,14 +78,15 @@ function(req, email, password, done) { // callback with email and password from 
     // we are checking to see if the user trying to login already exists
     (new User({email: email})).fetch({require: true})
     .then(function (user) {
-        user.authenticate(password)
-        .then(function (user){
-            return done(null, user);
-        })
+        return user.authenticate(password);
+        
     //     .catch(function (err){
     //         // if the user is found but the password is wrong
     //         return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
     //     })
+    })
+    .then(function (user){
+        return done(null, user);
     })
     .catch(function (err){
         return done(null, false, req.flash('loginMessage', 'Unable to log in. Please check your email and password.'));

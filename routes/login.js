@@ -27,39 +27,45 @@ router.post('/', passport.authenticate('local-login',
     ); 
 
 router.post('/forgot', function (req, res, next) {
-    crypto.randomBytesAsync(20)
-    .then(function (buf) {
-        var token = buf.toString('hex');
-        return new Reset(
-            {
-                token: token, 
-                expires: new Date() + 3600000 // 1 hour
-            }
-        )
-    })
-    .then(function (invite) {
-        new User({email: email}).fetch({require: true})
-        .then(function (user){
-            return invite.attach(user);
-        })
-        .catch(function (err){
-            req.flash('loginMessage', 'No account with that email address exists.');
-            return res.redirect('/login');
-        });
-    })
-    .then(function (invite){
-        return invite.save();
-    })
-    .then(function (invite){
+    Promise.all(
+        [
+            crypto.randomBytesAsync(20)
+            .then(function (buf) {
+                var token = buf.toString('hex');
+                let date = new Date();
+                date.setHours(date.getHours() + 1);
+                return new Reset(
+                    {
+                        token: token, 
+                        expires: date
+                    }
+                )
+            }),
+
+            new User({email: req.body.email}).fetch({require: true})
+        ]
+    )
+    .spread(function (invite, user){
+        invite.set('user_id', user.id).save();
+        
         // Email stuff
-        let user = invite.related('user');
-        mail.sendResetMail(req, user.email, invite.token);
+        return mail.sendResetMail(req, user.get('email'), invite.get('token'));  
+    })
+    .then(function (){
+        req.flash('loginMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+        res.redirect(303, '/login');
+    })    
+    .catch(User.NotFoundError, function (err){
+        req.flash('loginMessage', 'No account with that email address exists.');
+        res.redirect(303, '/login');
     })
     .catch(function (err) {
-        return next(err);
+        console.log(err);
+        req.flash('loginMessage', 'Problem sending reset.');
+        res.redirect(303, '/login');
     });
 
-    res.redirect('/login');
+    
     
 });
 

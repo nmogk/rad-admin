@@ -15,8 +15,8 @@ var schema = {
     },
     invitations: {
         token: {type: 'string', maxlength: 150, primary: true},
-        expires: {type: 'date', nullable: false},
-        user_id: {type: 'integer', unsigned: true, references: 'users.id'}
+        expires: {type: 'dateTime', nullable: false},
+        user_id: {type: 'integer', unsigned: true, references: 'users.id', unique: true}
     }
     
   };
