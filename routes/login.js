@@ -65,10 +65,9 @@ router.post('/forgot', function (req, res, next) {
     // Wait for all the ingredients to return before using them
     Promise.join(tokenPromise, userPromise, clearPromise,
     function (invite, user, clear){
-        console.log(invite, user);
-        invite.set('user_id', user.id).save(); // Link the token to account, then save in database
+        invite.set('user_id', user.id).save(null, {method: 'insert'}); // Link the token to account, then save in database
         
-        // Email stuff
+        // Email stuff currently not working
         return mail.sendResetMail(req, user.get('email'), invite.get('token'));  
     })
     .then(function (){ // Success
