@@ -4,7 +4,7 @@ var nodemailer = require('nodemailer');
 self.AWS = require('aws-sdk');
 
 self.AWS.config.update({
-    region: 'us-east-1'
+    region: 'us-west-2'
 });
 
 self.sesTransporter = nodemailer.createTransport({

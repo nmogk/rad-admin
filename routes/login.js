@@ -27,42 +27,60 @@ router.post('/', passport.authenticate('local-login',
     ); 
 
 router.post('/forgot', function (req, res, next) {
-    Promise.all(
-        [
-            crypto.randomBytesAsync(20)
-            .then(function (buf) {
-                var token = buf.toString('hex');
-                let date = new Date();
-                date.setHours(date.getHours() + 1);
-                return new Reset(
-                    {
-                        token: token, 
-                        expires: date
-                    }
-                )
-            }),
+    
+    // Fetch the user from the given email. This will happen only once, and this promise will be reused
+    // If the user is not found, then it will throw a User.NotFoundError which is caught below.
+    var userPromise = new User({email: req.body.email}).fetch({require: true, withRelated: 'reset'})
 
-            new User({email: req.body.email}).fetch({require: true})
-        ]
-    )
-    .spread(function (invite, user){
-        invite.set('user_id', user.id).save();
+    // Generate the random token to use for the password reset
+    var tokenPromise = crypto.randomBytesAsync(20)
+        .then(function (buf) {
+            var token = buf.toString('hex');
+            let date = new Date();
+            date.setHours(date.getHours() + 1);
+            return new Reset(
+                {
+                    token: token, 
+                    expires: date
+                }
+            )
+        });
+
+    // This promise makes sure there is not an outstanding token on this account
+    // If there is a token which is expired, it removes it
+    var clearPromise = userPromise
+        .then(function(user){
+            return user.related('reset').fetch({requred: true})
+        })
+        .then(function (reset){
+            if(reset.get('expires') < new Date()) {
+                reset.destroy();
+            } else {
+                throw new Error("Cannot send reset email at this time.")
+            }
+        })
+        .catch(); // No token found. All is well
+
+    // Wait for all the ingredients to return before using them
+    Promise.join(tokenPromise, userPromise, clearPromise,
+    function (invite, user, clear){
+        invite.set('user_id', user.id).save(); // Link the token to account, then save in database
         
         // Email stuff
         return mail.sendResetMail(req, user.get('email'), invite.get('token'));  
     })
-    .then(function (){
-        req.flash('loginMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
-        res.redirect(303, '/login');
+    .then(function (){ // Success
+        return req.flash('loginMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
     })    
-    .catch(User.NotFoundError, function (err){
-        req.flash('loginMessage', 'No account with that email address exists.');
-        res.redirect(303, '/login');
+    .catch(User.NotFoundError, function (err){ // Reset attempted with wrong account
+        return req.flash('loginMessage', 'No account with that email address exists.');
     })
-    .catch(function (err) {
+    .catch(function (err) { // Other errors
         console.log(err);
-        req.flash('loginMessage', 'Problem sending reset.');
-        res.redirect(303, '/login');
+        return req.flash('loginMessage', 'Problem sending reset.');
+    })
+    .finally(function (){ // All responses get redirected to /login to display flash message
+        res.redirect(303, '/login'); // 303 ensures that the client uses GET rather than POST.
     });
 
     

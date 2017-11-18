@@ -39,6 +39,7 @@ app.use(session({
     store: store,
     saveUninitialized: false,
     resave: false,
+    unset: 'destroy',
     cookie: {
         secure: true,
         maxAge: 86400000 // 1 day for now
