@@ -30,7 +30,7 @@ router.post('/forgot', function (req, res, next) {
     
     // Fetch the user from the given email. This will happen only once, and this promise will be reused
     // If the user is not found, then it will throw a User.NotFoundError which is caught below.
-    var userPromise = new User({email: req.body.email}).fetch({require: true, withRelated: 'reset'})
+    var userPromise = new User({email: req.body.email}).fetch({require: true})
 
     // Generate the random token to use for the password reset
     var tokenPromise = crypto.randomBytesAsync(20)
@@ -50,20 +50,22 @@ router.post('/forgot', function (req, res, next) {
     // If there is a token which is expired, it removes it
     var clearPromise = userPromise
         .then(function(user){
-            return user.related('reset').fetch({requred: true})
+            return new Reset({user_id: user.id}).fetch();
         })
-        .then(function (reset){
-            if(reset.get('expires') < new Date()) {
-                reset.destroy();
+        .then(function(currentToken){
+            if(!currentToken){ // No token found. All is well
+                return;
+            } else if (currentToken.get('expires') < new Date()) { // Remove the expired token
+                return reset.destroy();
             } else {
-                throw new Error("Cannot send reset email at this time.")
+                throw new Error("Cannot send reset email at this time.");
             }
-        })
-        .catch(); // No token found. All is well
+        }); 
 
     // Wait for all the ingredients to return before using them
     Promise.join(tokenPromise, userPromise, clearPromise,
     function (invite, user, clear){
+        console.log(invite, user);
         invite.set('user_id', user.id).save(); // Link the token to account, then save in database
         
         // Email stuff
