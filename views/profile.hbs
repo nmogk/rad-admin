@@ -2,7 +2,10 @@
     {{#*inline "custom-title"}}<h1>{{username}}</h1>{{/inline}}  
     
     {{#*inline "search-area"}}
-        <a class="btn btn-primary" ><span class="glyphicon glyphicon-wrench"></span> Update Password</a><a href="#" class="btn btn-link" data-toggle="modal" data-target="#deleteModal"><span class="glyphicon glyphicon-trash"></span> Delete Account</a>
+        {{#if message}}
+            <div class="alert alert-success">{{message}}</div>
+        {{/if}}
+        <a href='/profile/password' class="btn btn-primary" ><span class="glyphicon glyphicon-wrench"></span> Update Password</a><a href="#" class="btn btn-link" data-toggle="modal" data-target="#deleteModal"><span class="glyphicon glyphicon-trash"></span> Delete Account</a>
     {{/inline}}   
 
 

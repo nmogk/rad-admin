@@ -14,7 +14,6 @@ router.get('/:token', function(req, res) {
     .where('expires', '>', Date.now())
     .fetch({required: true, withRelated: 'user'})
     .then(function (token) {
-        let user = token.related('user');
         res.render('passwordChange', {message: req.flash('passChangeMessage')});
     })
     .catch(function (err){
