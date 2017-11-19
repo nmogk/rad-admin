@@ -46,21 +46,15 @@ router.post('/forgot', function (req, res, next) {
             )
         });
 
-    // This promise makes sure there is not an outstanding token on this account
-    // If there is a token which is expired, it removes it
+    // This promise clears any active tokens on this account if they exist.
     var clearPromise = userPromise
         .then(function(user){
-            return new Reset({user_id: user.id}).fetch();
+            return new Reset({user_id: user.get('id')}).fetch();
         })
         .then(function(currentToken){
-            if(!currentToken){ // No token found. All is well
-                return;
-            } else if (currentToken.get('expires') < new Date()) { // Remove the expired token
-                return reset.destroy();
-            } else {
-                throw new Error("Cannot send reset email at this time.");
-            }
-        }); 
+            return currentToken.destroy(); // Remove the expired token
+        })
+        .catch(function(err){}); // No token found. All is well
 
     // Wait for all the ingredients to return before using them
     Promise.join(tokenPromise, userPromise, clearPromise,
@@ -84,8 +78,6 @@ router.post('/forgot', function (req, res, next) {
         res.redirect(303, '/login'); // 303 ensures that the client uses GET rather than POST.
     });
 
-    
-    
 });
 
 module.exports = router;
