@@ -61,7 +61,6 @@ router.post('/forgot', function (req, res, next) {
     function (invite, user, clear){
         invite.set('user_id', user.id).save(null, {method: 'insert'}); // Link the token to account, then save in database
         
-        // Email stuff currently not working
         return mail.sendResetMail(req, user.get('email'), invite.get('token'));  
     })
     .then(function (){ // Success
