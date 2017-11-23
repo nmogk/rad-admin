@@ -33,3 +33,4 @@ npm-debug.log
 view-source_*.html
 
 certs
+launch.json
