@@ -1,17 +1,17 @@
-var express          = require('express');
-var path             = require('path');
-var favicon          = require('serve-favicon');
-var logger           = require('morgan');
-var cookieParser     = require('cookie-parser');
-var bodyParser       = require('body-parser');
-var hbs              = require('hbs');
-var flash            = require('connect-flash');
-var session          = require('express-session');
+var express = require('express');
+var path = require('path');
+var favicon = require('serve-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var hbs = require('hbs');
+var flash = require('connect-flash');
+var session = require('express-session');
 var KnexSessionStore = require('connect-session-knex')(session);
 
-var passport         = require('./config/passport');
-var bookshelf        = require('./config/bookshelf');
-var knex             = require('./config/database');
+var passport = require('./config/passport');
+var bookshelf = require('./config/bookshelf');
+var knex = require('./config/database');
 
 var app = express();
 
@@ -34,7 +34,7 @@ var store = new KnexSessionStore({
     createtable: true
 });
 
-app.use(session({ 
+app.use(session({
     secret: process.env.SESSIONKEY,
     store: store,
     saveUninitialized: false,
@@ -44,7 +44,7 @@ app.use(session({
         secure: true,
         maxAge: 86400000 // 1 day for now
     }
- })); // session secret
+})); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
@@ -54,24 +54,17 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
-  
-      // if user is authenticated in the session, carry on 
-      if (req.isAuthenticated())
-          return next();
-  
-      // if they aren't redirect them to the login page
-      res.redirect('/login');
-  }
 
-// Route middleware to only allow users with an invitation key to access.
-// Meant to control user sign ups TODO, haven't put this together yet
-function invitationKey(req, res, next) {
+    // if user is authenticated in the session, carry on 
     if (req.isAuthenticated())
         return next();
-    
-    res.redirect('/');
+
+    // if they aren't redirect them to the login page
+    res.redirect('/login');
 }
 
+// Middleware which detects if the connection is using ssl, and forces
+// it if not and the user is accessing a resource other than /
 var forceSsl = function (req, res, next) {
     if (req.path === '/' || req.connection.encrypted) {
         return next();
@@ -80,12 +73,20 @@ var forceSsl = function (req, res, next) {
     var host = req.get('Host');
     var colonidx = host.indexOf(':');
     if (colonidx !== -1) {
-      host = host.slice(0, colonidx);
+        host = host.slice(0, colonidx);
     }
 
     var redirect = ['https://', host, ':', process.env.HTTPSPORT, req.url].join('')
     return res.redirect(redirect);
- };
+};
+
+// Redirects to profile page if a particular user does not have
+// Sufficient permissions to use the user editing interface
+var superuser = function (req, res, next) {
+    if (req.user.get("permission") >= 2) { 
+        return next(); }
+    res.redirect('/profile');
+}
 
 // routes ======================================================================
 
@@ -97,36 +98,36 @@ app.all('/private/*', isLoggedIn); // This must come before the next line
 app.use('/private', express.static(path.join(__dirname, 'private')));
 
 
-app.use('/',        require('./routes/index'));
-app.use('/login',   require('./routes/login'));
-app.use('/logout',  require('./routes/logout'));
-app.use('/signup',  require('./routes/signup'));
-app.use('/reset',   require('./routes/reset'));
-//app.use('/signup', invitationKey, require('./routes/signup'));
+app.use('/', require('./routes/index'));
+app.use('/login', require('./routes/login'));
+app.use('/logout', require('./routes/logout'));
+app.use('/signup', require('./routes/signup'));
+app.use('/reset', require('./routes/reset'));
+//app.use('/signup', require('./routes/reset'));
 
-app.use('/profile',   isLoggedIn, require('./routes/profile'));
-app.use('/refs',      isLoggedIn, require('./routes/refs'));
+app.use('/profile', isLoggedIn, require('./routes/profile'));
+app.use('/refs', isLoggedIn, require('./routes/refs'));
 //app.use('/sources',   isLoggedIn, require('./routes/sources'));
 //app.use('/campaigns', isLoggedIn, require('./routes/campaigns'));
 //app.use('/site',      isLoggedIn, require('./routes/site'));
-//app.use('/users',     isLoggedIn, require('./routes/users'));
+app.use('/users',     isLoggedIn, superuser, require('./routes/users'));
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+app.use(function (req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+    // render the error page
+    res.status(err.status || 500);
+    res.render('error');
 });
 
 module.exports = app;
