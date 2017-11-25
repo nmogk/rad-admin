@@ -1,0 +1,80 @@
+{{!-- This is the administration page for references --}} 
+{{#> layout title="Users" nav=1 useActive=1}} 
+
+{{#*inline "search-area"}}
+{{#if message}}
+    <div class="alert alert-success">{{message}}</div>
+{{/if}}
+<form class="form inline">
+    <div class="form-group">
+        <label for="email">Invite address:</label>
+        <input type="email" class="form-control" id="email">
+    </div>
+    <button type="submit" href='/users/invite' class="btn btn-primary">
+        <span class="glyphicon glyphicon-gift"></span> Invite New Editor</a>
+</form>
+
+{{/inline}} 
+
+{{#*inline "results-area"}} {{! Results header }}
+<div id="mainDisplay" role="main">
+
+    {{! Results group }}
+    <div class="table-responsive">
+
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Display Name</th>
+                    <th>Validated</th>
+                    <th>Permissions</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: users -->
+                <tr>
+                    <td>
+                        <span data-bind="text: email"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: name"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: validated"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: "></span> {{! Three buttons in button group with current permission highlighted. Clicking on a button will update permission}}
+                    </td>
+                    <td>
+                        <a class='btn btn-default' data-bind="click: delUser">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+                <!-- /ko -->
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+{{/inline}} 
+
+{{#*inline "modal-block"}} 
+{{!--{{> adminHelp}}--}} 
+{{/inline}} 
+
+{{#*inline "footer-block"}} 
+{{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}} 
+
+{{> footerBasic}}
+
+<a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a>! 
+{{/inline}} 
+
+{{#*inline "scripts-block"}}
+<script src="usertools.js"></script> 
+{{/inline}} 
+{{/layout}}

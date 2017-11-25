@@ -24,6 +24,19 @@ self.sendResetMail = function(req, email, token){
     return self.sesTransporter.sendMail(mailOptions);
 };
 
+self.sendInviteMail = function(req, email, token){
+    var mailOptions = {
+        to: email,
+        from: 'DoNotReply@rad.creationeducation.org',
+        subject: 'RAD Admin Account Invitation',
+        text: 'You are receiving this because you have been invited to create an administration account for the Creation Education Resources Research Assistance Database.\n\n' +
+          'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+          'https://' + req.get('Host') + '/signup/' + token + '\n\n' +
+          'If you believe you have received this in error, please ignore this email.\n'
+    };
+    return self.sesTransporter.sendMail(mailOptions);
+};
+
 self.sendPassChangeConfirmation = function(email){
     var mailOptions = {
         to: email,
