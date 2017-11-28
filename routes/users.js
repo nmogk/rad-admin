@@ -3,7 +3,8 @@ var router = express.Router();
 var User = require('../models/user');
 var Promise = require('bluebird');
 var _ = require('lodash');
-var crypto = Promise.promisifyAll(require('crypto'));
+var tokens = require('../models/tokens');
+var Invite = require('../models/invitations');
 
 function getReplacements(req) {
   var replacements = {};
@@ -53,49 +54,58 @@ router.post('/invite', function (req, res, next) {
     return;
   }
 
-  newUserPass = crypto.randomBytes(20).toString('hex');
+  newUserPass = tokens.randomHexString();
 
-  // If the superuser is refreshing an invitation, the save command should trigger an update
-  // with the new password. This will essentially be a forced administrative password reset.
   // If invitation resends don't work, this call is likely to blame.
-  newUserPromise = new User({ email: req.body.newUserEmail, password: newUserPass }).save();
+  // This will fail if there is already an invite
+  newUserPromise = new User({ email: req.body.newUserEmail, password: newUserPass }).save(null, { method: "insert" });
 
-  // Generate the random token to use for the invitation token
-  var tokenPromise = crypto.randomBytesAsync(20)
-    .then(function (buf) {
-      var token = buf.toString('hex');
-      let date = new Date();
-      date.setDate(date.getDate() + 1); // Invitations expire 1 day after issue
-      return new Reset(
-        {
-          token: token,
-          expires: date
-        }
-      )
-    });
-
-  var clearPromise = newUserPromise
-    .then(function (user) {
-      return new Reset({ user_id: user.get('id') }).fetch();
-    })
-    .then(function (currentToken) {
-      return currentToken.destroy(); // Remove the expired token
-    })
-    .catch(function (err) { }); // No token found. All is well
-
-  Promise.join(tokenPromise, newUserPromise, clearPromise, function (invite, user, clear) {
+  Promise.join(tokens.getToken(24), newUserPromise, tokens.clearRelated(newUserPromise), 
+  function (invite, user, clear) {
     invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
 
     return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
   })
     .catch(User.NoRowsUpdatedError, function (err) { // User was not saved in database
-      req.flash('userMessage', 'New user not created.');
-      res.redirect('/users');
+      req.flash('userMessage', 'User already exists. New user not created.');
     })
-    .catch(function (err) {
-
+    .catch(function (err) { // Other errors
+      console.log(err);
+      req.flash('userMessage', 'Problem resending invite.');
+    })
+    .finally(function () { // All responses get redirected to /login to display flash message
+      res.redirect(303, '/users'); // 303 ensures that the client uses GET rather than POST.
     });
 
+});
+
+// Allows the superuser to refresh an invitation, the save command should trigger an update
+// with the new password. This will essentially be a forced administrative password reset.
+router.post('resend/:id', function (req, res, next) {
+  // Fetch the user from the given email. This will happen only once, and this promise will be reused
+  // If the user is not found, then it will throw a User.NotFoundError which is caught below.
+  var userPromise = new User({ id: id }).fetch({ require: true })
+
+  // Wait for all the ingredients to return before using them
+  Promise.join(tokens.getToken(24), userPromise, tokens.clearRelated(userPromise),
+    function (invite, user, clear) {
+      invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
+
+      return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
+    })
+    .then(function () { // Success
+      return req.flash('userMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+    })
+    .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
+      return req.flash('userMessage', 'No account with that email address exists.');
+    })
+    .catch(function (err) { // Other errors
+      console.log(err);
+      req.flash('userMessage', 'Problem resending invite.');
+    })
+    .finally(function () { // All responses get redirected to /login to display flash message
+      res.redirect(303, '/users'); // 303 ensures that the client uses GET rather than POST.
+    });
 });
 
 // Updating permissions for user 

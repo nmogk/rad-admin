@@ -8,6 +8,7 @@ var Reset = require('../models/invitations');
 var Promise = require('bluebird');
 var crypto = Promise.promisifyAll(require('crypto'));
 var mail = require('../config/mailer');
+var token = require('../models/tokens');
 
 // =====================================
 // LOGIN ===============================
@@ -32,32 +33,8 @@ router.post('/forgot', function (req, res, next) {
     // If the user is not found, then it will throw a User.NotFoundError which is caught below.
     var userPromise = new User({ email: req.body.email }).fetch({ require: true })
 
-    // Generate the random token to use for the password reset
-    var tokenPromise = crypto.randomBytesAsync(20)
-        .then(function (buf) {
-            var token = buf.toString('hex');
-            let date = new Date();
-            date.setHours(date.getHours() + 1);
-            return new Reset(
-                {
-                    token: token,
-                    expires: date
-                }
-            )
-        });
-
-    // This promise clears any active tokens on this account if they exist.
-    var clearPromise = userPromise
-        .then(function (user) {
-            return new Reset({ user_id: user.get('id') }).fetch();
-        })
-        .then(function (currentToken) {
-            return currentToken.destroy(); // Remove the expired token
-        })
-        .catch(function (err) { }); // No token found. All is well
-
     // Wait for all the ingredients to return before using them
-    Promise.join(tokenPromise, userPromise, clearPromise,
+    Promise.join(token.getToken(1), userPromise, token.clearRelated(userPromise),
         function (invite, user, clear) {
             invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
 
