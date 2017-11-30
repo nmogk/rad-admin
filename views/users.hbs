@@ -1,6 +1,10 @@
 {{!-- This is the administration page for references --}} 
 {{#> layout title="Users" nav=1 useActive=1}} 
 
+{{#*inline "scripts-block"}}
+    <script src="usertools.js"></script>
+{{/inline}}
+
 {{#*inline "search-area"}}
 {{#if message}}
     <div class="alert alert-success">{{message}}</div>
@@ -32,8 +36,7 @@
                     <th>Delete</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- ko foreach: users -->
+            <tbody data-bind="foreach: users">
                 <tr>
                     <td>
                         <span data-bind="text: email"></span>
@@ -53,7 +56,6 @@
                         </a>
                     </td>
                 </tr>
-                <!-- /ko -->
             </tbody>
         </table>
 
