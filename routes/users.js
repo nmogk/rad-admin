@@ -139,8 +139,8 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
 
 // Delete a particular user
 router.delete('/:id(\\d+)', function (req, res, next) {
-  new User({ id: req.params.id }).fetch({ require: true })
-    .then(function (user) {
+  var userPromise = new User({ id: req.params.id }).fetch({ require: true })
+  Promise.join(userPromise, tokens.clearRelated(userPromise), function (user, clear) {
       return user.destroy();
     })
     .then(function (user) {

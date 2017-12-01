@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var validator = require('../config/passValidator');
 var mail = require('../config/mailer');
+var tokens = require('../models/tokens');
+var Promise = require('bluebird');
 
 function getReplacements(user, req) {
     var replacements = {};
@@ -40,7 +42,9 @@ router.post('/', function(req, res, next) {
 });
 
 router.delete('/', function (req, res, next){
-    req.user.destroy().then(function (user){
+    tokens.clearRelated(Promise.resolve(req.user))
+    .then(function (clear){
+        req.user.destroy()
         res.end();
     });
 });
