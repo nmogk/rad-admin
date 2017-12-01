@@ -29,7 +29,7 @@ router.post('/:token', function(req, res) {
         return;
     }
     if(! validator.validate(req.body.password)) {
-        req.flash('passChangeMessage', 'Password is not strong enough. Passwords must have 8-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
+        req.flash('passChangeMessage', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
         res.redirect(303, 'back');
         return;
     }
@@ -47,6 +47,7 @@ router.post('/:token', function(req, res) {
         
         let user = token.related('user');
         user.set('password', req.body.password);
+        user.set('validated', 1);
         return user.save();
     });
 
