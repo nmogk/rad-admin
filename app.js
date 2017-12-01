@@ -101,16 +101,16 @@ app.use('/private', express.static(path.join(__dirname, 'private')));
 app.use('/', require('./routes/index'));
 app.use('/login', require('./routes/login'));
 app.use('/logout', require('./routes/logout'));
-app.use('/signup', require('./routes/signup'));
 app.use('/reset', require('./routes/reset'));
-//app.use('/signup', require('./routes/reset'));
+app.use('/signup', require('./routes/reset'));
 
 app.use('/profile', isLoggedIn, require('./routes/profile'));
 app.use('/refs', isLoggedIn, require('./routes/refs'));
 //app.use('/sources',   isLoggedIn, require('./routes/sources'));
 //app.use('/campaigns', isLoggedIn, require('./routes/campaigns'));
 //app.use('/site',      isLoggedIn, require('./routes/site'));
-app.use('/users',     isLoggedIn, superuser, require('./routes/users'));
+app.use('/users',        isLoggedIn, superuser, require('./routes/users'));
+app.use('/users/signup', isLoggedIn, superuser, require('./routes/signup'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

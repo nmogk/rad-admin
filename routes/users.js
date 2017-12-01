@@ -5,6 +5,7 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var tokens = require('../models/tokens');
 var Invite = require('../models/invitations');
+var mail = require('../config/mailer');
 
 function getReplacements(req) {
   var replacements = {};
@@ -49,6 +50,7 @@ router.get('/all', function (req, res, next) {
 
 // 
 router.post('/invite', function (req, res, next) {
+  console.log(req.body);
   if (!req.body.newUserEmail) {
     req.flash('userMessage', 'No email specified');
     res.redirect(400, '/users');
@@ -82,7 +84,7 @@ router.post('/invite', function (req, res, next) {
 
 // Allows the superuser to refresh an invitation, the save command should trigger an update
 // with the new password. This will essentially be a forced administrative password reset.
-router.post('resend/:id', function (req, res, next) {
+router.post('/resend/:id(\\d+)', function (req, res, next) {
   // Fetch the user from the given email. This will happen only once, and this promise will be reused
   // If the user is not found, then it will throw a User.NotFoundError which is caught below.
   var userPromise = new User({ id: req.params.id }).fetch({ require: true })
@@ -110,7 +112,7 @@ router.post('resend/:id', function (req, res, next) {
 });
 
 // Updating permissions for user 
-router.post('/:id/:level', function (req, res, next) {
+router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
   if (req.params.level < 0 || req.params.level > 2) {
     req.flash('userMessage', 'Invalid permission level');
     res.redirect(400, '/users');
@@ -136,7 +138,7 @@ router.post('/:id/:level', function (req, res, next) {
 });
 
 // Delete a particular user
-router.delete('/:id', function (req, res, next) {
+router.delete('/:id(\\d+)', function (req, res, next) {
   new User({ id: req.params.id }).fetch({ require: true })
     .then(function (user) {
       return user.destroy();
