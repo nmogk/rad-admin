@@ -36,7 +36,7 @@
     {{! Results group }}
     <div class="table-responsive">
 
-        <table class="table table-responsive table-hover" style="table-layout: auto">
+        <table class="table table-sm table-hover">
             <thead>
                 <tr>
                     <th>Email</th>
@@ -54,21 +54,22 @@
                     <td>
                         <span data-bind="text: name"></span>
                     </td>
-                    <td class="row fit">
-                        <span class="col-sm-6" data-bind="text: validated"></span>
-                        <div class="col-sm-6">
-                            <a class='btn btn-primary text-right' data-toggle="tooltip" title="Resend invitation (or administrative password reset)" data-bind="click: $parent.resendInvite">
-                                <span class="glyphicon glyphicon-open-file"></span>
-                            </a>
-                        </div>
+                    <td class="fit">
+                        <span data-bind="text: validated"></span>
                     </td>
-                    <td>
-                        <div class="btn-group" role="group" aria-label="Update user permissions">
-                            <button type="button" data-bind="click: $parent.updatePerms.bind($data, 0), attr: {'class': perm0}">Normal</button>
-                            <button type="button" data-bind="click: $parent.updatePerms.bind($data, 1), attr: {'class': perm1}">Delete</button>
-                            <button type="button" data-bind="click: $parent.updatePerms.bind($data, 2), attr: {'class': perm2}">Superuser</button>
-                        </div>
-                        
+                    <td class="fit">
+                        <a class='btn btn-primary' data-toggle="tooltip" title="Resend invitation (or administrative password reset)" data-bind="click: $parent.resendInvite">
+                            <span class="glyphicon glyphicon-open-file"></span>
+                        </a>  
+                    </td>
+                    <td class="fit">
+                        <button type="button" data-bind="click: $parent.updatePerms.bind($data, 0), attr: {'class': perm0}">Normal</button>
+                    </td>
+                    <td class="fit">
+                        <button type="button" data-bind="click: $parent.updatePerms.bind($data, 1), attr: {'class': perm1}">Delete</button>
+                    </td>
+                    <td class="fit">
+                        <button type="button" data-bind="click: $parent.updatePerms.bind($data, 2), attr: {'class': perm2}">Superuser</button>
                     </td>
                     <td class="fit">
                         <a class='btn btn-default' data-bind="click: $parent.delUser">

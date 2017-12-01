@@ -32,26 +32,32 @@ function UserViewModel(qString) {
     self.delUser = function (user) {
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "https://" + window.location.host + "/users/" + user.id,
-            method: "DELETE"
+            method: "DELETE",
+            success: function(){
+                window.location.reload(true);
+            }
         });
-        //window.location.reload(true);
     };
 
     self.resendInvite = function (user) {
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "https://" + window.location.host + "/users/resend" + user.id,
-            method: "POST"
+            method: "POST",
+            success: function(){
+                window.location.reload(true);
+            }
         });
-        //window.location.reload(true);
     };
 
     self.updatePerms = function (newperms, user) {
         console.log("https://" + window.location.host + "/users/" + user.id + "/" + newperms);
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "https://" + window.location.host + "/users/" + user.id + "/" + newperms,
-            method: "POST"
+            method: "POST",
+            success: function(){
+                window.location.reload(true);
+            }
         });
-        //window.location.reload(true);
     };
 };
 

@@ -19,7 +19,7 @@ function getReplacements(req) {
 
 // GET users listing.
 router.get('/', function (req, res, next) {
-
+  console.log(getReplacements(req));
   res.render('users', getReplacements(req));
 });
 
@@ -136,7 +136,7 @@ router.post('/:id/:level', function (req, res, next) {
 
 // Delete a particular user
 router.delete('/:id', function (req, res, next) {
-  new User({ id: id }).fetch({ require: true })
+  new User({ id: req.params.id }).fetch({ require: true })
     .then(function (user) {
       return user.destroy();
     })
@@ -144,6 +144,7 @@ router.delete('/:id', function (req, res, next) {
       return req.flash('userMessage', 'User successfully deleted');
     })
     .catch(function (err) {
+      console.log(err);
       return req.flash('userMessage', 'Problem deleting user');
     })
     .finally(function () {
