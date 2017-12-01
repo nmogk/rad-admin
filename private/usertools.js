@@ -16,10 +16,10 @@ function UserViewModel(qString) {
                     id: user.id,
                     email: ko.observable(user.email),
                     name: ko.observable(user.name),
-                    validated: ko.observable(user.validated),
-                    perm0: user.permission === 0,
-                    perm1: user.permission === 1,
-                    perm2: user.permission === 2,
+                    validated: user.validated? "Yes" : "No",
+                    perm0: user.permission === 0? "btn btn-primary active" : "btn btn-outline-primary",
+                    perm1: user.permission === 1? "btn btn-primary active" : "btn btn-outline-primary",
+                    perm2: user.permission === 2? "btn btn-primary active" : "btn btn-outline-primary",
                 });
             });
         },
