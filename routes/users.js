@@ -11,7 +11,7 @@ function getReplacements(req) {
   let user = req.user;
   replacements.username = user.get("name") || user.get("email");
   replacements.users = user.get("permission") >= 2;
-  replacements.message = req.flash("userMessage");
+  replacements.message = req.flash('userMessage');
   replacements.nav = 1;
   return replacements;
 }
@@ -19,8 +19,9 @@ function getReplacements(req) {
 
 // GET users listing.
 router.get('/', function (req, res, next) {
-  console.log(getReplacements(req));
-  res.render('users', getReplacements(req));
+  let replacements = getReplacements(req);
+  console.log(replacements);
+  res.render('users', replacements);
 });
 
 // RESTful endpoint for getting an array of users in json format 
@@ -94,17 +95,17 @@ router.post('resend/:id', function (req, res, next) {
       return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
     })
     .then(function () { // Success
-      return req.flash('userMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+      req.flash('userMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
     })
     .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
-      return req.flash('userMessage', 'No account with that email address exists.');
+      req.flash('userMessage', 'No account with that email address exists.');
     })
     .catch(function (err) { // Other errors
       console.log(err);
       req.flash('userMessage', 'Problem resending invite.');
     })
     .finally(function () { // All responses get redirected to /login to display flash message
-      res.redirect(303, '/users'); // 303 ensures that the client uses GET rather than POST.
+      res.redirect(278, '/users'); // 278 is an unused success status code. It prevents ajax from 
     });
 });
 
@@ -123,13 +124,13 @@ router.post('/:id/:level', function (req, res, next) {
         .save();
     })
     .then(function (user) {
-      return req.flash('userMessage', 'User permissions successfully updated');
+      req.flash('userMessage', 'User permissions successfully updated');
     })
     .catch(function (err) {
-      return req.flash('userMessage', 'Problem updating user');
+      req.flash('userMessage', 'Problem updating user');
     })
     .finally(function () {
-      res.redirect(303, '/users');
+      res.redirect(278, '/users');
     });
 
 });
@@ -141,14 +142,14 @@ router.delete('/:id', function (req, res, next) {
       return user.destroy();
     })
     .then(function (user) {
-      return req.flash('userMessage', 'User successfully deleted');
+      req.flash('userMessage', 'User successfully deleted');
     })
     .catch(function (err) {
       console.log(err);
-      return req.flash('userMessage', 'Problem deleting user');
+      req.flash('userMessage', 'Problem deleting user');
     })
     .finally(function () {
-      res.redirect(303, '/users');
+      res.redirect(278, '/users');
     });
 });
 

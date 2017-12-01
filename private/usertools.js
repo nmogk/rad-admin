@@ -17,9 +17,9 @@ function UserViewModel(qString) {
                     email: ko.observable(user.email),
                     name: ko.observable(user.name),
                     validated: user.validated? "Yes" : "No",
-                    perm0: user.permission === 0? "btn btn-primary active" : "btn btn-outline-primary",
-                    perm1: user.permission === 1? "btn btn-primary active" : "btn btn-outline-primary",
-                    perm2: user.permission === 2? "btn btn-primary active" : "btn btn-outline-primary",
+                    perm0: user.permission === 0? "btn btn-primary active disabled" : "btn btn-outline-primary",
+                    perm1: user.permission === 1? "btn btn-primary active disabled" : "btn btn-outline-primary",
+                    perm2: user.permission === 2? "btn btn-primary active disabled" : "btn btn-outline-primary",
                 });
             });
         },
@@ -54,7 +54,7 @@ function UserViewModel(qString) {
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "https://" + window.location.host + "/users/" + user.id + "/" + newperms,
             method: "POST",
-            success: function(){
+            success: function(data){
                 window.location.reload(true);
             }
         });
@@ -62,4 +62,8 @@ function UserViewModel(qString) {
 };
 
 //$(document).ready(
+$('[data-toggle=confirmation]').confirmation({
+    rootSelector: '[data-toggle=confirmation]',
+    // other options
+    });
 ko.applyBindings(new UserViewModel())//);
