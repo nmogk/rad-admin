@@ -5,7 +5,7 @@ var schema = new passwordValidator();
  
 // Add properties to it 
 schema
-.is().min(8)                                    // Minimum length 8 
+.is().min(9)                                    // Minimum length 9 
 .is().max(72)                                   // Maximum length 100 (from bcrypt)
 .has().uppercase()                              // Must have uppercase letters 
 .has().lowercase()                              // Must have lowercase letters 

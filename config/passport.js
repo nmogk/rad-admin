@@ -46,7 +46,7 @@ function(req, email, password, done) {
     })
     .catch(function (err){
         if(! validator.validate(password)) {
-            return done(null, false, req.flash('signupMessage', 'Password is not strong enough. Passwords must have 8-72 characters and contain at least one numeral, uppercase, and lowercase letters.'));
+            return done(null, false, req.flash('signupMessage', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.'));
         }
         user.set({password: password});
         user.save() // {method: 'insert'}

@@ -56,7 +56,7 @@ router.post('/password', function (req, res, next) {
         return;
     }
     if(! validator.validate(req.body.password)) {
-        req.flash('passChangeMessage', 'Password is not strong enough. Passwords must have 8-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
+        req.flash('passChangeMessage', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
         res.redirect(303, 'back');
         return;
     }
