@@ -47,7 +47,7 @@ router.post('/:token', function(req, res) {
         
         let user = token.related('user');
         user.set('password', req.body.password);
-        user.set('validated', 1);
+        user.set('validated', '1');
         return user.save();
     });
 
