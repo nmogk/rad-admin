@@ -26,7 +26,7 @@
     {{! Results group }}
     <div class="table-responsive">
 
-        <table class="table table-striped table-hover table-bordered">
+        <table class="table table-responsive table-sm table-striped table-hover">
             <thead>
                 <tr>
                     <th>Email</th>
@@ -44,14 +44,24 @@
                     <td>
                         <span data-bind="text: name"></span>
                     </td>
-                    <td>
-                        <span data-bind="text: validated"></span>
+                    <td class="row">
+                        <span class="col-sm-6" data-bind="text: validated"></span>
+                        <div class="col-sm-6">
+                            <a class='btn btn-primary col-sm-6 text-right' data-toggle="tooltip" title="Resend invitation (or administrative password reset)" data-bind="click: $parent.resendInvite">
+                                <span class="glyphicon glyphicon-open-file"></span>
+                            </a>
+                        </div>
                     </td>
                     <td>
-                        <span data-bind="text: "></span> {{! Three buttons in button group with current permission highlighted. Clicking on a button will update permission}}
+                        <div class="btn-group" role="group" aria-label="Update user permissions">
+                            <button type="button" class="btn btn-primary <!-- ko if: perm0 --> active <!-- /ko -->" data-bind="click: $parent.updatePerms.bind($data, 0)">Normal</button>
+                            <button type="button" class="btn btn-primary <!-- ko if: perm1 --> active <!-- /ko -->" data-bind="click: $parent.updatePerms.bind($data, 1)">Delete</button>
+                            <button type="button" class="btn btn-primary <!-- ko if: perm2 --> active <!-- /ko -->" data-bind="click: $parent.updatePerms.bind($data, 2)">Superuser</button>
+                        </div>
+                        
                     </td>
                     <td>
-                        <a class='btn btn-default' data-bind="click: delUser">
+                        <a class='btn btn-default' data-bind="click: $parent.delUser">
                             <span class="glyphicon glyphicon-trash"></span>
                         </a>
                     </td>
@@ -77,6 +87,6 @@
 {{/inline}} 
 
 {{#*inline "scripts-block"}}
-<script src="usertools.js"></script> 
+<script src="private/usertools.js"></script> 
 {{/inline}} 
 {{/layout}}

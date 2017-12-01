@@ -84,7 +84,7 @@ router.post('/invite', function (req, res, next) {
 router.post('resend/:id', function (req, res, next) {
   // Fetch the user from the given email. This will happen only once, and this promise will be reused
   // If the user is not found, then it will throw a User.NotFoundError which is caught below.
-  var userPromise = new User({ id: id }).fetch({ require: true })
+  var userPromise = new User({ id: req.params.id }).fetch({ require: true })
 
   // Wait for all the ingredients to return before using them
   Promise.join(tokens.getToken(24), userPromise, tokens.clearRelated(userPromise),
@@ -110,16 +110,16 @@ router.post('resend/:id', function (req, res, next) {
 
 // Updating permissions for user 
 router.post('/:id/:level', function (req, res, next) {
-  if (level < 0 || level > 2) {
+  if (req.params.level < 0 || req.params.level > 2) {
     req.flash('userMessage', 'Invalid permission level');
     res.redirect(400, '/users');
     return;
   }
 
-  new User({ id: id }).fetch({ require: true })
+  new User({ id: req.params.id }).fetch({ require: true })
     .then(function (user) {
       return user
-        .set('permission', level)
+        .set('permission', req.params.level)
         .save();
     })
     .then(function (user) {
