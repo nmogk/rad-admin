@@ -1,0 +1,106 @@
+{{!-- This is the administration page for references --}} 
+{{#> layout title="Users" nav=1 useActive=1}} 
+
+{{#*inline "header-block"}}
+    <style>
+        .table td.fit, 
+        .table th.fit {
+            white-space: nowrap;
+            width: 1%;
+        }
+    </style>
+    <script src="javascripts/bootstrap-confirmation.min.js"></script>
+{{/inline}}
+
+{{#*inline "scripts-block"}}
+    <script src="/usertools.js"></script>
+{{/inline}}
+
+{{#*inline "search-area"}}
+{{#if message}}
+    <div class="alert alert-success">{{message}}</div>
+{{/if}}
+<form class="form inline" method="post" action="/users/invite">
+    <div class="form-group">
+        <label for="email">Invite address:</label>
+        <input type="email" class="form-control" id="email" name="newUserEmail">
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <span class="glyphicon glyphicon-gift"></span> Invite New Editor
+    </button>
+    <a href="/users/signup/">Direct user creation.</a>
+</form>
+
+{{/inline}} 
+
+{{#*inline "results-area"}} {{! Results header }}
+<div id="mainDisplay" role="main">
+
+    {{! Results group }}
+    <div class="table-responsive">
+
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Display Name</th>
+                    <th class="fit" colspan="2">Validated</th>
+                    <th class="fit" colspan="3">Permissions</th>
+                    <th class="fit">Delete</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: users">
+                <tr>
+                    <td>
+                        <span data-bind="text: email"></span>
+                    </td>
+                    <td>
+                        <span data-bind="text: name"></span>
+                    </td>
+                    <td class="fit">
+                        <span data-bind="text: validated"></span>
+                    </td>
+                    <td class="fit">
+                        <a class='btn btn-primary' data-toggle="tooltip" title="Resend invitation (or administrative password reset)" data-bind="click: $parent.resendInvite">
+                            <span class="glyphicon glyphicon-open-file"></span>
+                        </a>  
+                    </td>
+                    <td class="fit">
+                        <button type="button" data-toggle="confirmation" data-bind="click: $parent.updatePerms.bind($data, 0), attr: {'class': perm0}">Normal</button>
+                    </td>
+                    <td class="fit">
+                        <button type="button" data-toggle="confirmation" data-bind="click: $parent.updatePerms.bind($data, 1), attr: {'class': perm1}">Delete</button>
+                    </td>
+                    <td class="fit">
+                        <button type="button" data-bind="click: $parent.updatePerms.bind($data, 2), attr: {'class': perm2}">Superuser</button>
+                    </td>
+                    <td class="fit">
+                        <a class='btn btn-default' data-toggle="confirmation"  data-title="Delete User?" data-content="This cannot be undone!" data-singleton="true" data-popout="true" data-bind="click: $parent.delUser">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+{{/inline}} 
+
+{{#*inline "modal-block"}} 
+{{!--{{> adminHelp}}--}} 
+{{/inline}} 
+
+{{#*inline "footer-block"}} 
+{{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}} 
+
+{{> footerBasic}}
+
+<a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a>! 
+{{/inline}} 
+
+{{#*inline "scripts-block"}}
+<script src="private/usertools.js"></script> 
+{{/inline}} 
+{{/layout}}

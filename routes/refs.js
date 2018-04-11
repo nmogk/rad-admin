@@ -5,8 +5,11 @@ var fs = require("fs");
 /* GET home page. */
 router.get('/', function(req, res, next) {
     var contents = fs.readFileSync("database.json");
-    var dbMeta = JSON.parse(contents);
-    res.render('refs', dbMeta);
+    var replacements = JSON.parse(contents);
+    replacements.username = req.user.get("name") || req.user.get("email");
+    replacements.users = req.user.get("permission") >= 2;
+    replacements.deletable = req.user.get("permission") >= 1;
+    res.render('refs', replacements);
 });
 
 module.exports = router;

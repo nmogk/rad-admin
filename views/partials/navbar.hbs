@@ -16,15 +16,15 @@
     </div>
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li {{#if refActive}}class="active"{{/if}}><a href="../refs">References</a></li>
-        <li {{#if srcActive}}class="active"{{/if}}><a href="../sources">Sources</a></li>
-        <li {{#if cmpActive}}class="active"{{/if}}><a href="../campaigns">Campaigns</a></li>
-        <li {{#if sitActive}}class="active"{{/if}}><a href="../site">Website</a></li>
-        {{#if users}}<li {{#if useActive}}class="active"{{/if}}><a href="../users">Users</a></li>{{/if}}
+        <li {{#if refActive}}class="active"{{/if}}><a href="/refs">References</a></li>
+        <li {{#if srcActive}}class="active"{{/if}}><a href="/sources">Sources</a></li>
+        <li {{#if cmpActive}}class="active"{{/if}}><a href="/campaigns">Campaigns</a></li>
+        <li {{#if sitActive}}class="active"{{/if}}><a href="/site">Website</a></li>
+        {{#if users}}<li {{#if useActive}}class="active"{{/if}}><a href="/users">Users</a></li>{{/if}}
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{username}}</a></li>
-        <li><a href="#"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+        <li><a href="/profile"><span class="glyphicon glyphicon-user"></span> {{username}}</a></li>
+        <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
       </ul>
     </div>
   </div>

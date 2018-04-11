@@ -29,7 +29,7 @@
               <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
-              <button type="button" class="btn btn-info"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
+              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#editRefModal"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
             </div>
           </div>
         </form>
@@ -82,7 +82,7 @@
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.goSource"}}><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.generateCitation"}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
                       <li role="presentation"><a role="menuitem" href="#" target="_blank" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-trash"></span> Delete</a></li>
+                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
                 </div>
@@ -114,6 +114,8 @@
 
     {{#*inline "modal-block"}}
         {{> sourceModal}}
+
+        {{> editRefModal}}
 
         {{!--{{> adminHelp}}--}}
 
