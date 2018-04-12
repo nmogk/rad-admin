@@ -30,12 +30,23 @@ function UserViewModel(qString) {
 
     // Opens the webpage referenced by the source of the reference
     self.delUser = function (user) {
-        $.ajax({ // Makes an AJAX query to the server for the source
-            url: "https://" + window.location.host + "/users/" + user.id,
-            method: "DELETE",
-            success: function () {
-                window.location.reload(true);
-            }
+
+        $( "#deleteUserConfirm" ).modal('show');
+
+        $('#deleteUserConfirm .modal-footer button').on('click', function(event) {
+            var $button = $(event.target);
+          
+            $(this).closest('.modal').one('hidden.bs.modal', function() {
+                if($button[0].id === 'confirm-delete-button') {
+                    $.ajax({ // Makes an AJAX query to the server for the source
+                        url: "https://" + window.location.host + "/users/" + user.id,
+                        method: "DELETE",
+                        success: function () {
+                            window.location.reload(true);
+                        }
+                    });
+                }
+            });
         });
     };
 
@@ -62,12 +73,4 @@ function UserViewModel(qString) {
     };
 };
 
-//$(document).ready(
-$('[data-toggle="confirmation"]').confirmation({
-    rootSelector: '[data-toggle="confirmation"]',
-    // other options
-    singleton: true,
-    popout: true,
-    container: "body"
-});
-ko.applyBindings(new UserViewModel())//);
+ko.applyBindings(new UserViewModel());
