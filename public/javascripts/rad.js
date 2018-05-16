@@ -211,7 +211,7 @@ function RefsViewModel(qString) {
     };
 
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
-    qString.rows = parseInt(qString.rows);
+    qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
     $.ajax({
         url: self.refsURI,
