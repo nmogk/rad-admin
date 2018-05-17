@@ -43,6 +43,7 @@
     "passport-local": "^1.0.0",
     "password-validator": "^4.0.0",
     "serve-favicon": "~2.4.5",
+    "url": "^0.11.0",
     "when": "^3.7.8"
   }
 }

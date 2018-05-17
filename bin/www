@@ -13,6 +13,7 @@ var http = require('http');
 var https = require('https');
 var proxy = require('http-proxy');
 var proxyOpts = require('../config/solr-proxy');
+var url = require('url');
 
 /**
  * Get port from environment and store in Express.
