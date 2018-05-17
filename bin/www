@@ -12,7 +12,7 @@ var debug = require('debug')('radadmin:server');
 var http = require('http');
 var https = require('https');
 var proxy = require('http-proxy');
-var proxyOpts = require('../config/solr-config');
+var proxyOpts = require('../config/solr-proxy');
 
 /**
  * Get port from environment and store in Express.
