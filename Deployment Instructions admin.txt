@@ -1,0 +1,59 @@
+install dependencies
+
+	sudo dnf -y install mysql git java-1.8.0 nodejs npm
+	sudo dnf -y remove java-1.7.0-openjdk (if exists)
+
+configure mysql
+
+install solr
+
+	sudo mkdir /usr/solr
+	sudo useradd -r solr
+	cd /usr/solr
+	sudo wget http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/6.3.0/solr-6.3.0.tgz
+	sudo tar zxf solr-6.3.0
+	sudo chown -R solr:solr solr-6.3.0
+
+install application
+
+	git clone https://github.com/nmogk/rad-admin.git
+	npm install
+
+get rad data
+
+	tar xcf rad.tar.gz
+	Copy index data into /usr/solr/solr-6.3.0/server/solr, replacing the default solr.xml
+
+localize configuration
+
+	touch .env
+	vim .env
+	(add entries for the following values):
+		DBUSER={username of mysql user}
+		DBUSERPASS={password for mysql user}
+		SESSIONKEY={a random key}
+		HTTPPORT={http port}
+		HTTPSPORT={https port}
+		SSLKEY={path to server private key}
+		SSLCERT={path to server certificate}
+		AWS_ACCESS_KEY_ID={AWS key}
+		AWS_SECRET_ACCESS_KEY={AWS secret}
+		BOOTSTRAP_ADMIN={superuser to be created in application} 
+		BOOTSTRAP_PASS={password for superuser}
+
+run database migration
+
+	node migration.js
+
+configure iptables/firewall
+
+	Open port 8008, 80, and 443 through lightsail (or other relevant) interface
+
+install startup script
+
+	Copy radd System V script to /etc/rc.d/init.d
+	sudo chkconfig radd on
+
+start service
+
+	sudo service radd start
