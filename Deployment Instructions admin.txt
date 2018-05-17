@@ -1,9 +1,18 @@
 install dependencies
 
-	sudo dnf -y install mysql git java-1.8.0 nodejs npm
-	sudo dnf -y remove java-1.7.0-openjdk (if exists)
+	sudo yum -y install mysql mysql-server git java-1.8.0 nodejs npm
+	sudo yum -y remove java-1.7.0-openjdk (if exists)
 
 configure mysql
+(https://dev.mysql.com/doc/refman/5.7/en/linux-installation-yum-repo.html)
+
+	sudo service mysqld start
+	sudo grep 'temporary password' /var/log/mysqld.log
+	mysql -uroot -p (use temporary password when prompted)
+	mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'new root password';
+	mysql> CREATE DATABASE rad_admin;
+	mysql> CREATE USER 'db user name'@'localhost' IDENTIFIED BY 'db user pass';
+	mysql> GRANT ALL ON rad_admin.* to 'db user name'@'localhost';
 
 install solr
 
@@ -14,12 +23,16 @@ install solr
 	sudo tar zxf solr-6.3.0
 	sudo chown -R solr:solr solr-6.3.0
 
+install solr-proxy (temporary, will be included in application)
+
+	sudo npm install -g solr-proxy
+
 install application
 
 	git clone https://github.com/nmogk/rad-admin.git
 	npm install
 
-get rad data
+get rad index data
 
 	tar xcf rad.tar.gz
 	Copy index data into /usr/solr/solr-6.3.0/server/solr, replacing the default solr.xml
@@ -41,7 +54,7 @@ localize configuration
 		BOOTSTRAP_ADMIN={superuser to be created in application} 
 		BOOTSTRAP_PASS={password for superuser}
 
-run database migration
+run initial database migration
 
 	node migration.js
 
