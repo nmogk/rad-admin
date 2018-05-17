@@ -191,7 +191,7 @@ function RefsViewModel(qString) {
     }
 
     var self = this;
-    self.refsURI = "http://rad.creationeducation.org:8008/solr/rad/refs?";
+    self.refsURI = "https://" + window.location.hostname + ":8008/solr/rad/refs?";
     self.refs = ko.observableArray();
     self.spellings = ko.observableArray();
     self.numResults = ko.observable(0);
