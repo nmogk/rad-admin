@@ -108,8 +108,7 @@ var validateRequest = function(request, options) {
         path = parsedUrl.pathname,
         queryParams = Object.keys(parsedUrl.query);
 
-    console.log(path);
-    console.log(options.validPaths);
+    console.log(request);
     
     return options.validHttpMethods.indexOf(request.method) !== -1 &&
         options.validPaths.indexOf(path) !== -1 &&
