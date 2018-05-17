@@ -15,7 +15,6 @@ var knex = require('./config/database');
 
 var proxy = require('http-proxy');
 var proxyOpts = require('./config/solr-proxy');
-var url = require('url');
 
 var app = express();
 
@@ -104,15 +103,9 @@ var superuser = function (req, res, next) {
  *  - All request query params (eg ?q=, ?stream.url=) not in options.invalidParams
  */
 var validateRequest = function(request, options) {
-    var parsedUrl = url.parse(request.url, true),
-        path = parsedUrl.pathname,
-        queryParams = Object.keys(parsedUrl.query);
-
-    console.log(request);
-    
     return options.validHttpMethods.indexOf(request.method) !== -1 &&
-        options.validPaths.indexOf(path) !== -1 &&
-        queryParams.every(function(p) {
+        options.validPaths.indexOf(request.baseUrl) !== -1 &&
+        Object.keys(request.query).every(function(p) {
         var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
         return options.invalidParams.indexOf(paramPrefix) === -1;
         });
