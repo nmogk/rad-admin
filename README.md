@@ -29,11 +29,6 @@ sudo wget http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/6.3.0/so
 sudo tar zxf solr-6.3.0
 sudo chown -R solr:solr solr-6.3.0
 ```
-### install solr-proxy (temporary, will be included in application)
-```
-sudo npm install -g solr-proxy
-```
-
 ### generate https keys
 (https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)
 
@@ -64,6 +59,7 @@ touch .env
 vim .env
 ```
 Add entries for the following values:
+```
 	DBUSER={username of mysql user}
 	DBUSERPASS={password for mysql user}
 	SESSIONKEY={a random key}
@@ -75,8 +71,10 @@ Add entries for the following values:
 	AWS_SECRET_ACCESS_KEY={AWS secret}
 	BOOTSTRAP_ADMIN={superuser to be created in application} 
 	BOOTSTRAP_PASS={password for superuser}
+```
 
 Update help text in the following locations:
+
     index.html:278,279 endpoint URLs
 	index.html:305,307 example URLs
 
@@ -103,7 +101,6 @@ sudo service radd start
 ### Manually
 ```
 /usr/solr/solr-6.3.0/bin/solr start
-solr-proxy --backendPort 8983 --validPaths /solr/rad/refs,/solr/source/select &
-node bin/www
+npm start
 ```
 ## Upgrade Instructions
