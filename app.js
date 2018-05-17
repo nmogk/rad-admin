@@ -14,7 +14,7 @@ var bookshelf = require('./config/bookshelf');
 var knex = require('./config/database');
 
 var proxy = require('http-proxy');
-var proxyOpts = require('../config/solr-proxy');
+var proxyOpts = require('./config/solr-proxy');
 var url = require('url');
 
 var app = express();
