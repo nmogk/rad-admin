@@ -11,8 +11,8 @@
           <p>The best way to learn how to use the REST API is to try it out. Use your browser's address bar, or command line <code>curl</code> to see what is returned by the server.</p>
         <h3>Endpoint and Methods</h3>
           <p>There is one endpoint available for references and one for sources. Only GET requests are allowed. Searching the database is performed through query parameters. Query parameters are specified after the host information and must begin with <code>?</code> with <code>key=value</code> pairs separated by <code>&amp;</code>.</p>
-          <input class="form-control" value="https://rad.creationeducation.org:8008/solr/rad/refs" readonly>
-          <input class="form-control" value="https://rad.creationeducation.org:8008/solr/source/select" readonly>
+          <input class="form-control" value="rad.creationeducation.org/solr/rad/refs" readonly>
+          <input class="form-control" value="rad.creationeducation.org/solr/source/select" readonly>
           <h4>Authentication</h4>
             <p>No authentication is required to access the provided resources.</p>
         <h3>Query Parameters</h3>
@@ -38,9 +38,9 @@
 }</pre>
         <h3>Examples</h3>
           <h4>Browser</h4>
-            <input class="form-control" value="https://rad.creationeducation.org:8008/solr/rad/refs?q=evolution&rows=40&start=80&indent=on" readonly>
+            <input class="form-control" value="rad.creationeducation.org/solr/rad/refs?q=evolution&rows=40&start=80&indent=on" readonly>
           <h4>curl</h4>
-            <input class="form-control" value='curl -s "https://rad.creationeducation.org:8008/solr/rad/refs?q=superposition&rows=40"' readonly>
+            <input class="form-control" value='curl -s "rad.creationeducation.org/solr/rad/refs?q=superposition&rows=40"' readonly>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

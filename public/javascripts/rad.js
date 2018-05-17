@@ -137,7 +137,7 @@ function SourceViewModel(name) {
     });
 
     $.ajax({
-        url: "http://rad.creationeducation.org:8008/solr/source/select?", // solr-proxy running on port 8008
+        url: "/solr/source/select?", // solr-proxy running on port 8008
         dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
         jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
         data: $.param({"q": name}), // Server on backend is set up to search name field by default... I think
@@ -191,7 +191,7 @@ function RefsViewModel(qString) {
     }
 
     var self = this;
-    self.refsURI = "https://" + window.location.hostname + ":8008/solr/rad/refs?";
+    self.refsURI = "/solr/rad/refs?";
     self.refs = ko.observableArray();
     self.spellings = ko.observableArray();
     self.numResults = ko.observable(0);
