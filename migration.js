@@ -3,7 +3,7 @@ var knex = require('./config/database');
 var Schema = require('./models/schema');
 var sequence = require('when/sequence');
 var _ = require('lodash');
-var User = require('../models/user');
+var User = require('./models/user');
 
 function createTable(tableName) {
   return knex.schema.createTable(tableName, function (table) {
