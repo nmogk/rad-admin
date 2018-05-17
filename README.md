@@ -6,11 +6,11 @@
 
 ### install dependencies
 ```
-	sudo yum -y install mysql mysql-server git java-1.8.0 nodejs npm
+	sudo yum -y install mysql mysql-server git java-1.8.0 nodejs npm openssl
 	sudo yum -y remove java-1.7.0-openjdk (if exists)
 ```
 ### configure mysql
-([https://dev.mysql.com/doc/refman/5.7/en/linux-installation-yum-repo.html])
+(https://dev.mysql.com/doc/refman/5.7/en/linux-installation-yum-repo.html)
 ```
 	sudo service mysqld start
 	sudo grep 'temporary password' /var/log/mysqld.log
@@ -33,6 +33,21 @@
 ```
 	sudo npm install -g solr-proxy
 ```
+
+### generate https keys
+(https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)
+
+```
+sudo openssl req -new > new.ssl.csr (follow prompts)
+sudo openssl rsa -in privkey.pem -out new.cert.key
+sudo openssl x509 -in new.cert.csr -out new.cert.cert -req -signkey new.cert.key -days NNN
+```
+Copy key and cert into desired directory
+```
+sudo cp new.cert.cert /etc/ssl/certs/server.crt
+sudo cp new.cert.key /etc/ssl/private/server.key
+```
+
 ### install application
 ```
 	git clone https://github.com/nmogk/rad-admin.git
@@ -41,8 +56,8 @@
 ### get rad index data
 ```
 	tar xcf rad.tar.gz
-	Copy index data into /usr/solr/solr-6.3.0/server/solr, replacing the default solr.xml
 ```
+	Copy index data into /usr/solr/solr-6.3.0/server/solr, replacing the default solr.xml
 ### localize configuration
 ```
 	touch .env
