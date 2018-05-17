@@ -107,7 +107,10 @@ var validateRequest = function(request, options) {
     var parsedUrl = url.parse(request.url, true),
         path = parsedUrl.pathname,
         queryParams = Object.keys(parsedUrl.query);
-  
+
+    console.log(options.validHttpMethods.indexOf(request.method) !== -1);
+    console.log(options.validPaths.indexOf(path) !== -1);
+    
     return options.validHttpMethods.indexOf(request.method) !== -1 &&
         options.validPaths.indexOf(path) !== -1 &&
         queryParams.every(function(p) {
@@ -117,6 +120,7 @@ var validateRequest = function(request, options) {
 };
 
 var proxyLogic = function (request, response){
+    console.log(validateRequest(request, proxyOpts));
     if (validateRequest(request, proxyOpts)) {
       proxyServer.web(request, response);
     } else {
