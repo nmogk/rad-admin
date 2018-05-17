@@ -113,18 +113,19 @@ var validateRequest = function(request, options) {
 
 var proxyLogic = function (request, response){
     if (validateRequest(request, proxyOpts)) {
-      proxyServer.web(request, response);
+        request.url = request.originalUrl;
+        proxyServer.web(request, response);
     } else {
-      response.writeHead(403, 'Illegal request');
-      response.write('solrProxy: access denied\n');
-      response.end();
+        response.writeHead(403, 'Illegal request');
+        response.write('solrProxy: access denied\n');
+        response.end();
     }
 };
 
 // routes ======================================================================
 
-app.use(express.static(path.join(__dirname, 'public')));
 app.use('/solr/*', proxyLogic);
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
