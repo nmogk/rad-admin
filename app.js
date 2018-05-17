@@ -13,6 +13,10 @@ var passport = require('./config/passport');
 var bookshelf = require('./config/bookshelf');
 var knex = require('./config/database');
 
+var proxy = require('http-proxy');
+var proxyOpts = require('../config/solr-proxy');
+var url = require('url');
+
 var app = express();
 
 // Configuration ===============================================================
@@ -48,6 +52,10 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
+
+// Proxy set up
+
+var proxyServer = proxy.createProxyServer({target: proxyOpts.backend});
 
 
 // custom middleware =============================================================
@@ -86,11 +94,42 @@ var superuser = function (req, res, next) {
     if (req.user.get("permission") >= 2) { 
         return next(); }
     res.redirect('/profile');
-}
+};
+
+
+/*
+ * Returns true if the request satisfies the following conditions:
+ *  - HTTP method (e.g., GET) is in options.validHttpMethods
+ *  - Path (eg. /solr/update) is in options.validPaths
+ *  - All request query params (eg ?q=, ?stream.url=) not in options.invalidParams
+ */
+var validateRequest = function(request, options) {
+    var parsedUrl = url.parse(request.url, true),
+        path = parsedUrl.pathname,
+        queryParams = Object.keys(parsedUrl.query);
+  
+    return options.validHttpMethods.indexOf(request.method) !== -1 &&
+        options.validPaths.indexOf(path) !== -1 &&
+        queryParams.every(function(p) {
+        var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
+        return options.invalidParams.indexOf(paramPrefix) === -1;
+        });
+};
+
+var proxyLogic = function (request, response){
+    if (validateRequest(request, proxyOpts)) {
+      proxyServer.web(request, response);
+    } else {
+      response.writeHead(403, 'Illegal request');
+      response.write('solrProxy: access denied\n');
+      response.end();
+    }
+};
 
 // routes ======================================================================
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/solr/*', proxyLogic);
 app.use(forceSsl);
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
