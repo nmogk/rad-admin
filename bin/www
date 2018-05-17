@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 require('dotenv').config();
+
 /**
  * Module dependencies.
  */
@@ -10,13 +11,16 @@ var app = require('../app');
 var debug = require('debug')('radadmin:server');
 var http = require('http');
 var https = require('https');
+var proxy = require('http-proxy');
+var proxyOpts = require('../config/solr-config');
 
 /**
  * Get port from environment and store in Express.
  */
 
 var httpPort = normalizePort(process.env.HTTPPORT || '3000');
-var httpsPort = normalizePort(process.env.HTTPSPORT || '8443')
+var httpsPort = normalizePort(process.env.HTTPSPORT || '8443');
+
 app.set('port', httpPort);
 
 var credentials = {
@@ -30,6 +34,16 @@ var credentials = {
 
 var httpServer = http.createServer(app);
 var httpsServer = https.createServer(credentials, app);
+var proxyServer = proxy.createProxyServer({target: proxyOpts.backend, ssl: credentials});
+var proxyLogic = https.createServer(credentials, function (request, response){
+  if (validateRequest(request, proxyOpts)) {
+    proxyServer.web(request, response);
+  } else {
+    response.writeHead(403, 'Illegal request');
+    response.write('solrProxy: access denied\n');
+    response.end();
+  }
+});
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -42,6 +56,10 @@ httpServer.on('listening', onListening);
 httpsServer.listen(httpsPort);
 httpsServer.on('error', onError);
 httpsServer.on('listening', onListening);
+
+proxyServer.on('error', onError);
+proxyLogic.listen(proxyOpts.listenPort);
+
 
 /**
  * Normalize a port into a number, string, or false.
@@ -102,3 +120,22 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+/*
+ * Returns true if the request satisfies the following conditions:
+ *  - HTTP method (e.g., GET) is in options.validHttpMethods
+ *  - Path (eg. /solr/update) is in options.validPaths
+ *  - All request query params (eg ?q=, ?stream.url=) not in options.invalidParams
+ */
+var validateRequest = function(request, options) {
+  var parsedUrl = url.parse(request.url, true),
+      path = parsedUrl.pathname,
+      queryParams = Object.keys(parsedUrl.query);
+
+  return options.validHttpMethods.indexOf(request.method) !== -1 &&
+         options.validPaths.indexOf(path) !== -1 &&
+         queryParams.every(function(p) {
+           var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
+           return options.invalidParams.indexOf(paramPrefix) === -1;
+         });
+};
