@@ -10,7 +10,7 @@
           <p>The Research Assistance Database can be accessed programmatically through a RESTful interface. See <a target="_blank" href="http://www.restapitutorial.com/">here</a> for a brief introduction to REST. Using the REST API provides a lot of flexibility for interacting with the database. A full reference on searching the Solr database can be found <a target="_blank" href="https://cwiki.apache.org/confluence/display/solr/Searching">here</a>.</p>
           <p>The best way to learn how to use the REST API is to try it out. Use your browser's address bar, or command line <code>curl</code> to see what is returned by the server.</p>
         <h3>Endpoint and Methods</h3>
-          <p>There is one endpoint available for references and one for sources. Only GET requests are allowed. Searching the database is performed through query parameters. Query parameters are specified after the host information and must begin with <code>?</code> with <code>key=value</code> pairs separated by <code>&amp;</code>.</p>
+          <p>There is one endpoint available for references and one for sources. Only GET requests are allowed. Searching the database is performed through query parameters. Query parameters are specified after the host information and must begin with <code>?</code> with <code>key=value</code> pairs separated by <code>&amp;</code>. HTTPS is supported.</p>
           <input class="form-control" value="rad.creationeducation.org/solr/rad/refs" readonly>
           <input class="form-control" value="rad.creationeducation.org/solr/source/select" readonly>
           <h4>Authentication</h4>

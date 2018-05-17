@@ -73,11 +73,6 @@ Add entries for the following values:
 	BOOTSTRAP_PASS={password for superuser}
 ```
 
-Update help text in the following locations:
-
-    index.html:278,279 endpoint URLs
-	index.html:305,307 example URLs
-
 ### run initial database migration
 ```
 node migration.js
