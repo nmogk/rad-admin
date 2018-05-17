@@ -55,7 +55,8 @@ function createTables () {
 }
 createTables()
 .then(function () {
-  new User({email: process.env.BOOTSTRAP_ADMIN, password: process.env.BOOTSTRAP_PASS, permission: 2, validated: 1})
+  return new User({email: process.env.BOOTSTRAP_ADMIN, password: process.env.BOOTSTRAP_PASS, permission: 2, validated: 1})
+  .save(null, { method: "insert" });
 })
 .then(function() {
   console.log('Tables created!!');
