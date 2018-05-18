@@ -1,6 +1,6 @@
 var http = require('http');
 var async = require('async');
-import whilst from 'async/doWhilst';
+//import whilst from 'async/doWhilst';
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
