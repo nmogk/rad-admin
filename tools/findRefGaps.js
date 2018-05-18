@@ -8,14 +8,13 @@ function runQuery(id, callback) {
         if(data && data.response.numFound) {
             callback(id + 1);
         } else {
-            return;
+            return id;
         }
     });
 }
 
 function loop(id){
-    runQuery(id, loop);
-    return id;
+    return runQuery(id, loop);
 }
 
 var id = loop(1);
