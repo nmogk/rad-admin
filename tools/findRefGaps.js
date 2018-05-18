@@ -1,21 +1,22 @@
 var http = require('http');
-var Client = require('node-rest-client').Client
-
+var async = require('async');
+import whilst from 'async/doWhilst';
+var Client = require('node-rest-client').Client;
 var client = new Client();
 
-function runQuery(id, callback) {
-    client.get('http://localhost:8080/solr/rad/refs?q=id%3A' + id, function (data, response) {
-        if(data && data.response.numFound) {
-            callback(id + 1);
-        } else {
-            return id;
-        }
-    });
-}
+var found = 0;
+var id = 1;
 
-function loop(id){
-    return runQuery(id, loop);
-}
-
-var id = loop(1);
-console.log("Data gap begins at " + id);
+async.doWhilst(
+    function(callback){
+        client.get('http://localhost:8080/solr/rad/refs?q=id%3A' + id, function (data, response) {
+            found = data.response.numFound;
+            id = id + 1;
+            callback(null, found, id);
+        });
+    },
+    function(){return found;},
+    function(err, found, id) {
+        console.log("Data gap begins at " + id);
+    }
+);
