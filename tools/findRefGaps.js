@@ -3,18 +3,20 @@ var Client = require('node-rest-client').Client
 
 var client = new Client();
 
-var found = 0;
-var id = 1;
-
-do {
+function runQuery(id, callback) {
     client.get('http://localhost:8080/solr/rad/refs?q=id%3A' + id, function (data, response) {
-        if(data) {
-            found = data.response.numFound;
-            id = id + 1;
+        if(data && data.response.numFound) {
+            callback(id + 1);
         } else {
-            console.log("No data returned. Problems!")
+            return;
         }
     });
-} while (found)
+}
 
+function loop(id){
+    runQuery(id, loop);
+    return id;
+}
+
+var id = loop(1);
 console.log("Data gap begins at " + id);
