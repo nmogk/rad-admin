@@ -1,6 +1,5 @@
 var http = require('http');
 var async = require('async');
-//import whilst from 'async/doWhilst';
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
@@ -17,6 +16,6 @@ async.doWhilst(
     },
     function(){return found;},
     function(err, found, id) {
-        console.log("Data gap begins at " + id);
+        console.log("Data gap begins at " + id-1);
     }
 );
