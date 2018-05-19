@@ -3,19 +3,20 @@ var async = require('async');
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
-var found = 0;
-var id = process.argv[2] || 1;
+var max = process.argv[2] || 0;
+var count = 0;
+var id = 1;
 
-async.doWhilst(
+async.whilst(
+    function(){return id <= max;},
     function(callback){
         client.get('http://localhost:8080/solr/rad/refs?q=id%3A' + id, function (data, response) {
-            found = data.response.numFound;
+            count = count + data.response.numFound;
             id = id + 1;
-            callback(null, found, id);
+            callback(null, count);
         });
     },
-    function(){return found;},
-    function(err, found, id) {
-        console.log("Data gap begins at " + id-1);
+    function(err, count) {
+        console.log("Found " + count + " references.");
     }
 );
