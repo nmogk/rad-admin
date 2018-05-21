@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var fs = require("fs");
+var log4js = require('log4js');
+var auditLogger = log4js.getLogger("audit");
 var Client = require('node-rest-client').Client;
 var client = new Client();
 var proxyOpts = require('./config/solr-proxy');
@@ -99,7 +101,8 @@ router.post('/new', function(req, res, next){
         if(!data.response.status) { // Success
 
             // Audit log entry
-        
+            auditLogger.addContext("User", req.user.get("email"));
+            auditLogger.info("New reference added: " + doc);
         
             // Record edit information
             var editDate = new Date();
@@ -109,7 +112,7 @@ router.post('/new', function(req, res, next){
             dbParams.numRecords = dbParams.numRecords + 1;
         
             fs.writeFile("database.json", dbParams);
-            
+
         }
     });
 
