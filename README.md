@@ -99,3 +99,14 @@ sudo service radd start
 npm start
 ```
 ## Upgrade Instructions
+
+```
+git pull
+npm install (only necessary when dependencies change, but a good idea)
+```
+
+### In the event of local changes
+```
+git fetch
+git reset --hard origin/{branch-name}
+```
