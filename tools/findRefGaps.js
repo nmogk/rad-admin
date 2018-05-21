@@ -4,7 +4,7 @@ var Client = require('node-rest-client').Client;
 var client = new Client();
 
 var found = 0;
-var id = process.argv[2] || 1;
+var id = parseInt(process.argv[2],10) || 1;
 
 async.doWhilst(
     function(callback){
@@ -16,6 +16,6 @@ async.doWhilst(
     },
     function(){return found;},
     function(err, found, id) {
-        console.log("Data gap begins at " + id-1);
+        console.log("Data gap begins at %d.", id-1);
     }
 );

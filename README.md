@@ -29,7 +29,7 @@ sudo wget http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/6.3.0/so
 sudo tar zxf solr-6.3.0
 sudo chown -R solr:solr solr-6.3.0
 ```
-### generate https keys
+### generate https cert and key
 (https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)
 
 ```
@@ -79,7 +79,7 @@ node migration.js
 ```
 ### configure iptables/firewall
 
-Open port 8008, 80, and 443 through lightsail (or other relevant) interface
+Open ports 80, and 443 through lightsail (or other relevant) interface
 
 ### install startup script
 ```
