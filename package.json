@@ -1,11 +1,23 @@
 {
   "name": "radadmin",
-  "version": "0.0.0",
+  "version": "0.2.0",
+  "description": "A management application for a Solr search database with support for managing editors. Made for the Research Assistance Database at http://rad.creationeducation.org.",
   "private": true,
+  "homepage": "https://github.com/nmogk/rad-admin",
+  "bugs": {
+    "url": "http://rad.creationeducation.org/tracker"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Nathan Mogk",
+    "email": "nm8911@gmail.com"
+  },
+  "repository": "github:nmogk/rad-admin",
   "scripts": {
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "async": "^2.6.0",
     "aws-sdk": "^2.151.0",
     "bcrypt-node": "^0.1.0",
     "bluebird": "^3.5.1",
@@ -21,10 +33,12 @@
     "express-session": "^1.15.6",
     "fs": "0.0.1-security",
     "hbs": "~4.0.1",
+    "http-proxy": "^1.17.0",
     "knex": "0.13.0",
     "lodash": "^4.17.4",
     "morgan": "~1.9.0",
     "mysql": "^2.15.0",
+    "node-rest-client": "^3.1.0",
     "nodemailer": "^4.4.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",

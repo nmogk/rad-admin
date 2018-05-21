@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 require('dotenv').config();
+
 /**
  * Module dependencies.
  */
@@ -16,7 +17,8 @@ var https = require('https');
  */
 
 var httpPort = normalizePort(process.env.HTTPPORT || '3000');
-var httpsPort = normalizePort(process.env.HTTPSPORT || '8443')
+var httpsPort = normalizePort(process.env.HTTPSPORT || '8443');
+
 app.set('port', httpPort);
 
 var credentials = {

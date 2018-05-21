@@ -3,7 +3,7 @@ var knex = require('./config/database');
 var Schema = require('./models/schema');
 var sequence = require('when/sequence');
 var _ = require('lodash');
-var User = require('../models/user');
+var User = require('./models/user');
 
 function createTable(tableName) {
   return knex.schema.createTable(tableName, function (table) {
@@ -55,7 +55,8 @@ function createTables () {
 }
 createTables()
 .then(function () {
-  new User({email: process.env.BOOTSTRAP_ADMIN, password: process.env.BOOTSTRAP_PASS, permission: 2, validated: 1})
+  return new User({email: process.env.BOOTSTRAP_ADMIN, password: process.env.BOOTSTRAP_PASS, permission: 2, validated: 1})
+  .save(null, { method: "insert" });
 })
 .then(function() {
   console.log('Tables created!!');

@@ -3,7 +3,11 @@
     {{#*inline "header-block"}}{{/inline}} 
     {{#*inline "search-area"}}{{/inline}}  
     {{#*inline "results-area"}}{{/inline}} 
-    {{#*inline "modal-block"}}{{/inline}}  
+    {{#*inline "modal-block"}}
+    
+    {{> adminHelp}}
+    
+    {{/inline}}  
     {{!--{{#*inline "footer-block"}}{{/inline}} --}}
     {{#*inline "scripts-block"}}{{/inline}}
 {{/layout}}
