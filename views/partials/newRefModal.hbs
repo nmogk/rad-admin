@@ -8,12 +8,12 @@
                 </h4>
             </div>
             <div class="modal-body">
-                <form data-async data-target="newRefModal" method="POST" action="new">
+                <form data-async data-target="newRefModal" method="POST" action="new" id="newRefForm">
                     {{> refFormFields}}
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" data-dismiss="modal">Save</button>
+                <button type="submit" form="newRefForm" class="btn btn-info" data-dismiss="modal">Save</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
