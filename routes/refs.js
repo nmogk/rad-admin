@@ -5,7 +5,7 @@ var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
 var Client = require('node-rest-client').Client;
 var client = new Client();
-var proxyOpts = require('./config/solr-proxy');
+var proxyOpts = require('../config/solr-proxy');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
