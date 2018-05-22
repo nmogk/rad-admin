@@ -30,6 +30,13 @@ sudo tar zxf solr-6.3.0
 sudo chown -R solr:solr solr-6.3.0
 ```
 ### generate https cert and key
+
+#### letsencrypt
+(https://blog.lawrencemcdaniel.com/letsencrypt-amazon-linux-apache/)
+(https://certbot.eff.org/docs/using.html)
+
+
+#### self-signed
 (https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)
 
 ```
@@ -96,7 +103,7 @@ sudo service radd start
 ### Manually
 ```
 /usr/solr/solr-6.3.0/bin/solr start
-npm start
+sudo npm start
 ```
 ## Upgrade Instructions
 
