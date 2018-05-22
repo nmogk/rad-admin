@@ -103,7 +103,7 @@ sudo service radd start
 ### Manually
 ```
 /usr/solr/solr-6.3.0/bin/solr start
-npm start
+sudo npm start
 ```
 ## Upgrade Instructions
 
