@@ -76,7 +76,7 @@ router.post('/new', function(req, res, next){
         
         var inputDate = new Date(req.body.dateField);
         doc.dt = req.body.dateField;
-        doc.year = inputDate.getFullYear();
+        doc.year = inputDate.prototype.getUTCFullYear();
         //doc.date = .... Will start using this field when all fields are made compatible
         
         var latestRefDate = new Date(dbParams.latest);
@@ -88,7 +88,7 @@ router.post('/new', function(req, res, next){
         }
     }
 
-    consol.log(doc);
+    console.log(doc);
 
     // Send request
 
@@ -97,7 +97,7 @@ router.post('/new', function(req, res, next){
         headers: { "Content-Type": "application/json" }
     };
      
-    client.post("https://" + proxyOpts.backend.host + proxyOpts.backend.port + "/solr/rad/update/docs?commit=true", args, function (data, response) {
+    var restReq = client.post("http://" + proxyOpts.backend.host + proxyOpts.backend.port + "/solr/rad/update/docs?commit=true", args, function (data, response) {
         // parsed response body as js object
         console.log(data);
         // raw response
@@ -121,6 +121,21 @@ router.post('/new', function(req, res, next){
         }
 
         res.redirect(303, 'refs');
+    });
+
+    restReq.on('requestTimeout', function (req) {
+        console.log('request has expired');
+        req.abort();
+    });
+     
+    restReq.on('responseTimeout', function (res) {
+        console.log('response has expired');
+     
+    });
+     
+    //it's usefull to handle request errors to avoid, for example, socket hang up errors on request timeouts
+    restReq.on('error', function (err) {
+        console.log('request error', err);
     });
 
 
