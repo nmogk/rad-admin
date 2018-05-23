@@ -1,7 +1,6 @@
 jQuery(function ($) {
-    $('.modal').on('submit', 'form[data-async]', function (event) {
-        var $form = $(this);
-        var $target = $($form.attr('data-target'));
+    $('button#submit').click(function () {
+        var $form = $('form.refInput');
         console.log("Form submission activated");
 
         $.ajax({
@@ -11,15 +10,7 @@ jQuery(function ($) {
 
             success: function (data, status) {
                 console.log("Submit success");
-                $.each(target.split("|"), function (i, val) {
-                    if (val == "close") {
-                        $form.closest(".modal").modal("hide");
-                    } else if (val == "event") {
-                        $form.trigger("ajax-submit");
-                    } else {
-                        $(val).html(data);
-                    }
-                });
+                $form.closest(".modal").modal("hide");
             }, 
 
             error: function (jqXHR, status, error) {
