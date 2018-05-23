@@ -21,6 +21,7 @@ router.get('/', function(req, res, next) {
 /* Post to root path here will cause an update rather than create a new one */
 router.post('/', function(req, res, next) {
     // Need to detect if a new one was posted instead.
+    console.log(req.body);
 });
 
 
@@ -34,6 +35,7 @@ router.post('/', function(req, res, next) {
 router.post('/new', function(req, res, next){
     // Will create a new one. Does not check for existing references. 
     // Can be used to create duplicates
+    console.log(req.body);
 
     // Do nothing for empty inputs
     if(!req.body.authorField    && !req.body.titleField && !req.body.dateField 
