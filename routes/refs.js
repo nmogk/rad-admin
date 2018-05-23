@@ -14,6 +14,7 @@ router.get('/', function(req, res, next) {
     replacements.username = req.user.get("name") || req.user.get("email");
     replacements.users = req.user.get("permission") >= 2;
     replacements.deletable = req.user.get("permission") >= 1;
+    replacements.message = req.flash("refMessage");
     res.render('refs', replacements);
 });
 
@@ -87,6 +88,8 @@ router.post('/new', function(req, res, next){
         }
     }
 
+    consol.log(doc);
+
     // Send request
 
     var args = {
@@ -116,6 +119,8 @@ router.post('/new', function(req, res, next){
             fs.writeFile("database.json", dbParams);
 
         }
+
+        res.redirect(303, 'refs');
     });
 
 

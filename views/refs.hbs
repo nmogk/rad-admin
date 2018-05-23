@@ -9,6 +9,9 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
+        {{#if message}}
+            <div class="alert alert-success">{{message}}</div>
+        {{/if}}
         
         <form role="search" class="form-horizontal">
           <div class="form-group">
