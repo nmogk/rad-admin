@@ -76,7 +76,7 @@ router.post('/new', function(req, res, next){
         
         var inputDate = new Date(req.body.dateField);
         doc.dt = req.body.dateField;
-        doc.year = inputDate.prototype.getUTCFullYear();
+        doc.year = inputDate.getUTCFullYear();
         //doc.date = .... Will start using this field when all fields are made compatible
         
         var latestRefDate = new Date(dbParams.latest);
