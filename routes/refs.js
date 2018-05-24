@@ -93,17 +93,20 @@ router.post('/new', function(req, res, next){
     // Send request
 
     var args = {
-        data: doc,
+        data: {
+            "add": doc,
+            "commit": {}
+        },
         headers: { "Content-Type": "application/json" }
     };
      
-    var restReq = client.post("http://" + proxyOpts.backend.host + proxyOpts.backend.port + "/solr/rad/update/docs?commit=true", args, function (data, response) {
+    var restReq = client.post("http://" + proxyOpts.backend.host + proxyOpts.backend.port + "/solr/rad/update/", args, function (data, response) {
         // parsed response body as js object
         console.log(data);
         // raw response
         console.log(response);
 
-        if(!data.response.status) { // Success
+        if(!data.responseHeader.status) { // Success
 
             // Audit log entry
             auditLogger.addContext("User", req.user.get("email"));
