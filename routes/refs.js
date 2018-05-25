@@ -3,9 +3,12 @@ var router = express.Router();
 var fs = require("fs");
 var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
-var Client = require('node-rest-client').Client;
-var client = new Client();
+//var Client = require('node-rest-client').Client;
+//var client = new Client();
 var proxyOpts = require('../config/solr-proxy');
+var solr = require('solr-client');
+var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
+client.autoCommit = true;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -92,40 +95,48 @@ router.post('/new', function(req, res, next){
 
     // Send request
 
-    var args = {
+   /*  var args = {
         data: {
             "add": doc,
             "commit": {}
         },
         headers: { "Content-Type": "application/json" }
-    };
+    }; */
      
-    var restReq = client.post("http://" + proxyOpts.backend.host + proxyOpts.backend.port + "/solr/rad/update/", args, function (data, response) {
-        // parsed response body as js object
-        console.log(data);
-        // raw response
-        console.log(response);
+    client.add(doc, function (err, data) {
 
-        if(!data.responseHeader.status) { // Success
+        if (err) {
+            console.log(err);
+            req.flash('refMessage', 'A problem occurred during submit.');
+        } else {
+            // parsed response body as js object
+            console.log(data);
 
-            // Audit log entry
-            auditLogger.addContext("User", req.user.get("email"));
-            auditLogger.info("New reference added: " + doc);
-        
-            // Record edit information
-            var editDate = new Date();
-            var editDateString = JSON.stringify(editDate);
-            dbParams.edited = editDateString.slice(0, editDateString.search("T"));
-            dbParams.highestId = newId;
-            dbParams.numRecords = dbParams.numRecords + 1;
-        
-            fs.writeFile("database.json", dbParams);
+            if (!data.responseHeader.status) { // Success
 
+                // Audit log entry
+                auditLogger.addContext("User", req.user.get("email"));
+                auditLogger.info("New reference added: " + doc);
+
+                // Record edit information
+                var editDate = new Date();
+                var editDateString = JSON.stringify(editDate);
+                dbParams.edited = editDateString.slice(0, editDateString.search("T"));
+                dbParams.highestId = newId;
+                dbParams.numRecords = dbParams.numRecords + 1;
+
+                fs.writeFile("database.json", dbParams);
+
+                req.flash('refMessage', 'New reference successfully added.');
+
+            } else {
+                req.flash('refMessage', 'A problem occurred during submit.');
+            }
         }
 
-        res.redirect(303, 'refs');
+        res.redirect(303, '/refs');
     });
-
+/* 
     restReq.on('requestTimeout', function (req) {
         console.log('request has expired');
         req.abort();
@@ -140,7 +151,7 @@ router.post('/new', function(req, res, next){
     restReq.on('error', function (err) {
         console.log('request error', err);
     });
-
+ */
 
 });
 
