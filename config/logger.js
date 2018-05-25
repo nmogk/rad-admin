@@ -3,7 +3,7 @@ log4js.configure({
     appenders: {
         audit: {
             type: 'file',
-            filename: process.env.AUDIT_LOG_PATH + 'audit.log',
+            filename: process.env.AUDIT_LOG_PATH + '/audit.log',
             maxLogSize: 1073741824 // 1GiB
         },
         app: {

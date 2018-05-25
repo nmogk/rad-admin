@@ -8,7 +8,7 @@ var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
 var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
-client.autoCommit = true;
+//client.autoCommit = true; //Autocommit is broken apparently.
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -95,15 +95,7 @@ router.post('/new', function(req, res, next){
 
     // Send request
 
-   /*  var args = {
-        data: {
-            "add": doc,
-            "commit": {}
-        },
-        headers: { "Content-Type": "application/json" }
-    }; */
-     
-    client.add(doc, function (err, data) {
+   client.add(doc, function (err, data) {
 
         if (err) {
             console.log(err);
@@ -114,9 +106,10 @@ router.post('/new', function(req, res, next){
 
             if (!data.responseHeader.status) { // Success
 
+                client.softCommit();
+
                 // Audit log entry
-                auditLogger.addContext("User", req.user.get("email"));
-                auditLogger.info("New reference added: " + doc);
+                auditLogger.info(req.user.get("email") + " added a new reference:\n" + JSON.stringify(doc));
 
                 // Record edit information
                 var editDate = new Date();
@@ -125,7 +118,7 @@ router.post('/new', function(req, res, next){
                 dbParams.highestId = newId;
                 dbParams.numRecords = dbParams.numRecords + 1;
 
-                fs.writeFile("database.json", dbParams);
+                fs.writeFileSync("database.json", JSON.stringify(dbParams));
 
                 req.flash('refMessage', 'New reference successfully added.');
 
@@ -136,22 +129,7 @@ router.post('/new', function(req, res, next){
 
         res.redirect(303, '/refs');
     });
-/* 
-    restReq.on('requestTimeout', function (req) {
-        console.log('request has expired');
-        req.abort();
-    });
-     
-    restReq.on('responseTimeout', function (res) {
-        console.log('response has expired');
-     
-    });
-     
-    //it's usefull to handle request errors to avoid, for example, socket hang up errors on request timeouts
-    restReq.on('error', function (err) {
-        console.log('request error', err);
-    });
- */
+
 
 });
 
