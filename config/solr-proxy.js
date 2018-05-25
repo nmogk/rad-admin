@@ -4,7 +4,7 @@ var proxyOptions = {
     invalidParams: ['qt', 'stream'],
     backend: {
         host: 'localhost',
-        port: 8983
+        port: process.env.SOLRPORT
   }
 };
 

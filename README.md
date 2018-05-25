@@ -78,6 +78,9 @@ Add entries for the following values:
 	AWS_SECRET_ACCESS_KEY={AWS secret}
 	BOOTSTRAP_ADMIN={superuser to be created in application} 
 	BOOTSTRAP_PASS={password for superuser}
+	AUDIT_LOG_PATH={path to audit logs}
+	INDEX_BACKUP_PATH={path to index backups}
+	SOLRPORT=8983
 ```
 
 ### run initial database migration

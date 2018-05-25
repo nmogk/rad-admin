@@ -9,6 +9,9 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
+        {{#if message}}
+            <div class="alert alert-danger">{{message}}</div>
+        {{/if}}
         
         <form role="search" class="form-horizontal">
           <div class="form-group">
@@ -29,7 +32,7 @@
               <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
-              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#editRefModal"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
+              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newRefModal" data-backdrop="static"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
             </div>
           </div>
         </form>
@@ -115,6 +118,8 @@
     {{#*inline "modal-block"}}
         {{> sourceModal}}
 
+        {{> newRefModal}}
+
         {{> editRefModal}}
 
         {{> adminHelp}}
@@ -128,7 +133,8 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script src="javascripts/rad.js"></script> {{! This is temporary only to check the layout}}
+      <script> src="private/ajax-form.js"</script>
+      <script src="javascripts/rad.js"></script> {{! This is temporary only to check the layout}}
     {{/inline}}
 
 {{/layout}}
