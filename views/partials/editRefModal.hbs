@@ -4,41 +4,12 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
                 <h4 class="modal-title">
-                    <span data-bind="text: name">Name</span>
+                    Edit Reference <span data-bind="text: id"></span>
                 </h4>
             </div>
             <div class="modal-body">
-                <form>
-                    <div class="form-group">
-                        <label for="authorField">Author</label>
-                        <input class="form-control" type="text" id="authorField" data-bind="text: author">
-                    </div>
-                    <div class="form-group">
-                        <label for="titleField">Title</label>
-                        <input class="form-control" type="text" id="titleField" data-bind="text: title">
-                    </div>
-                    <div class="form-group">
-                        <label for="dateField">Date</label>
-                        <input class="form-control" type="text" id="dateField" data-bind="text: date">
-                        <small id="dateHelp" class="form-text text-muted">Use ISO 1601 format: yyyy-mm-dd</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="referenceField">Reference</label>
-                        <input class="form-control" type="text" id="referenceField" data-bind="text: reference">
-                    </div>
-                    <div class="form-group">
-                        <label for="sourceField">Source</label>
-                        <input class="form-control" type="text" id="sourceField" data-bind="text: source">
-                    </div>
-                    <div class="form-group">
-                        <label for="pageField">Page</label>
-                        <input class="form-control" type="text" id="pageField" data-bind="text: page">
-                        <small id="runtimeHelp" class="form-text text-muted">When "Source" is "DVD"|"CD"|"cassette", this field represents run time.</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="abstField">Abstract</label>
-                        <textarea class="form-control" rows="8" id="abstField" data-bind="text: abst"></textarea>
-                    </div>
+                <form data-async data-target="editRefModal" method="POST" data-bind="attr: {action: id}">
+                    {{> refFormFields}}
                 </form>
             </div>
             <div class="modal-footer">

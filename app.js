@@ -12,6 +12,7 @@ var KnexSessionStore = require('connect-session-knex')(session);
 var passport = require('./config/passport');
 var bookshelf = require('./config/bookshelf');
 var knex = require('./config/database');
+var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
 
 var proxy = require('http-proxy');
 var proxyOpts = require('./config/solr-proxy');
