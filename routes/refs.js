@@ -97,8 +97,6 @@ router.post('/new', function(req, res, next){
             req.flash('refMessage', 'A problem occurred during submit.');
         } else {
             // parsed response body as js object
-            console.log(data);
-
             if (!data.responseHeader.status) { // Success
 
                 client.softCommit();
