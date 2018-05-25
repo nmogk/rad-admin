@@ -3,8 +3,6 @@ var router = express.Router();
 var fs = require("fs");
 var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
-//var Client = require('node-rest-client').Client;
-//var client = new Client();
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
 var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
@@ -39,8 +37,7 @@ router.post('/', function(req, res, next) {
 router.post('/new', function(req, res, next){
     // Will create a new one. Does not check for existing references. 
     // Can be used to create duplicates
-    console.log(req.body);
-
+    
     // Do nothing for empty inputs
     if(!req.body.authorField    && !req.body.titleField && !req.body.dateField 
     && !req.body.referenceField && !req.body.sourceField 
@@ -87,11 +84,9 @@ router.post('/new', function(req, res, next){
         if(latestRefDate < inputDate) {
             var inputDateString = JSON.stringify(inputDate);
             // This might cause a date to be assumed if just year or month entered.
-            dbParams.latest = inputDateString.slice(0, inputDateString.search("T"));
+            dbParams.latest = inputDateString.slice(1, inputDateString.search("T"));
         }
     }
-
-    console.log(doc);
 
     // Send request
 
@@ -114,7 +109,7 @@ router.post('/new', function(req, res, next){
                 // Record edit information
                 var editDate = new Date();
                 var editDateString = JSON.stringify(editDate);
-                dbParams.edited = editDateString.slice(0, editDateString.search("T"));
+                dbParams.updated = editDateString.slice(1, editDateString.search("T"));
                 dbParams.highestId = newId;
                 dbParams.numRecords = dbParams.numRecords + 1;
 
