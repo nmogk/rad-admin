@@ -126,5 +126,51 @@ router.post('/new', function(req, res, next){
 
 });
 
+router.post("/:id(\\d+)", function (req, res, next){
+    // TBD
+});
+
+router.delete("/:id(\\d+)", function (req, res, next) {
+    if (req.user.get("permission") < 1) { 
+        res.redirect(403, "/refs"); 
+    }
+    
+    // TBD get current values for audit purposes
+    var doc = undefined;
+
+    var contents = fs.readFileSync("database.json");
+    var dbParams = JSON.parse(contents);
+
+    client.deleteByID(id, function(err,data){
+        if(err){
+            console.log(err);
+            req.flash('refMessage', 'A problem occurred during delete submission.');
+        }else{
+            // parsed response body as js object
+            if (!data.responseHeader.status) { // Success
+
+                client.softCommit();
+
+                // Audit log entry
+                auditLogger.info(req.user.get("email") + " reference (ID:"  +  id + ":\n" + JSON.stringify(doc));
+
+                // Record edit information
+                var editDate = new Date();
+                var editDateString = JSON.stringify(editDate);
+                dbParams.updated = editDateString.slice(1, editDateString.search("T"));
+                dbParams.numRecords = dbParams.numRecords - 1;
+
+                fs.writeFileSync("database.json", JSON.stringify(dbParams));
+
+                req.flash('refMessage', 'Reference successfully deleted.');
+
+            } else {
+                req.flash('refMessage', 'A problem occurred during delete submission.');
+            }
+        }
+        
+     });
+});
+
 
 module.exports = router;
