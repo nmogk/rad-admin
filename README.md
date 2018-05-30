@@ -88,6 +88,7 @@ Open ports 80, and 443 through lightsail (or other relevant) interface
 ```
 Copy radd System V script to /etc/rc.d/init.d
 sudo chkconfig radd on
+sudo chkconfig mysqld on
 ```
 ## Starting Instructions
 
