@@ -135,8 +135,18 @@ router.delete("/:id(\\d+)", function (req, res, next) {
         res.redirect(403, "/refs"); 
     }
     
-    // TBD get current values for audit purposes
+    var query = 'q=id:' + id;
+
     var doc = undefined;
+
+    client.get('mlt', query, function(err, obj){
+        if(err){
+            req.flash('refMessage', 'A problem occurred during delete submission.');
+            res.redirect(303, '/refs');
+        }else{
+            doc = obj.response.docs[0];
+        }
+    });
 
     var contents = fs.readFileSync("database.json");
     var dbParams = JSON.parse(contents);
