@@ -126,7 +126,7 @@ router.post('/new', function(req, res, next){
 
 });
 
-router.post("/:id(\\d+)", function (req, res, next){
+router.post("/:id(\\d+)", function (req, res, next) {
     // TBD
 });
 
@@ -137,49 +137,53 @@ router.delete("/:id(\\d+)", function (req, res, next) {
     
     var query = 'q=id:' + id;
 
+    var contents = fs.readFileSync("database.json");
+    var dbParams = JSON.parse(contents);
     var doc = undefined;
 
-    client.get('mlt', query, function(err, obj){
-        if(err){
+    client.get('mlt', query, function(err, obj) {
+        if(err) {
             req.flash('refMessage', 'A problem occurred during delete submission.');
-            res.redirect(303, '/refs');
-        }else{
+        } else {
             doc = obj.response.docs[0];
+            client.deleteByID(id, function(err,data){
+                if(err) {
+                    console.log(err);
+                    return req.flash('refMessage', 'A problem occurred during delete submission.');
+                } else {
+                    // parsed response body as js object
+                    if (!data.responseHeader.status) { // Success
+        
+                        client.softCommit();
+        
+                        // Audit log entry
+                        auditLogger.info(req.user.get("email") + " deleted reference (ID:"  +  id + ":\n" + JSON.stringify(doc));
+        
+                        // Record edit information
+                        /* 
+                         * If the record which was deleted had the entry with the latest date, then 
+                         * this will be out of date. There is no way to know that from here, so if
+                         * there is an expectation of this being wrong it has to be regenerated elsewhere.
+                         */
+                        var editDate = new Date();
+                        var editDateString = JSON.stringify(editDate);
+                        dbParams.updated = editDateString.slice(1, editDateString.search("T"));
+                        dbParams.numRecords = dbParams.numRecords - 1;
+        
+                        fs.writeFileSync("database.json", JSON.stringify(dbParams));
+        
+                        req.flash('refMessage', 'Reference successfully deleted.');
+        
+                    } else {
+                        req.flash('refMessage', 'A problem occurred during delete submission.');
+                    }
+                }
+                
+            });
         }
     });
 
-    var contents = fs.readFileSync("database.json");
-    var dbParams = JSON.parse(contents);
-
-    client.deleteByID(id, function(err,data){
-        if(err){
-            console.log(err);
-            req.flash('refMessage', 'A problem occurred during delete submission.');
-        }else{
-            // parsed response body as js object
-            if (!data.responseHeader.status) { // Success
-
-                client.softCommit();
-
-                // Audit log entry
-                auditLogger.info(req.user.get("email") + " reference (ID:"  +  id + ":\n" + JSON.stringify(doc));
-
-                // Record edit information
-                var editDate = new Date();
-                var editDateString = JSON.stringify(editDate);
-                dbParams.updated = editDateString.slice(1, editDateString.search("T"));
-                dbParams.numRecords = dbParams.numRecords - 1;
-
-                fs.writeFileSync("database.json", JSON.stringify(dbParams));
-
-                req.flash('refMessage', 'Reference successfully deleted.');
-
-            } else {
-                req.flash('refMessage', 'A problem occurred during delete submission.');
-            }
-        }
-        
-     });
+    return res.redirect(303, '/refs');
 });
 
 
