@@ -1,105 +1,4 @@
 /**
- * Hides the search results section (if visible) and makes the backstory section visible
- */
-function showStory() {
-    "use strict";
-    // The "aria-hidden" attribute is set to control the style "display" attribute in the html file
-    document.getElementById("mainDisplay").setAttribute("aria-hidden", "true");
-    document.getElementById("story").setAttribute("aria-hidden", "false");
-}
-
-/**
- * Hides the story section and makes the search results section visible
- */
-function hideStory() {
-    "use strict";
-    // The "aria-hidden" attribute is set to control the style "display" attribute in the html file
-    document.getElementById("story").setAttribute("aria-hidden", "true");
-    if (parseQuery().q !== undefined) {
-      document.getElementById("mainDisplay").setAttribute("aria-hidden", "false");
-    }
-}
-
-/**
- * Populates an object with the parameters of the query string
- */
-function parseQuery(){
-    "use strict";
-    var queryString = {};
-    window.location.search.replace(
-        new RegExp("([^?=&]+)(=([^&]*))?", "g"), // Splits query string capture group $1 contains each key, $3 each value
-        function ($0, $1, $2, $3) {
-            queryString[$1] = $3;
-        }
-    );
-    return queryString;
-}
-
-/**
- * References are stored as objects whose fields are knockout observables. This function gets the
- * values of a subset of those fields in to a regular object for easier manipulation.
- */
-function unpackRef(ref) {
-    "use strict";
-    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), date: ref.date(), "abstract": ref.abst(), year: ref.year()};
-}
-
-/**
- * Decodes an html escaped string into a regular string with special characters.
- */
-function htmlDecode(value) {
-    "use strict";
-    return $("<textarea/>").html(value).text();
-}
-
-/**
- * Takes as input an array of javascript objects and produces a comma-separated value file from the
- * input. The first object's keys are turned into a header row. Double quotes, commas, and new line
- * characters are properly escaped from input strings. Result is a string containing the proper CSV
- * representation of the input data.
- * @param args - input object containing columnDelimiter (default ','), lineDelimiter (default '\n'), and data which is an array of javascript objects which are to be encoded as CSV
- * @return string containing proper CSV representation of input data, or null if no input received
- */
-function convertArrayOfObjectsToCSV(args) {
-    "use strict";
-    // Return null for no data
-    var data = args.data || null;
-    if (data === null || !data.length) {
-        return null;
-    }
-
-    var columnDelimiter = args.columnDelimiter || ","; // Comma column delimiter
-    var lineDelimiter = args.lineDelimiter || "\n"; // newline line delimiter (unix)
-
-    // Generate header row
-    var keys = Object.keys(data[0]);
-
-    var result = "";
-    result += keys.join(columnDelimiter);
-    result += lineDelimiter;
-
-    data.forEach(function (item) {
-        var ctr = 0;
-        keys.forEach(function (key) {
-            if (ctr > 0) {
-                result += columnDelimiter;
-            }
-
-            var sanitized = item[key].replace(/"/g, '""'); // Escape double quotes in input
-            if (sanitized.search(/("|,|\n)/g) >= 0) {
-                sanitized = '"' + sanitized + '"'; // Quote input if it contains reserved characters
-            }
-
-            result += sanitized;
-            ctr += 1;
-        });
-        result += lineDelimiter;
-    });
-
-    return result;
-}
-
-/**
  * View model for source information. Sources are kept in a separate index which is searched when
  * needed.
  * @param name - name of reference to query
@@ -137,7 +36,7 @@ function SourceViewModel(name) {
     });
 
     $.ajax({
-        url: "/solr/source/select?", 
+        url: "/solr/source/select?", // solr-proxy running on port 8008
         dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
         jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
         data: $.param({"q": name}), // Server on backend is set up to search name field by default... I think
@@ -338,27 +237,16 @@ function RefsViewModel(qString) {
         }
     });
 
-    // Opens the webpage referenced by the source of the reference
-    self.goSource = function (ref) {
+    self.deleteRef = function (ref) {
         $.ajax({ // Makes an AJAX query to the server for the source
-            url: "/solr/source/select?",
-            dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
-            jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
-            data: $.param({"q": ref.source()}),
-            success: function (data) {
-                var src = data.response.docs[0]; // first result only
-                if (src.website !== undefined) {
-                    window.open("http://" + src.website[0]);
-                } else {
-                    alert("Source does not have a website to go to!");
-                }
-            },
+            url: "/refs/" + ref.id(),
+            type: "DELETE",
             error: function (jqXHR) {
                 console.log("ajax error " + jqXHR.status);
-                alert("Unable to go to source webpage at this time!");
+                alert("Error sending delete request");
             }
         });
-    };
+    }
 
     // Opens a modal dialog with the source information
     self.sourceModal = function (ref) {
@@ -366,56 +254,6 @@ function RefsViewModel(qString) {
         $("#sourceModal").modal("show");
     };
 
-    // Initializes a view model for the formatted citation
-    self.generateCitation = function (ref) {
-        ko.applyBindings(new CitationView(unpackRef(ref)), $("#citationModal")[0]);
-        $("#citationModal").modal("show");
-    };
-
-    // Adds reference information to localStorage so that it can be printed nicely
-    // This merely aggregates the references and opens the printAggregator page
-    self.downloadCitation = function (ref) {
-        if (Storage !== undefined) {
-            var store = "printRefs";
-            var toAdd = [unpackRef(ref)]; // If no current list (empty storage or something other than an array) this will be added
-            var rawStore = localStorage[store];
-
-            if (rawStore) {
-                var stored = JSON.parse(localStorage[store]);
-                if (Object.prototype.toString.call(stored) === "[object Array]") { // Parse and add new reference
-                    stored.push(unpackRef(ref));
-                    toAdd = stored;
-                }
-            }
-
-            localStorage[store] = JSON.stringify(toAdd);
-            window.open("printAggregator.html", "printer");
-        } else {
-            alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
-        }
-    };
-
-    // Allows the user to download the entire displayed list of references as CSV
-    self.downloadList = function () {
-        var visibleList = [];
-
-        self.refs().forEach(function (ref) {
-            visibleList.push(unpackRef(ref));
-        });
-
-        var csv = convertArrayOfObjectsToCSV({
-            data: visibleList
-        });
-        if (csv === null) {
-            return;
-        }
-
-        var filename = "references_CER.csv"; // Default filename
-
-        var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
-        saveAs(blob, filename);
-
-    };
 }
 
 /**
