@@ -141,36 +141,38 @@ router.delete("/:id(\\d+)", function (req, res, next) {
             res.redirect(303, '/refs');
         } else {
             doc = obj.response.docs[0];
+
+            client.deleteByID(id, { commitWithin: 500 }, function (err, data) {
+                if (err || !data.responseHeader.status) {
+                    console.log(err);
+                    return req.flash('refMessage', 'A problem occurred during delete submission.');
+                } else { // Success
+
+                    // Audit log entry
+                    auditLogger.info(req.user.get("email") + " deleted reference (ID:" + id + ":\n" + JSON.stringify(doc));
+
+                    // Record edit information
+                    /* 
+                     * If the record which was deleted had the entry with the latest date, then 
+                     * this will be out of date. There is no way to know that from here, so if
+                     * there is an expectation of this being wrong it has to be regenerated elsewhere.
+                     */
+                    var editDate = new Date();
+                    var editDateString = JSON.stringify(editDate);
+                    dbParams.updated = editDateString.slice(1, editDateString.search("T"));
+                    dbParams.numRecords = dbParams.numRecords - 1;
+
+                    fs.writeFileSync("database.json", JSON.stringify(dbParams));
+
+                    req.flash('refMessage', 'Reference successfully deleted.');
+
+                }
+
+            });
         }
     });
 
-    client.deleteByID(id, { commitWithin: 500 }, function (err, data) {
-        if (err || !data.responseHeader.status) {
-            console.log(err);
-            return req.flash('refMessage', 'A problem occurred during delete submission.');
-        } else { // Success
 
-            // Audit log entry
-            auditLogger.info(req.user.get("email") + " deleted reference (ID:" + id + ":\n" + JSON.stringify(doc));
-
-            // Record edit information
-            /* 
-             * If the record which was deleted had the entry with the latest date, then 
-             * this will be out of date. There is no way to know that from here, so if
-             * there is an expectation of this being wrong it has to be regenerated elsewhere.
-             */
-            var editDate = new Date();
-            var editDateString = JSON.stringify(editDate);
-            dbParams.updated = editDateString.slice(1, editDateString.search("T"));
-            dbParams.numRecords = dbParams.numRecords - 1;
-
-            fs.writeFileSync("database.json", JSON.stringify(dbParams));
-
-            req.flash('refMessage', 'Reference successfully deleted.');
-
-        }
-
-    });
 
     return res.redirect(303, '/refs');
 });
