@@ -135,7 +135,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
     var doc = undefined;
     client.get('/refs', query, function (err, obj) {
         if (err) {
-            req.flash('refMessage', 'A problem occurred during delete submission.');
+            req.flash('refMessage', 'Unable to obtain a copy of object to delete for audit log. Reference not deleted.');
             res.redirect(303, '/refs');
         } else {
             doc = obj.response.docs[0];
