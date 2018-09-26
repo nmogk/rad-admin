@@ -127,6 +127,8 @@ router.delete("/:id(\\d+)", function (req, res, next) {
         res.redirect(403, "/refs");
     }
 
+    var id = req.params.id;
+
     var query = 'q=id:' + id;
 
     var contents = fs.readFileSync("database.json");
