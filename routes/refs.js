@@ -5,7 +5,7 @@ var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
-var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "/rad");
+var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
 //client.autoCommit = true; //Autocommit is broken apparently.
 
 /* GET home page. */
@@ -133,7 +133,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
     var dbParams = JSON.parse(contents);
 
     var doc = undefined;
-    client.get('/refs', query, function (err, obj) {
+    client.get('refs', query, function (err, obj) {
         if (err) {
             req.flash('refMessage', 'Unable to obtain a copy of object to delete for audit log. Reference not deleted.');
             res.redirect(303, '/refs');
