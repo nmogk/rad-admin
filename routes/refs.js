@@ -11,7 +11,7 @@ var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "
 /* GET home page. */
 router.get('/', function (req, res, next) {
     var contents = fs.readFileSync("database.json");
-    res.render('refs', Object.assign(req.replacements, JSON.parse(contents));
+    res.render('refs', Object.assign(req.replacements, JSON.parse(contents)));
 });
 
 

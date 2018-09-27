@@ -153,6 +153,7 @@ var proxyLogic = function (request, response){
 app.use('/solr/*', proxyLogic);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
+app.use(flashMessageCenter);
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
