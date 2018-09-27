@@ -69,10 +69,10 @@ function isLoggedIn(req, res, next) {
             req.replacements = {}
         }
 
-        req.replacements.email = user.get("email");
-        req.replacements.dispname = user.get("name")
-        req.replacements.username = user.get("name") || user.get("email");
-        req.replacements.users = user.get("permission") >= 2;
+        req.replacements.email = req.user.get("email");
+        req.replacements.dispname = req.user.get("name")
+        req.replacements.username = req.user.get("name") || req.user.get("email");
+        req.replacements.users = req.user.get("permission") >= 2;
         req.replacements.deletable = req.user.get("permission") >= 1;
         req.replacements.nav = 1;
         
