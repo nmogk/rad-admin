@@ -60,15 +60,40 @@ var proxyServer = proxy.createProxyServer({target: proxyOpts.backend});
 
 // custom middleware =============================================================
 
-// route middleware to make sure a user is logged in
+// route middleware to make sure a user is logged in and establishes some handlebars context elements.
 function isLoggedIn(req, res, next) {
 
     // if user is authenticated in the session, carry on 
-    if (req.isAuthenticated())
+    if (req.isAuthenticated()) {
+        if(typeof req.replacements === "undefined") {
+            req.replacements = {}
+        }
+
+        req.replacements.email = user.get("email");
+        req.replacements.dispname = user.get("name")
+        req.replacements.username = user.get("name") || user.get("email");
+        req.replacements.users = user.get("permission") >= 2;
+        req.replacements.deletable = req.user.get("permission") >= 1;
+        req.replacements.nav = 1;
+        
         return next();
+    }
 
     // if they aren't redirect them to the login page
     res.redirect('/login');
+}
+
+// Middleware which collects flash messages and packages them into the handlebars context
+function flashMessageCenter(req, res, next) {
+    if(typeof req.replacements === "undefined") {
+        req.replacements = {}
+    }
+
+    req.replacements.errorMessage = req.flash("error");
+    req.replacements.yayMessage = req.flash("yay");
+    req.replacements.infoMessage = req.flash("info");
+    
+    return next();
 }
 
 // Middleware which detects if the connection is using ssl, and forces

@@ -7,22 +7,9 @@ var tokens = require('../models/tokens');
 var Invite = require('../models/invitations');
 var mail = require('../config/mailer');
 
-function getReplacements(req) {
-  var replacements = {};
-  let user = req.user;
-  replacements.username = user.get("name") || user.get("email");
-  replacements.users = user.get("permission") >= 2;
-  replacements.message = req.flash('userMessage');
-  replacements.nav = 1;
-  return replacements;
-}
-
-
 // GET users listing.
 router.get('/', function (req, res, next) {
-  let replacements = getReplacements(req);
-  console.log(replacements);
-  res.render('users', replacements);
+  res.render('users', req.replacements);
 });
 
 // RESTful endpoint for getting an array of users in json format 
@@ -52,7 +39,7 @@ router.get('/all', function (req, res, next) {
 router.post('/invite', function (req, res, next) {
   console.log(req.body);
   if (!req.body.newUserEmail) {
-    req.flash('userMessage', 'No email specified');
+    req.flash('error', 'No email specified');
     res.redirect(400, '/users');
     return;
   }
@@ -70,11 +57,11 @@ router.post('/invite', function (req, res, next) {
     return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
   })
     .catch(User.NoRowsUpdatedError, function (err) { // User was not saved in database
-      req.flash('userMessage', 'User already exists. New user not created.');
+      req.flash('error', 'User already exists. New user not created.');
     })
     .catch(function (err) { // Other errors
       console.log(err);
-      req.flash('userMessage', 'Problem resending invite.');
+      req.flash('error', 'Problem resending invite.');
     })
     .finally(function () { // All responses get redirected to /login to display flash message
       res.redirect(303, '/users'); // 303 ensures that the client uses GET rather than POST.
@@ -97,14 +84,14 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
       return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
     })
     .then(function () { // Success
-      req.flash('userMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+      req.flash('info', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
     })
     .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
-      req.flash('userMessage', 'No account with that email address exists.');
+      req.flash('error', 'No account with that email address exists.');
     })
     .catch(function (err) { // Other errors
       console.log(err);
-      req.flash('userMessage', 'Problem resending invite.');
+      req.flash('error', 'Problem resending invite.');
     })
     .finally(function () { // All responses get redirected to /login to display flash message
       res.redirect(278, '/users'); // 278 is an unused success status code. It prevents ajax from 
@@ -114,7 +101,7 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
 // Updating permissions for user 
 router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
   if (req.params.level < 0 || req.params.level > 2) {
-    req.flash('userMessage', 'Invalid permission level');
+    req.flash('error', 'Invalid permission level');
     res.redirect(400, '/users');
     return;
   }
@@ -126,10 +113,10 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
         .save();
     })
     .then(function (user) {
-      req.flash('userMessage', 'User permissions successfully updated');
+      req.flash('yay', 'User permissions successfully updated');
     })
     .catch(function (err) {
-      req.flash('userMessage', 'Problem updating user');
+      req.flash('error', 'Problem updating user');
     })
     .finally(function () {
       res.redirect(278, '/users');
@@ -144,11 +131,11 @@ router.delete('/:id(\\d+)', function (req, res, next) {
       return user.destroy();
     })
     .then(function (user) {
-      req.flash('userMessage', 'User successfully deleted');
+      req.flash('yay', 'User successfully deleted');
     })
     .catch(function (err) {
       console.log(err);
-      req.flash('userMessage', 'Problem deleting user');
+      req.flash('error', 'Problem deleting user');
     })
     .finally(function () {
       res.redirect(278, '/users');

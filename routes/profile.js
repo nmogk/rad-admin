@@ -5,24 +5,13 @@ var mail = require('../config/mailer');
 var tokens = require('../models/tokens');
 var Promise = require('bluebird');
 
-function getReplacements(user, req) {
-    var replacements = {};
-    replacements.email = user.get("email");
-    replacements.dispname = user.get("name")
-    replacements.username = user.get("name") || user.get("email");
-    replacements.users = user.get("permission") >= 2;
-    replacements.message = req.flash("passChangeMessage");
-    replacements.nav = 1;
-    return replacements;
-}
-
 // =====================================
 // PROFILE SECTION =====================
 // =====================================
 // we will want this protected so you have to be logged in to visit
 // we will use route middleware to verify this (the isLoggedIn function)
 router.get('/', function(req, res, next) {
-    res.render('profile', getReplacements(req.user, req));
+    res.render('profile', req.replacements);
 });
 
 router.post('/', function(req, res, next) {
@@ -36,7 +25,7 @@ router.post('/', function(req, res, next) {
 
     req.user.save()
     .done(function (user){
-        res.render('profile', getReplacements(req.user, req));
+        res.render('profile', req.replacements);
     });
     
 });
@@ -50,17 +39,17 @@ router.delete('/', function (req, res, next){
 });
 
 router.get('/password', function (req, res, next) {
-    res.render('passwordChange', getReplacements(req.user, req));
+    res.render('passwordChange', req.replacements);
 });
 
 router.post('/password', function (req, res, next) {
     if(req.body.password !== req.body.confirm) {
-        req.flash('passChangeMessage', 'Passwords do not match.');
+        req.flash('error', 'Passwords do not match.');
         res.redirect(303, 'back');
         return;
     }
     if(! validator.validate(req.body.password)) {
-        req.flash('passChangeMessage', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
+        req.flash('error', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
         res.redirect(303, 'back');
         return;
     }
@@ -69,11 +58,11 @@ router.post('/password', function (req, res, next) {
     req.user.save()
     .then(function (user){
         mail.sendPassChangeConfirmation(req.user.get('email'));
-        req.flash('passChangeMessage', 'Success! Your password has been changed.');
+        req.flash('yay', 'Success! Your password has been changed.');
     })
     .catch(function (err){
         console.log(err);
-        req.flash('passChangeMessage', 'Something\'s wrong! Your password has not been changed.');
+        req.flash('error', 'Something\'s wrong! Your password has not been changed.');
     })
     .finally(function (){
         res.redirect(303,  '/profile');

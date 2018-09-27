@@ -9,7 +9,7 @@ var passport = require('../config/passport');
 // show the signup form
 
 router.get('/', function(req, res, next) {
-    res.render('signup', { message: req.flash('signupMessage') });
+    res.render('signup', { errorMessage: req.flash('login') });
 });
 
 // process the signup form

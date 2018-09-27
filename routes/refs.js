@@ -11,12 +11,7 @@ var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "
 /* GET home page. */
 router.get('/', function (req, res, next) {
     var contents = fs.readFileSync("database.json");
-    var replacements = JSON.parse(contents);
-    replacements.username = req.user.get("name") || req.user.get("email");
-    replacements.users = req.user.get("permission") >= 2;
-    replacements.deletable = req.user.get("permission") >= 1;
-    replacements.message = req.flash("refMessage");
-    res.render('refs', replacements);
+    res.render('refs', Object.assign(req.replacements, JSON.parse(contents));
 });
 
 
@@ -42,8 +37,8 @@ router.post('/new', function (req, res, next) {
     if (!req.body.authorField && !req.body.titleField && !req.body.dateField
         && !req.body.referenceField && !req.body.sourceField
         && !req.body.pageField && !req.body.abstField) {
-        req.flash('refMessage', 'No data input. Reference not created.');
-        res.redirect(400, '/refs');
+        req.flash('error', 'No data input. Reference not created.');
+        res.redirect(303, '/refs');
         return;
     }
 
@@ -69,7 +64,7 @@ router.post('/new', function (req, res, next) {
         // Validate input date
         var dateRegX = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
         if (!dateRegX.test(req.body.dateField)) {
-            req.flash('refMessage', 'Incorrect date format entered. Please use ISO 8601.');
+            req.flash('error', 'Incorrect date format entered. Please use ISO 8601.');
             res.redirect(303, '/refs');
             return;
         }
@@ -94,7 +89,7 @@ router.post('/new', function (req, res, next) {
 
         if (err) {
             console.log(err);
-            req.flash('refMessage', 'A problem occurred during submit.');
+            req.flash('error', 'A problem occurred during submit.');
         } else { // Success
 
             // Audit log entry
@@ -108,7 +103,7 @@ router.post('/new', function (req, res, next) {
             dbParams.numRecords = dbParams.numRecords + 1;
 
             fs.writeFileSync("database.json", JSON.stringify(dbParams));
-            req.flash('refMessage', 'New reference successfully added.');
+            req.flash('yay', 'New reference successfully added.');
 
         }
 
@@ -137,7 +132,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
     var doc = undefined;
     client.get('refs', query, function (err, obj) {
         if (err) {
-            req.flash('refMessage', 'Unable to obtain a copy of object to delete for audit log. Reference not deleted.');
+            req.flash('error', 'Unable to obtain a copy of object to delete for audit log. Reference not deleted.');
             res.redirect(303, '/refs');
         } else {
             doc = obj.response.docs[0];
@@ -145,7 +140,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
             client.deleteByID(id, { commitWithin: 500 }, function (err, data) {
                 if (err) {
                     console.log(err);
-                    return req.flash('refMessage', 'A problem occurred during delete submission.');
+                    return req.flash('error', 'A problem occurred during delete submission.');
                 } else { // Success
 
                     // Audit log entry
@@ -164,7 +159,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
 
                     fs.writeFileSync("database.json", JSON.stringify(dbParams));
 
-                    req.flash('refMessage', 'Reference successfully deleted.');
+                    req.flash('yay', 'Reference successfully deleted.');
 
                 }
 
