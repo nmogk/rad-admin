@@ -92,7 +92,7 @@ router.post('/new', function (req, res, next) {
 
     client.add(doc, { commitWithin: 500 }, function (err, data) {
 
-        if (err || !data.responseHeader.status) {
+        if (err) {
             console.log(err);
             req.flash('refMessage', 'A problem occurred during submit.');
         } else { // Success
@@ -143,7 +143,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
             doc = obj.response.docs[0];
 
             client.deleteByID(id, { commitWithin: 500 }, function (err, data) {
-                if (err || !data.responseHeader.status) {
+                if (err) {
                     console.log(err);
                     return req.flash('refMessage', 'A problem occurred during delete submission.');
                 } else { // Success
