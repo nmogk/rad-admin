@@ -144,7 +144,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
                 } else { // Success
 
                     // Audit log entry
-                    auditLogger.info(req.user.get("email") + " deleted reference (ID:" + id + ":\n" + JSON.stringify(doc));
+                    auditLogger.info(req.user.get("email") + " deleted a reference:\n" + JSON.stringify(doc));
 
                     // Record edit information
                     /* 
