@@ -248,6 +248,11 @@ function RefsViewModel(qString) {
         });
     }
 
+    self.editRef = function (ref) {
+        ko.appendChild(ref, $("#editRefModal")[0]);
+        $("#editRefModal").modal("show");
+    }
+
     // Opens a modal dialog with the source information
     self.sourceModal = function (ref) {
         ko.applyBindings(new SourceViewModel(ref.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor

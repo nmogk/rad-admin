@@ -78,7 +78,7 @@
                     <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
                     <span class="glyphicon glyphicon-option-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.goSource"}}><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.editRef"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.generateCitation"}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
                       <li role="presentation"><a role="menuitem" href="#" target="_blank" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
                       {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.deleteRef"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}

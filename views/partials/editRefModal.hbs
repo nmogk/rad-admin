@@ -7,15 +7,15 @@
                     Edit Reference <span data-bind="text: id"></span>
                 </h4>
             </div>
-            <div class="modal-body">
-                <form data-async data-target="editRefModal" method="POST" data-bind="attr: {action: id}">
+            <form data-async data-target="editRefModal" method="POST" data-bind="attr: {action: id}"></form>
+                <div class="modal-body">
                     {{> refFormFields}}
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-info" data-dismiss="modal">Save</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-dismiss="modal">Save</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
