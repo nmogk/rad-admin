@@ -7,6 +7,7 @@ var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
 var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
 //client.autoCommit = true; //Autocommit is broken apparently.
+const url = require('url');    
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -85,7 +86,7 @@ router.post('/new', function (req, res, next) {
 
     // Send request
 
-    client.add(doc, { commitWithin: 500 }, function (err, data) {
+    client.add(doc, { commitWithin: 50 }, function (err, data) {
 
         if (err) {
             console.log(err);
@@ -107,7 +108,7 @@ router.post('/new', function (req, res, next) {
 
         }
 
-        res.redirect(303, '/refs');
+        res.redirect(303, '/refs?rows=1&q=id%3A' + newId);
     });
 
 
@@ -137,7 +138,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
         } else {
             doc = obj.response.docs[0];
 
-            client.deleteByID(id, { commitWithin: 500 }, function (err, data) {
+            client.deleteByID(id, { commitWithin: 50 }, function (err, data) {
                 if (err) {
                     console.log(err);
                     return req.flash('error', 'A problem occurred during delete submission.');
@@ -167,9 +168,10 @@ router.delete("/:id(\\d+)", function (req, res, next) {
         }
     });
 
-
-
-    return res.redirect(303, '/refs');
+    res.redirect(303, url.format({
+        pathname:"/refs",
+        query:req.query,
+    }));
 });
 
 
