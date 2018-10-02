@@ -1,68 +1,101 @@
 {{!-- To extend this layout, call this template as a partial block with the following optionally defined:
-  {{nav}} // Flag for adding the nav bar at the top of the page
-  {{title}} // Page title
+{{nav}} // Flag for adding the nav bar at the top of the page
+{{title}} // Page title
 {{#> layout title="Research Assistance Database" nav=0}}
-    {{#*inline "custom-title"}}{{/inline}}  // Define to customize the title layout on the page (not the page title)
-    {{#*inline "header-block"}}{{/inline}}  // Additional header lines as needed
-    {{#*inline "search-area"}}{{/inline}}   // Content for search area inside jumbotron
-    {{#*inline "results-area"}}{{/inline}}  // Content for results area inside main container
-    {{#*inline "modal-block"}}{{/inline}}   // Block for modal dialogue definitions
-    {{#*inline "footer-block"}}{{/inline}}  // Overrides the default footer
-    {{#*inline "scripts-block"}}{{/inline}} // Allows addition of scripts at end of file
+{{#*inline "custom-title"}}{{/inline}} // Define to customize the title layout on the page (not the page title)
+{{#*inline "header-block"}}{{/inline}} // Additional header lines as needed
+{{#*inline "search-area"}}{{/inline}} // Content for search area inside jumbotron
+{{#*inline "results-area"}}{{/inline}} // Content for results area inside main container
+{{#*inline "modal-block"}}{{/inline}} // Block for modal dialogue definitions
+{{#*inline "footer-block"}}{{/inline}} // Overrides the default footer
+{{#*inline "scripts-block"}}{{/inline}} // Allows addition of scripts at end of file
 {{/layout}}
 
-I am following the patterns from this site: https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803-7 
+I am following the patterns from this site:
+https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803-7
 --}}
 
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>{{title}} | {{#if nav}}RAD Admin{{else}}CER{{/if}}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  {{! Might not need this one. Need to check}}
-    <link rel="stylesheet" href="/stylesheets/journal-square-bootstrap.min.css">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#ffffff">
-    <style>[aria-hidden="true"]{display: none;}</style>
-    {{#if nav}}<style>body { padding-top: 60px; }</style>{{/if}}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
-    {{#> header-block}}{{/header-block}}
-  </head>
-  <body>
-    {{#if nav}}
-      {{> navbar}}
-    {{/if}}
-    <div class="jumbotron" role="banner">
-      <div class="container">
-        {{#> custom-title}}<h1>{{title}}</h1>{{/custom-title}}
-        {{#> search-area}}{{/search-area}}
-      </div>
-    </div>
+
+<head>
+  <title>{{title}} | {{#if nav}}RAD Admin{{else}}CER{{/if}}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> {{! Might not
+  need this one. Need to check}}
+  <link rel="stylesheet" href="/stylesheets/journal-square-bootstrap.min.css">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <style>[aria-hidden="true"]{display: none;}</style>
+  {{#if nav}}<style>body { padding-top: 60px; }</style>{{/if}}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
+  {{#> header-block}}{{/header-block}}
+</head>
+
+<body>
+  {{#if nav}}
+  {{> navbar}}
+  {{/if}}
+  <div class="jumbotron" role="banner">
     <div class="container">
-      <noscript>
-        <div class="alert alert-danger" role="alert">
-           <strong>Uh oh!</strong> Use of this database requires JavaScript. Please enable Javascript and reload the page.
-        </div>
-      </noscript>
-      {{#> results-area}}{{/results-area}}
+      {{#> custom-title}}<h1>{{title}}</h1>{{/custom-title}}
 
-      {{#> modal-block}}{{/modal-block}}
+      {{#if errorMessage}}
+      <div class="alert alert-danger alert-dismissible show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span>&times;</span>
+        </button>
+        {{errorMessage}}
+      </div>
+      {{/if}}
+
+      {{#if yayMessage}}
+      <div class="alert alert-success alert-dismissible show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span>&times;</span>
+        </button>
+        {{yayMessage}}
+      </div>
+      {{/if}}
+
+      {{#if infoMessage}}
+      <div class="alert alert-info alert-dismissible show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span>&times;</span>
+        </button>
+        {{infoMessage}}
+      </div>
+      {{/if}}
+
+      {{#> search-area}}{{/search-area}}
     </div>
+  </div>
+  <div class="container">
+    <noscript>
+      <div class="alert alert-danger" role="alert">
+        <strong>Uh oh!</strong> Use of this database requires JavaScript. Please enable Javascript and reload the page.
+      </div>
+    </noscript>
+    {{#> results-area}}{{/results-area}}
 
-    <footer class="text-center">
-      {{#> footer-block}}
-        {{> footerBasic}}
-      {{/footer-block}}
-    </footer>
+    {{#> modal-block}}{{/modal-block}}
+  </div>
 
-    {{#> scripts-block}}{{/scripts-block}}
-  </body>
+  <footer class="text-center">
+    {{#> footer-block}}
+    {{> footerBasic}}
+    {{/footer-block}}
+  </footer>
+
+  {{#> scripts-block}}{{/scripts-block}}
+</body>
+
 </html>

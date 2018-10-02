@@ -15,7 +15,7 @@ var token = require('../models/tokens');
 // =====================================
 // show the login form
 router.get('/', function (req, res, next) {
-    res.render('login', { message: req.flash('loginMessage') });
+    res.render('login', { errorMessage: req.flash('login') });
 });
 
 // process the login form
@@ -41,14 +41,14 @@ router.post('/forgot', function (req, res, next) {
             return mail.sendResetMail(req, user.get('email'), invite.get('token'));
         })
         .then(function () { // Success
-            return req.flash('loginMessage', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+            return req.flash('login', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
         })
         .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
-            return req.flash('loginMessage', 'No account with that email address exists.');
+            return req.flash('login', 'No account with that email address exists.');
         })
         .catch(function (err) { // Other errors
             console.log(err);
-            return req.flash('loginMessage', 'Problem sending reset.');
+            return req.flash('login', 'Problem sending reset.');
         })
         .finally(function () { // All responses get redirected to /login to display flash message
             res.redirect(303, '/login'); // 303 ensures that the client uses GET rather than POST.

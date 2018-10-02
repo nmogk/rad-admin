@@ -14,22 +14,22 @@ router.get('/:token', function(req, res) {
     .where('expires', '>', Date.now())
     .fetch({required: true, withRelated: 'user'})
     .then(function (token) {
-        res.render('passwordChange', {message: req.flash('passChangeMessage')});
+        res.render('passwordChange', { errorMessage: req.flash('login') });
     })
     .catch(function (err){
-        req.flash('loginMessage', 'Password reset token is invalid or has expired.');
+        req.flash('login', 'Password reset token is invalid or has expired.');
         res.redirect('/login');
     });
 });
 
 router.post('/:token', function(req, res) {
     if(req.body.password !== req.body.confirm) {
-        req.flash('passChangeMessage', 'Passwords do not match.');
+        req.flash('login', 'Passwords do not match.');
         res.redirect(303, 'back');
         return;
     }
     if(! validator.validate(req.body.password)) {
-        req.flash('passChangeMessage', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
+        req.flash('login', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
         res.redirect(303, 'back');
         return;
     }
@@ -38,7 +38,7 @@ router.post('/:token', function(req, res) {
     .where('expires', '>', Date.now())
     .fetch({required: true, withRelated: 'user'})
     .catch(function (err){
-        req.flash('loginMessage', 'Password reset token is invalid or has expired.');
+        req.flash('login', 'Password reset token is invalid or has expired.');
         res.redirect(303, '/login');
         throw err;
     });
@@ -53,7 +53,7 @@ router.post('/:token', function(req, res) {
 
     Promise.join(tokenPromise, userPromise, function(token, user){
         mail.sendPassChangeConfirmation(user.get('email'));
-        req.flash('loginMessage', 'Success! Your password has been changed.');
+        req.flash('login', 'Success! Your password has been changed.');
         token.destroy();
     })
     .finally(function (){

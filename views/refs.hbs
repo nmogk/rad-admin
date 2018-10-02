@@ -9,10 +9,6 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
-        {{#if message}}
-            <div class="alert alert-danger">{{message}}</div>
-        {{/if}}
-        
         <form role="search" class="form-horizontal">
           <div class="form-group">
             <label class="control-label col-sm-2">Query:</label>
@@ -85,7 +81,7 @@
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.goSource"}}><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.generateCitation"}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
                       <li role="presentation"><a role="menuitem" href="#" target="_blank" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
-                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: $parent.downloadCitation"}}><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
+                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.deleteRef"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
                 </div>
@@ -133,8 +129,10 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-      <script> src="private/ajax-form.js"</script>
-      <script src="javascripts/rad.js"></script> {{! This is temporary only to check the layout}}
+
+      {{!<script> src="private/ajax-form.js"</script>}}
+      <script src="javascripts/utils.js"></script>
+      <script src="private/refsview.js"></script> {{! This is temporary only to check the layout}}
     {{/inline}}
 
 {{/layout}}
