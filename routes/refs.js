@@ -47,7 +47,6 @@ router.post('/new', function (req, res, next) {
 
     var contents = fs.readFileSync("database.json");
     var dbParams = JSON.parse(contents);
-
     var newId = dbParams.highestId + 1;
     doc.id = newId;
 
@@ -74,7 +73,6 @@ router.post('/new', function (req, res, next) {
         doc.dt = req.body.dateField;
         doc.year = inputDate.getUTCFullYear();
         //doc.date = .... Will start using this field when all fields are made compatible
-
         var latestRefDate = new Date(dbParams.latest);
 
         if (latestRefDate < inputDate) {
