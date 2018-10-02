@@ -249,7 +249,7 @@ function RefsViewModel(qString) {
     }
 
     self.editRef = function (ref) {
-        ko.appendChild(ref, $("#editRefModal")[0]);
+        ko.applyBindings(ref, $("#editRefModal")[0]);
         $("#editRefModal").modal("show");
     }
 
