@@ -75,6 +75,75 @@ function CitationView(ref) {
     self.year = ko.observable(ref.year);
 }
 
+function RefViewModel(refi, i){
+    "use strict";
+    var self = this;
+
+    // Ref process, take care of null values
+    self.refP = function (field) {
+        if (field === undefined) {
+            return "\u2014";
+        }
+        return htmlDecode(field);
+    };
+
+    var pageTitle = "Page"; // Most references list how many pages they are
+    if (/(DVD|CD|cassette)/i.test(refi.reference)) { // Some references refer to media runtime instead
+        pageTitle = "Run Time";
+    }
+
+    self.author = ko.observable(self.refP(refi.author));
+    self.title = ko.observable(self.refP(refi.title));
+    self.date = ko.observable(self.refP(refi.dt));
+    self.reference = ko.observable(self.refP(refi.reference));
+    self.source = ko.observable(self.refP(refi.source));
+    self.page = ko.observable(self.refP(refi.page));
+    self.abst = ko.observable(self.refP(refi.abstract));
+    self.id = ko.observable(self.refP(refi.id));
+    self.year = ko.observable(self.refP(refi.year));
+    self.colId = "collapse" + (i + 1); // Needed to associate header and collapse
+    self.ariaLab = "reshead" + (i + 1);
+    self.pageTitle = pageTitle;
+
+    self.deleteRef = function {
+        $.ajax({ // Makes an AJAX query to the server for the source
+            url: "/refs/" + self.id(),
+            type: "DELETE",
+            error: function (jqXHR) {
+                console.log("ajax error " + jqXHR.status);
+                alert("Error sending delete request");
+            }
+        });
+    }
+
+    self.editRef = function {
+        ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
+        ko.applyBindings(self, $("#editRefModal")[0]);
+        $("#editRefModal").modal("show");
+    }
+
+    self.submitEdits = function {
+        $.ajax({ // Makes an AJAX query to the server for the source
+            url: "/refs/" + self.id(),
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(self),
+            type: "POST",
+            error: function (jqXHR) {
+                console.log("ajax error " + jqXHR.status);
+                alert("Error sending delete request");
+            }
+        });
+    }
+
+    // Opens a modal dialog with the source information
+    self.sourceModal = function (ref) {
+        ko.cleanNode($("#sourceModal")[0]) // Must clear bindings in newer version of KO
+        ko.applyBindings(new SourceViewModel(ref.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
+        $("#sourceModal").modal("show");
+    };
+}
+
 /**
  * View model for references, which is the main point of the website. Maintains a list of references
  * as an observable array. This is a single page of results. No displayable elements are set at initial
@@ -101,14 +170,7 @@ function RefsViewModel(qString) {
         return self.start() + " to " + self.end() + " of " + self.numResults() + " results";
     });
 
-    // Ref process, take care of null values
-    self.refP = function (field) {
-        if (field === undefined) {
-            return "\u2014";
-        }
-        return htmlDecode(field);
-    };
-
+   
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
@@ -119,25 +181,7 @@ function RefsViewModel(qString) {
         data: $.param(qString), // Pass along user's input directly as query string. Server handles escaping of searches.
         success: function (data) {
             data.response.docs.forEach( function (refi, i) {
-                var pageTitle = "Page"; // Most references list how many pages they are
-                if (/(DVD|CD|cassette)/i.test(refi.reference)) { // Some references refer to media runtime instead
-                    pageTitle = "Run Time";
-                }
-
-                self.refs.push({
-                    author: ko.observable(self.refP(refi.author)),
-                    title: ko.observable(self.refP(refi.title)),
-                    date: ko.observable(self.refP(refi.dt)),
-                    reference: ko.observable(self.refP(refi.reference)),
-                    source: ko.observable(self.refP(refi.source)),
-                    page: ko.observable(self.refP(refi.page)),
-                    abst: ko.observable(self.refP(refi.abstract)),
-                    id: ko.observable(self.refP(refi.id)),
-                    year: ko.observable(self.refP(refi.year)),
-                    colId: "collapse" + (i + 1), // Needed to associate header and collapse
-                    ariaLab: "reshead" + (i + 1),
-                    pageTitle: pageTitle
-                });
+                self.refs.push(new RefViewModel(refi, i));
             });
 
             // Generate spelling suggestions
@@ -236,44 +280,6 @@ function RefsViewModel(qString) {
             console.log("ajax error " + jqXHR.status);
         }
     });
-
-    self.deleteRef = function (ref) {
-        $.ajax({ // Makes an AJAX query to the server for the source
-            url: "/refs/" + ref.id(),
-            type: "DELETE",
-            error: function (jqXHR) {
-                console.log("ajax error " + jqXHR.status);
-                alert("Error sending delete request");
-            }
-        });
-    }
-
-    self.editRef = function (ref) {
-        ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
-        ko.applyBindings(ref, $("#editRefModal")[0]);
-        $("#editRefModal").modal("show");
-    }
-
-    self.submitEdits = function (ref) {
-        $.ajax({ // Makes an AJAX query to the server for the source
-            url: "/refs/" + ref.id(),
-            dataType: "json",
-            contentType: "application/json",
-            data: JSON.stringify(ref),
-            type: "POST",
-            error: function (jqXHR) {
-                console.log("ajax error " + jqXHR.status);
-                alert("Error sending delete request");
-            }
-        });
-    }
-
-    // Opens a modal dialog with the source information
-    self.sourceModal = function (ref) {
-        ko.cleanNode($("#sourceModal")[0]) // Must clear bindings in newer version of KO
-        ko.applyBindings(new SourceViewModel(ref.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
-        $("#sourceModal").modal("show");
-    };
 
 }
 
