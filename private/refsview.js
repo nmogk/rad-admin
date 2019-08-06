@@ -254,6 +254,20 @@ function RefsViewModel(qString) {
         $("#editRefModal").modal("show");
     }
 
+    self.submitEdits = function (ref) {
+        $.ajax({ // Makes an AJAX query to the server for the source
+            url: "/refs/" + ref.id(),
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify(ref),
+            type: "POST",
+            error: function (jqXHR) {
+                console.log("ajax error " + jqXHR.status);
+                alert("Error sending delete request");
+            }
+        });
+    }
+
     // Opens a modal dialog with the source information
     self.sourceModal = function (ref) {
         ko.cleanNode($("#sourceModal")[0]) // Must clear bindings in newer version of KO

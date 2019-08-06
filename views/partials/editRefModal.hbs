@@ -7,7 +7,7 @@
                     Edit Reference <span data-bind="text: id"></span>
                 </h4>
             </div>
-            <form data-async data-target="editRefModal" method="POST" data-bind="attr: {action: id}"></form>
+            <form data-async data-target="editRefModal" data-bind="submit: $parent.submitEdits"></form>
                 <div class="modal-body">
                     {{> refFormFields}}
                 </div>
