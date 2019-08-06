@@ -362,12 +362,14 @@ function RefsViewModel(qString) {
 
     // Opens a modal dialog with the source information
     self.sourceModal = function (ref) {
+        ko.cleanNode($("#sourceModal")[0]) // Must clear bindings in newer version of KO
         ko.applyBindings(new SourceViewModel(ref.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
         $("#sourceModal").modal("show");
     };
 
     // Initializes a view model for the formatted citation
     self.generateCitation = function (ref) {
+        ko.cleanNode($("#citationModal")[0]) // Must clear bindings in newer version of KO
         ko.applyBindings(new CitationView(unpackRef(ref)), $("#citationModal")[0]);
         $("#citationModal").modal("show");
     };
