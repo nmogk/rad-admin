@@ -115,6 +115,45 @@ router.post('/new', function (req, res, next) {
 router.post("/:id(\\d+)", function (req, res, next) {
     console.log(req.params.id);
 
+    var id = req.params.id;
+
+    var query = 'q=id:' + id;
+
+    var contents = fs.readFileSync("database.json");
+    var dbParams = JSON.parse(contents);
+
+    var doc = undefined;
+    client.get('refs', query, function (err, obj) {
+        if (err) {
+            req.flash('error', 'Unable to obtain a copy of object to edit for audit log. Reference not edited.');
+            res.redirect(303, '/refs');
+        } else {
+            doc = obj.response.docs[0];
+
+            client.add(id, { commitWithin: 50 }, function (err, data) {
+                if (err) {
+                    console.log(err);
+                    return req.flash('error', 'A problem occurred during edit submission.');
+                } else { // Success
+
+                    // Audit log entry
+                    auditLogger.info(req.user.get("email") + " edited a reference:\n" + JSON.stringify(doc)) + "\nA Original ||||| Updated V\n" + JSON.stringify(req.body);
+
+                    // Record edit information
+                    var editDate = new Date();
+                    var editDateString = JSON.stringify(editDate);
+                    dbParams.updated = editDateString.slice(1, editDateString.search("T"));
+
+                    fs.writeFileSync("database.json", JSON.stringify(dbParams));
+
+                    req.flash('yay', 'Reference successfully edited.');
+
+                }
+
+            });
+        }
+    });
+
     req.flash('yay', 'Reference sucessfully edited.');
     
     res.redirect(303, url.format({

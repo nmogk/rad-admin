@@ -19,7 +19,7 @@ RefViewModel.prototype.deleteRef = function() {
 RefViewModel.prototype.editRef = function() {
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     ko.applyBindings(this, $("#editRefModal")[0]);
-    $("#editRefModal").modal("show");
+    $("#editRefModal").modal({backdrop: 'static'});
 }
 
 RefViewModel.prototype.submitEdits = function() {
