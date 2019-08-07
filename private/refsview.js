@@ -105,7 +105,7 @@ function RefViewModel(refi, i){
     self.ariaLab = "reshead" + (i + 1);
     self.pageTitle = pageTitle;
 
-    self.deleteRef = function {
+    self.deleteRef = function() {
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "/refs/" + self.id(),
             type: "DELETE",
@@ -116,13 +116,13 @@ function RefViewModel(refi, i){
         });
     }
 
-    self.editRef = function {
+    self.editRef = function() {
         ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
         ko.applyBindings(self, $("#editRefModal")[0]);
         $("#editRefModal").modal("show");
     }
 
-    self.submitEdits = function {
+    self.submitEdits = function() {
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "/refs/" + self.id(),
             dataType: "json",
@@ -137,9 +137,9 @@ function RefViewModel(refi, i){
     }
 
     // Opens a modal dialog with the source information
-    self.sourceModal = function (ref) {
+    self.sourceModal = function () {
         ko.cleanNode($("#sourceModal")[0]) // Must clear bindings in newer version of KO
-        ko.applyBindings(new SourceViewModel(ref.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
+        ko.applyBindings(new SourceViewModel(self.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
         $("#sourceModal").modal("show");
     };
 }
