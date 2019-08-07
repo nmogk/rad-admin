@@ -75,9 +75,9 @@
                     <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
                     <span class="glyphicon glyphicon-option-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: $parent.goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
                     </ul>
                   </div>
                 </div>
@@ -126,6 +126,10 @@
     {{#*inline "scripts-block"}}
         <script src="javascripts/FileSaver.min.js"></script>
         <script src="javascripts/Blob.js"></script>
+        <script src="javascripts/utils.js"></script>
+        <script src="javascripts/refGridView.js"></script>
+        <script src="javascripts/refViewModel.js"></script>
+        <script src="javascripts/sourceViewModel.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
         <script src="javascripts/rad.js"></script>
     {{/inline}}

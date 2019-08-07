@@ -23,7 +23,7 @@ function hideStory() {
 /**
  * Populates an object with the parameters of the query string
  */
-function parseQuery(){
+/* function parseQuery(){
     "use strict";
     var queryString = {};
     window.location.search.replace(
@@ -33,7 +33,7 @@ function parseQuery(){
         }
     );
     return queryString;
-}
+} */
 
 /**
  * References are stored as objects whose fields are knockout observables. This function gets the
@@ -47,10 +47,10 @@ function unpackRef(ref) {
 /**
  * Decodes an html escaped string into a regular string with special characters.
  */
-function htmlDecode(value) {
+/* function htmlDecode(value) {
     "use strict";
     return $("<textarea/>").html(value).text();
-}
+} */
 
 /**
  * Takes as input an array of javascript objects and produces a comma-separated value file from the
@@ -104,7 +104,7 @@ function convertArrayOfObjectsToCSV(args) {
  * needed.
  * @param name - name of reference to query
  */
-function SourceViewModel(name) {
+/* function SourceViewModel(name) {
     "use strict";
     var self = this;
 
@@ -157,14 +157,14 @@ function SourceViewModel(name) {
             console.log("ajax error " + jqXHR.status);
         }
     });
-}
+} */
 
 /**
  * Simple view model for formatted citations. Contains all of the basic info fields. Formatting is
  * determined by the html view.
  * @param ref - a simple javascript object which contains the relevant information
  */
-function CitationView(ref) {
+/* function CitationView(ref) {
     "use strict";
     var self = this;
 
@@ -174,7 +174,84 @@ function CitationView(ref) {
     self.source = ko.observable(ref.source);
     self.page = ko.observable(ref.page);
     self.year = ko.observable(ref.year);
-}
+} */
+
+// Opens the webpage referenced by the source of the reference
+RefViewModel.prototype.goSource = function () {
+    $.ajax({ // Makes an AJAX query to the server for the source
+        url: "/solr/source/select?",
+        dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
+        jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
+        data: $.param({"q": this.source()}),
+        success: function (data) {
+            var src = data.response.docs[0]; // first result only
+            if (src.website !== undefined) {
+                window.open("http://" + src.website[0]);
+            } else {
+                alert("Source does not have a website to go to!");
+            }
+        },
+        error: function (jqXHR) {
+            console.log("ajax error " + jqXHR.status);
+            alert("Unable to go to source webpage at this time!");
+        }
+    });
+};
+
+
+// Initializes a view model for the formatted citation
+RefViewModel.prototype.generateCitation = function () {
+    ko.cleanNode($("#citationModal")[0]) // Must clear bindings in newer version of KO
+    ko.applyBindings(new CitationView(unpackRef(this)), $("#citationModal")[0]);
+    $("#citationModal").modal("show");
+};
+
+// Adds reference information to localStorage so that it can be printed nicely
+// This merely aggregates the references and opens the printAggregator page
+RefViewModel.prototype.downloadCitation = function () {
+    if (Storage !== undefined) {
+        var store = "printRefs";
+        var toAdd = [unpackRef(this)]; // If no current list (empty storage or something other than an array) this will be added
+        var rawStore = localStorage[store];
+
+        if (rawStore) {
+            var stored = JSON.parse(localStorage[store]);
+            if (Object.prototype.toString.call(stored) === "[object Array]") { // Parse and add new reference
+                stored.push(unpackRef(this));
+                toAdd = stored;
+            }
+        }
+
+        localStorage[store] = JSON.stringify(toAdd);
+        window.open("printAggregator.html", "printer");
+    } else {
+        alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
+    }
+};
+
+// Allows the user to download the entire displayed list of references as CSV
+RefsGridViewModel.prototype.downloadList = function () {
+    var visibleList = [];
+
+    self.refs().forEach(function (ref) {
+        visibleList.push(unpackRef(ref));
+    });
+
+    var csv = convertArrayOfObjectsToCSV({
+        data: visibleList
+    });
+    if (csv === null) {
+        return;
+    }
+
+    var filename = "references_CER.csv"; // Default filename
+
+    var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
+    saveAs(blob, filename);
+
+};
+
+
 
 /**
  * View model for references, which is the main point of the website. Maintains a list of references
@@ -183,7 +260,7 @@ function CitationView(ref) {
  * search server. Also sets up dynamic behavior associated with each reference.
  * @param qString - javascript array of search query key/value pairs
  */
-function RefsViewModel(qString) {
+/* function RefsViewModel(qString) {
     "use strict";
     // Set a reminder for updating the hard coded constants in the search configuration.
     if (new Date().getFullYear() >= 2020) {
@@ -418,7 +495,7 @@ function RefsViewModel(qString) {
         saveAs(blob, filename);
 
     };
-}
+} */
 
 /**
  * Performs initialization functions after page loads. Specifically, applies the reference view
@@ -438,7 +515,7 @@ function searchInit() {
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
         document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
-        ko.applyBindings(new RefsViewModel(queryString), $("#mainDisplay")[0]);
+        ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
     }
 }
 

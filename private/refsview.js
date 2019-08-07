@@ -3,7 +3,7 @@
  * needed.
  * @param name - name of reference to query
  */
-function SourceViewModel(name) {
+func/* tion SourceViewModel(name) {
     "use strict";
     var self = this;
 
@@ -56,14 +56,14 @@ function SourceViewModel(name) {
             console.log("ajax error " + jqXHR.status);
         }
     });
-}
+} */
 
 /**
  * Simple view model for formatted citations. Contains all of the basic info fields. Formatting is
  * determined by the html view.
  * @param ref - a simple javascript object which contains the relevant information
  */
-function CitationView(ref) {
+/* function CitationView(ref) {
     "use strict";
     var self = this;
 
@@ -72,9 +72,41 @@ function CitationView(ref) {
     self.reference = ko.observable(ref.reference);
     self.source = ko.observable(ref.source);
     self.page = ko.observable(ref.page);
-    self.year = ko.observable(ref.year);
+    self.year = ko.observable(ref.year); */
 }
 
+
+RefViewModel.prototype.deleteRef = function() {
+    $.ajax({ // Makes an AJAX query to the server for the source
+        url: "/refs/" + this.id(),
+        type: "DELETE",
+        error: function (jqXHR) {
+            console.log("ajax error " + jqXHR.status);
+            alert("Error sending delete request");
+        }
+    });
+}
+
+RefViewModel.prototype.editRef = function() {
+    ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
+    ko.applyBindings(this, $("#editRefModal")[0]);
+    $("#editRefModal").modal("show");
+}
+
+RefViewModel.prototype.submitEdits = function() {
+    $("#editRefModal").modal("hide");
+    $.ajax({ // Makes an AJAX query to the server for the source
+        url: "/refs/" + this.id(),
+        contentType: "application/json",
+        data: JSON.stringify(this),
+        type: "POST",
+        error: function (jqXHR) {
+            console.log("ajax error " + jqXHR.status);
+            alert("Error sending edit request");
+        }
+    });
+}
+/* 
 function RefViewModel(refi, i){
     "use strict";
     var self = this;
@@ -142,7 +174,7 @@ function RefViewModel(refi, i){
         ko.applyBindings(new SourceViewModel(self.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
         $("#sourceModal").modal("show");
     };
-}
+} */
 
 /**
  * View model for references, which is the main point of the website. Maintains a list of references
@@ -151,7 +183,7 @@ function RefViewModel(refi, i){
  * search server. Also sets up dynamic behavior associated with each reference.
  * @param qString - javascript array of search query key/value pairs
  */
-function RefsViewModel(qString) {
+/* function RefsViewModel(qString) {
     "use strict";
     // Set a reminder for updating the hard coded constants in the search configuration.
     if (new Date().getFullYear() >= 2020) {
@@ -281,7 +313,7 @@ function RefsViewModel(qString) {
         }
     });
 
-}
+} */
 
 /**
  * Performs initialization functions after page loads. Specifically, applies the reference view
@@ -301,7 +333,7 @@ function searchInit() {
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
         document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
-        ko.applyBindings(new RefsViewModel(queryString), $("#mainDisplay")[0]);
+        ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
     }
 }
 
