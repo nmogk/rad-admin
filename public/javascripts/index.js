@@ -134,7 +134,7 @@ RefViewModel.prototype.downloadCitation = function () {
 RefsGridViewModel.prototype.downloadList = function () {
     var visibleList = [];
 
-    self.refs().forEach(function (ref) {
+    this.refs().forEach(function (ref) {
         visibleList.push(unpackRef(ref));
     });
 
