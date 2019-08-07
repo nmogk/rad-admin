@@ -21,21 +21,3 @@ function htmlDecode(value) {
     "use strict";
     return $("<textarea/>").html(value).text();
 }
-
-
-/**
- * Simple view model for formatted citations. Contains all of the basic info fields. Formatting is
- * determined by the html view.
- * @param ref - a simple javascript object which contains the relevant information
- */
-function CitationView(ref) {
-    "use strict";
-    var self = this;
-
-    self.author = ko.observable(ref.author);
-    self.title = ko.observable(ref.title);
-    self.reference = ko.observable(ref.reference);
-    self.source = ko.observable(ref.source);
-    self.page = ko.observable(ref.page);
-    self.year = ko.observable(ref.year);
-}

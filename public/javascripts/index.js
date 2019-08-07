@@ -103,7 +103,7 @@ RefViewModel.prototype.goSource = function () {
 // Initializes a view model for the formatted citation
 RefViewModel.prototype.generateCitation = function () {
     ko.cleanNode($("#citationModal")[0]) // Must clear bindings in newer version of KO
-    ko.applyBindings(new CitationView(unpackRef(this)), $("#citationModal")[0]);
+    ko.applyBindings(this, $("#citationModal")[0]);
     $("#citationModal").modal("show");
 };
 
