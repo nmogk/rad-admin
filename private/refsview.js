@@ -123,15 +123,15 @@ function RefViewModel(refi, i){
     }
 
     self.submitEdits = function() {
+        $("#editRefModal").modal("hide");
         $.ajax({ // Makes an AJAX query to the server for the source
             url: "/refs/" + self.id(),
-            dataType: "json",
             contentType: "application/json",
             data: JSON.stringify(self),
             type: "POST",
             error: function (jqXHR) {
                 console.log("ajax error " + jqXHR.status);
-                alert("Error sending delete request");
+                alert("Error sending edit request");
             }
         });
     }

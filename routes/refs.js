@@ -113,7 +113,15 @@ router.post('/new', function (req, res, next) {
 });
 
 router.post("/:id(\\d+)", function (req, res, next) {
-    console.log(req.params.id);// TBD
+    console.log(req.params.id);
+
+    req.flash('yay', 'Reference sucessfully edited.');
+    
+    res.redirect(303, url.format({
+        pathname:"/refs",
+        query:req.query,
+    }));
+    // TBD
 });
 
 router.delete("/:id(\\d+)", function (req, res, next) {
