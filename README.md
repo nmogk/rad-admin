@@ -107,6 +107,7 @@ sudo service radd start
 ### Manually
 ```
 /usr/solr/solr-6.3.0/bin/solr start
+sudo systemctl start mysqld
 sudo npm start
 ```
 ## Upgrade Instructions
