@@ -18,6 +18,8 @@ function RefViewModel(data) {
         return (/(DVD|CD|cassette)/i.test(this.reference()||"") ? "Run Time" : "Page")
     }, self);
 
+    this.cache = function() {};
+
     this.update(data);
 
     // Opens a modal dialog with the source information
