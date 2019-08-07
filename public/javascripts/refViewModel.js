@@ -14,9 +14,9 @@ function RefViewModel(data) {
     self.colId = undefined;
     self.ariaLab = undefined;
 
-    self.pageTitle = ko.computed(function () {
-        return (/(DVD|CD|cassette)/i.test(this.reference()) ? "Run Time" : "Page")
-    });
+    self.pageTitle = ko.pureComputed(function () {
+        return (/(DVD|CD|cassette)/i.test(this.reference()||"") ? "Run Time" : "Page")
+    }, self);
 
     this.update(data);
 
