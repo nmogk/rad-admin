@@ -34,8 +34,8 @@ function RefsGridViewModel(qString) {
         jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
         data: $.param(qString), // Pass along user's input directly as query string. Server handles escaping of searches.
         success: function (data) {
-            data.response.docs.forEach( function (refi, i) {
-                self.refs.push(new RefViewModel(refi, i));
+            data.response.docs.forEach( function (refi) {
+                self.refs.push(new RefViewModel(refi));
             });
 
             // Generate spelling suggestions

@@ -1,3 +1,6 @@
+/**
+ * Provides functionality for deleting a reference on the server
+ */
 RefViewModel.prototype.deleteRef = function() {
     $.ajax({ // Makes an AJAX query to the server for the source
         url: "/refs/" + this.id(),
@@ -9,6 +12,10 @@ RefViewModel.prototype.deleteRef = function() {
     });
 }
 
+/**
+ * Provides functionality for populating the edit dialog with the correct
+ * ref item. 
+ */
 RefViewModel.prototype.editRef = function() {
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     ko.applyBindings(this, $("#editRefModal")[0]);
@@ -16,6 +23,7 @@ RefViewModel.prototype.editRef = function() {
 }
 
 RefViewModel.prototype.submitEdits = function() {
+    this.commit();
     $("#editRefModal").modal("hide");
     $.ajax({ // Makes an AJAX query to the server for the source
         url: "/refs/" + this.id(),
