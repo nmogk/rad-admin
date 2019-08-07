@@ -7,12 +7,12 @@
                     Edit Reference <span data-bind="text: id"></span>
                 </h4>
             </div>
-            <form data-async data-target="editRefModal" data-bind="submit: submitEdits"></form>
+            <form id="refEditForm" data-bind="submit: $data.submitEdits">
                 <div class="modal-body">
                     {{> refFormFields}}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-info" data-dismiss="modal">Save</button>
+                    <button type="submit" class="btn btn-info">Save</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 </div>
             </form>

@@ -113,7 +113,7 @@ router.post('/new', function (req, res, next) {
 });
 
 router.post("/:id(\\d+)", function (req, res, next) {
-    // TBD
+    console.log(req.params.id);// TBD
 });
 
 router.delete("/:id(\\d+)", function (req, res, next) {
