@@ -77,7 +77,7 @@ router.post('/new', function (req, res, next) {
 
     // Send request
 
-    client.add(doc, { commitWithin: 50 }, function (err, data) {
+    client.add(doc, function (err, data) {
 
         if (err) {
             console.log(err);
@@ -152,7 +152,7 @@ router.post("/:id(\\d+)", function (req, res, next) {
         } else {
             oldDoc = obj.response.docs[0];
 
-            client.add(doc, { softCommit : true, commitWithin: 50 }, function (err, data) {
+            client.add(doc, function (err, data) {
                 if (err) {
                     console.log(err);
                     return req.flash('error', 'A problem occurred during edit submission.');
@@ -202,7 +202,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
         } else {
             doc = obj.response.docs[0];
 
-            client.deleteByID(id, { commitWithin: 50 }, function (err, data) {
+            client.deleteByID(id, function (err, data) {
                 if (err) {
                     console.log(err);
                     return req.flash('error', 'A problem occurred during delete submission.');
