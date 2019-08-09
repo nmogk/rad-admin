@@ -106,8 +106,6 @@ router.post('/new', function (req, res, next) {
 });
 
 router.post("/:id(\\d+)", function (req, res, next) {
-    console.log(req.params.id);
-
     var query = 'q=id:' + req.params.id;
 
     var contents = fs.readFileSync("database.json");
