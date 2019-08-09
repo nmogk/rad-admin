@@ -1,7 +1,7 @@
 /**
  * Provides functionality for deleting a reference on the server
  */
-RefViewModel.prototype.deleteRef = function() {
+RefViewModel.prototype.deleteRef = function () {
     $.ajax({ // Makes an AJAX query to the server for the source
         url: "/refs/" + this.id(),
         type: "DELETE",
@@ -16,13 +16,13 @@ RefViewModel.prototype.deleteRef = function() {
  * Provides functionality for populating the edit dialog with the correct
  * ref item. 
  */
-RefViewModel.prototype.editRef = function() {
+RefViewModel.prototype.editRef = function () {
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     ko.applyBindings(this, $("#editRefModal")[0]);
-    $("#editRefModal").modal({backdrop: 'static'});
+    $("#editRefModal").modal({ backdrop: 'static' });
 }
 
-RefViewModel.prototype.submitEdits = function() {
+RefViewModel.prototype.submitEdits = function () {
     this.commit();
     $("#editRefModal").modal("hide");
     $.ajax({ // Makes an AJAX query to the server for the source
@@ -37,14 +37,15 @@ RefViewModel.prototype.submitEdits = function() {
     });
 }
 
-RefViewModel.prototype.newRefHandler = function() {
+RefViewModel.prototype.newRefHandler = function () {
     this.commit();
-    if ($("holdInputCheck").is(":checked")) 
+    if ($("#holdInputCheck")[0].is(":checked")) {
         this.holdOver(); // Save some fields for the holdover
-    else 
+    } else {
         this.blank(); // Clear all fields for a blank submit
+    }
 
-    localStorage['refsEditor'] = this;
+    localStorage['refsEditor'] = ko.toJS(this);
     return true;
 }
 
@@ -56,13 +57,17 @@ function searchInit() {
     "use strict";
     // Create an object which contains the query string as keys/values
     var queryString = parseQuery();
-    
+
     if (queryString.boost !== undefined) {
         document.getElementById("boostCheck").checked = true;
     }
 
-    ko.applyBindings(localStorage["refsEditor"] || new RefViewModel());
-    
+    var blankRefViewModel = new RefViewModel({});
+    if (localStorage['refsEditor']) {
+        blankRefViewModel.update(localStorage['refsEditor']);
+    }
+    ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
+
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body
