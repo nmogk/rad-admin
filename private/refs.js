@@ -37,6 +37,17 @@ RefViewModel.prototype.submitEdits = function() {
     });
 }
 
+RefViewModel.prototype.newRefHandler = function() {
+    this.commit();
+    if ($("holdInputCheck").is(":checked")) 
+        this.holdOver(); // Save some fields for the holdover
+    else 
+        this.blank(); // Clear all fields for a blank submit
+
+    localStorage['refsEditor'] = this;
+    return true;
+}
+
 /**
  * Performs initialization functions after page loads. Specifically, applies the reference view
  * model if a query has been submitted to the page
@@ -49,6 +60,8 @@ function searchInit() {
     if (queryString.boost !== undefined) {
         document.getElementById("boostCheck").checked = true;
     }
+
+    ko.applyBindings(localStorage["refsEditor"] || new RefViewModel());
     
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string

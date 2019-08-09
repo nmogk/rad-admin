@@ -34,23 +34,15 @@ function RefViewModel(data) {
 ko.utils.extend(RefViewModel.prototype, {
     update: function (data) {
 
-        // Ref process, take care of null values
-        function refP(field) {
-            // if (field === undefined) {
-            //     return "\u2014";
-            // }
-            return htmlDecode(field);
-        };
-
-        this.author(refP(data.author));
-        this.title(refP(data.title));
-        this.date(refP(data.dt));
-        this.reference(refP(data.reference));
-        this.source(refP(data.source));
-        this.page(refP(data.page));
-        this.abst(refP(data.abstract));
-        this.id(refP(data.id));
-        this.year(refP(data.year));
+        this.author(htmlDecode(data.author));
+        this.title(htmlDecode(data.title));
+        this.date(htmlDecode(data.dt));
+        this.reference(htmlDecode(data.reference));
+        this.source(htmlDecode(data.source));
+        this.page(htmlDecode(data.page));
+        this.abst(htmlDecode(data.abstract));
+        this.id(htmlDecode(data.id));
+        this.year(htmlDecode(data.year));
         this.colId = data.colId || "collapse" + Math.random().toString(36).substring(2, 8); // Needed to associate header and collapse
         this.ariaLab = data.ariaLab || "reshead" + Math.random().toString(36).substring(2, 8);
 
@@ -61,9 +53,26 @@ ko.utils.extend(RefViewModel.prototype, {
     },
     commit: function () {
         this.cache.latestData = ko.toJS(this);
+    },
+    holdOver: function () {
+        this.author(null);
+        this.title(null);
+        this.page(null);
+        this.abst(null);        
+        this.id(null);    
+    },
+    blank: function () {
+        this.holdOver();
+        this.date(null);
+        this.reference(null);
+        this.source(null);
+        this.year(null);
     }
 });
 
+/**
+ * Custom binding which supplies a default value (em dash) for observables with undefined values
+ */
 ko.bindingHandlers.textPretty = {
     update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
         var value = valueAccessor();

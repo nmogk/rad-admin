@@ -2,7 +2,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close" data-bind="click: revert">&times;</button>
                 <h4 class="modal-title">Add New Reference</h4>
             </div>
             <form id="refInput" method="post" action="/refs/new" data-bind="submit: newRefHandler">
@@ -13,7 +13,7 @@
                     <input type="checkbox" class="form-check-input" id="holdInputCheck" value="persistInput"> 
                     <label class="form-check-label" for="holdInputCheck">Input hold</label>
                     <button type="submit" class="btn btn-info">Save</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click: revert">Cancel</button>
                 </div>
             </form>
         </div>
