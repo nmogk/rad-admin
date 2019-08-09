@@ -115,7 +115,7 @@ router.post('/new', function (req, res, next) {
 router.post("/:id(\\d+)", function (req, res, next) {
     console.log(req.params.id);
 
-    var query = 'q=id:' + id;
+    var query = 'q=id:' + req.params.id;
 
     var contents = fs.readFileSync("database.json");
     var dbParams = JSON.parse(contents);
@@ -161,7 +161,7 @@ router.post("/:id(\\d+)", function (req, res, next) {
         } else {
             oldDoc = obj.response.docs[0];
 
-            client.add(id, { commitWithin: 50 }, function (err, data) {
+            client.add(doc, { commitWithin: 50 }, function (err, data) {
                 if (err) {
                     console.log(err);
                     return req.flash('error', 'A problem occurred during edit submission.');
