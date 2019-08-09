@@ -16,13 +16,6 @@ router.get('/', function (req, res, next) {
 });
 
 
-/* Post to root path here will cause an update rather than create a new one */
-router.post('/', function (req, res, next) {
-    // Need to detect if a new one was posted instead.
-    console.log(req.body);
-});
-
-
 /*
     Input fields:
     authorField, titleField, dateField, referenceField, sourceField, pageField, abstField
