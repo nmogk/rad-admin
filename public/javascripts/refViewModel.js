@@ -36,9 +36,9 @@ ko.utils.extend(RefViewModel.prototype, {
 
         // Ref process, take care of null values
         function refP(field) {
-            if (field === undefined) {
-                return "\u2014";
-            }
+            // if (field === undefined) {
+            //     return "\u2014";
+            // }
             return htmlDecode(field);
         };
 
@@ -63,3 +63,11 @@ ko.utils.extend(RefViewModel.prototype, {
         this.cache.latestData = ko.toJS(this);
     }
 });
+
+ko.bindingHandlers.textPretty = {
+    update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        var value = valueAccessor();
+        var text = ko.unwrap(value) || "\u2014";
+        ko.bindingHandlers.text.update(element, function() { return text; });
+    }
+}
