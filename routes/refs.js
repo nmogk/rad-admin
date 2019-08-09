@@ -168,7 +168,7 @@ router.post("/:id(\\d+)", function (req, res, next) {
                 } else { // Success
 
                     // Audit log entry
-                    auditLogger.info(req.user.get("email") + " edited a reference:\n" + JSON.stringify(oldDoc)) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc);
+                    auditLogger.info(req.user.get("email") + " edited a reference:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
 
                     // Record edit information
                     var editDate = new Date();
