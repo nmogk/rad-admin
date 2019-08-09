@@ -28,7 +28,7 @@ RefViewModel.prototype.submitEdits = function() {
     $.ajax({ // Makes an AJAX query to the server for the source
         url: "/refs/" + this.id(),
         contentType: "application/json",
-        data: JSON.stringify(this),
+        data: JSON.stringify(this.cache.latestData),
         type: "POST",
         error: function (jqXHR) {
             console.log("ajax error " + jqXHR.status);

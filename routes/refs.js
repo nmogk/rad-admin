@@ -125,24 +125,24 @@ router.post("/:id(\\d+)", function (req, res, next) {
 
     // These fields should be sent in already html sanitized. Maybe I should check anyway.
     // Empty fields are OK
-    if (req.body.authorField) { doc.author = req.body.authorField; }
-    if (req.body.titleField) { doc.title = req.body.titleField; }
-    if (req.body.referenceField) { doc.reference = req.body.referenceField; }
-    if (req.body.sourceField) { doc.source = req.body.sourceField; }
-    if (req.body.pageField) { doc.page = req.body.pageField; }
-    if (req.body.abstField) { doc.abstract = req.body.abstField; }
+    if (req.body.author) { doc.author = req.body.author; }
+    if (req.body.title) { doc.title = req.body.title; }
+    if (req.body.reference) { doc.reference = req.body.reference; }
+    if (req.body.source) { doc.source = req.body.source; }
+    if (req.body.page) { doc.page = req.body.page; }
+    if (req.body.abst) { doc.abstract = req.body.abst; }
 
-    if (req.body.dateField) {
+    if (req.body.date) {
         // Validate input date
         var dateRegX = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
-        if (!dateRegX.test(req.body.dateField)) {
+        if (!dateRegX.test(req.body.date)) {
             req.flash('error', 'Incorrect date format entered. Please use ISO 8601.');
             res.redirect(303, '/refs');
             return;
         }
 
-        var inputDate = new Date(req.body.dateField);
-        doc.dt = req.body.dateField;
+        var inputDate = new Date(req.body.date);
+        doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
         //doc.date = .... Will start using this field when all fields are made compatible
         var latestRefDate = new Date(dbParams.latest);
@@ -155,6 +155,7 @@ router.post("/:id(\\d+)", function (req, res, next) {
     }
     client.get('refs', query, function (err, obj) {
         if (err) {
+            console.log(err);
             req.flash('error', 'Unable to obtain a copy of object to edit for audit log. Reference not edited.');
             res.redirect(303, '/refs');
         } else {
@@ -188,7 +189,6 @@ router.post("/:id(\\d+)", function (req, res, next) {
         pathname:"/refs",
         query:req.query,
     }));
-    // TBD
 });
 
 router.delete("/:id(\\d+)", function (req, res, next) {
