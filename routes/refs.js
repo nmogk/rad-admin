@@ -185,7 +185,7 @@ router.post("/:id(\\d+)", function (req, res, next) {
         }
     });
     
-    res.redirect(303, url.format({
+    res.redirect(278, url.format({
         pathname:"/refs",
         query:req.query,
     }));
@@ -241,7 +241,7 @@ router.delete("/:id(\\d+)", function (req, res, next) {
         }
     });
 
-    res.redirect(303, url.format({
+    res.redirect(278, url.format({
         pathname:"/refs",
         query:req.query,
     }));
