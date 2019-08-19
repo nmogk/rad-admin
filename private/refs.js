@@ -45,7 +45,7 @@ RefViewModel.prototype.newRefHandler = function () {
         this.blank(); // Clear all fields for a blank submit
     }
 
-    localStorage['refsEditor'] = ko.toJS(this);
+    localStorage['refsEditor'] = ko.toJSON(this);
     return true;
 }
 
