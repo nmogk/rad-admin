@@ -39,13 +39,13 @@ RefViewModel.prototype.submitEdits = function () {
 
 RefViewModel.prototype.newRefHandler = function () {
     this.commit();
-    if ($("#holdInputCheck")[0].is(":checked")) {
+    if ($("#holdInputCheck").is(":checked")) {
         this.holdOver(); // Save some fields for the holdover
     } else {
         this.blank(); // Clear all fields for a blank submit
     }
 
-    localStorage['refsEditor'] = ko.toJS(this);
+    localStorage['refsEditor'] = ko.toJSON(this);
     return true;
 }
 
