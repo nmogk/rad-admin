@@ -35,6 +35,10 @@ sudo chown -R solr:solr solr-6.3.0
 (https://blog.lawrencemcdaniel.com/letsencrypt-amazon-linux-apache/)
 (https://certbot.eff.org/docs/using.html)
 
+New or renew:
+```
+sudo certbot certonly --manual --preferred-challenges dns
+```
 
 #### self-signed
 (https://www.linux.com/learn/creating-self-signed-ssl-certificates-apache-linux)
