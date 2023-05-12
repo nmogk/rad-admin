@@ -23,7 +23,7 @@
     "aws-sdk": "^3.0",
     "bluebird": "^3.5",
     "body-parser": "^1.18",
-    "bookshelf": "^1.2.0",
+    "bookshelf": "^1.0",
     "bookshelf-secure-password": "^3.0.1",
     "connect-flash": "^0.1.1",
     "connect-session-knex": "^1.4.0",

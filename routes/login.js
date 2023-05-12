@@ -29,7 +29,7 @@ router.post('/forgot', function (req, res, next) {
 
     // Fetch the user from the given email. This will happen only once, and this promise will be reused
     // If the user is not found, then it will throw a User.NotFoundError which is caught below.
-    var userPromise = new User({ email: req.body.email }).fetch({ require: true })
+    var userPromise = new User({ email: req.body.email }).fetch()
 
     // Wait for all the ingredients to return before using them
     Promise.join(token.getToken(1), userPromise, token.clearRelated(userPromise),
