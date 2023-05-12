@@ -5,7 +5,6 @@ var nodemailer = require('nodemailer');
 var User = require('../models/user');
 var Reset = require('../models/invitations');
 var Promise = require('bluebird');
-var crypto = Promise.promisifyAll(require('crypto'));
 var mail = require('../config/mailer');
 var token = require('../models/tokens');
 
