@@ -1,14 +1,14 @@
 var self = this;
 
 var nodemailer = require('nodemailer');
-self.AWS = require('aws-sdk');
+var aws = require('@aws-sdk/client-ses');
 
-self.AWS.config.update({
+const ses = new aws.SES({
     region: 'us-east-1'
 });
 
 self.sesTransporter = nodemailer.createTransport({
-    SES: new self.AWS.SES()
+    SES: {ses, aws}
 });
 
 self.sendResetMail = function(req, email, token){
