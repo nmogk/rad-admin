@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var passport = require('../config/passport');
 var nodemailer = require('nodemailer');
-var async = require('async');
 var User = require('../models/user');
 var Reset = require('../models/invitations');
 var Promise = require('bluebird');
