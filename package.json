@@ -27,7 +27,7 @@
     "bookshelf": "^1.0",
     "bookshelf-secure-password": "^4.0",
     "connect-flash": "^0.1.1",
-    "connect-session-knex": "^1.4.0",
+    "connect-session-knex": "^1.4",
     "cookie-parser": "~1.4.3",
     "debug": "^3.1.0",
     "dotenv": "^4.0.0",
