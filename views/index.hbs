@@ -67,17 +67,17 @@
               <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
               <div class="row">
                   <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
-                    <div class="col-sm-3"><h5><span data-bind="text: author">Author</span></h5></div>
-                    <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
-                    <div class="col-sm-2"><h5><span data-bind="text: date">Date</span></h5></div>
+                    <div class="col-sm-3"><h5><span data-bind="textPretty: author">Author</span></h5></div>
+                    <div class="col-sm-6"><h5><span data-bind="textPretty: title">Title</span></h5></div>
+                    <div class="col-sm-2"><h5><span data-bind="textPretty: date">Date</span></h5></div>
                   </a>
                   <div class="dropdown col-sm-1" aria-haspopup="true">
                     <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
                     <span class="glyphicon glyphicon-option-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: $parent.goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: $parent.downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
                     </ul>
                   </div>
                 </div>
@@ -85,13 +85,13 @@
               <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
                 <div class="panel-body">
                   <div class="row">
-                    <div class="col-sm-5"><h4>Reference</h4><span data-bind="text: reference"></span></div>
-                    <div class="col-sm-5"><h4>Source</h4><span data-bind="text: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: $parent.sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
-                    <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="text: page"></span></div>
+                    <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
+                    <div class="col-sm-5"><h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: $parent.sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
+                    <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="textPretty: page"></span></div>
                     <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
                   </div>
                   <h4>Abstract</h4>
-                  <p data-bind="text: abst" style="white-space:pre-wrap"></p>
+                  <p data-bind="textPretty: abst" style="white-space:pre-wrap"></p>
                 </div>
               </div>
             </div>
@@ -126,8 +126,12 @@
     {{#*inline "scripts-block"}}
         <script src="javascripts/FileSaver.min.js"></script>
         <script src="javascripts/Blob.js"></script>
+        <script src="javascripts/utils.js"></script>
+        <script src="javascripts/refGridView.js"></script>
+        <script src="javascripts/refViewModel.js"></script>
+        <script src="javascripts/sourceViewModel.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
-        <script src="javascripts/rad.js"></script>
+        <script src="javascripts/index.js"></script>
     {{/inline}}
 
 {{/layout}}

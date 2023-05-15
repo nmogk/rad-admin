@@ -74,7 +74,7 @@ router.post('/invite', function (req, res, next) {
 router.post('/resend/:id(\\d+)', function (req, res, next) {
   // Fetch the user from the given email. This will happen only once, and this promise will be reused
   // If the user is not found, then it will throw a User.NotFoundError which is caught below.
-  var userPromise = new User({ id: req.params.id }).fetch({ require: true })
+  var userPromise = new User({ id: req.params.id }).fetch()
 
   // Wait for all the ingredients to return before using them
   Promise.join(tokens.getToken(24), userPromise, tokens.clearRelated(userPromise),
@@ -106,7 +106,7 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
     return;
   }
 
-  new User({ id: req.params.id }).fetch({ require: true })
+  new User({ id: req.params.id }).fetch()
     .then(function (user) {
       return user
         .set('permission', req.params.level)
@@ -126,7 +126,7 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
 
 // Delete a particular user
 router.delete('/:id(\\d+)', function (req, res, next) {
-  var userPromise = new User({ id: req.params.id }).fetch({ require: true })
+  var userPromise = new User({ id: req.params.id }).fetch()
   Promise.join(userPromise, tokens.clearRelated(userPromise), function (user, clear) {
       return user.destroy();
     })

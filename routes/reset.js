@@ -12,7 +12,7 @@ router.get('/', function(req, res){
 router.get('/:token', function(req, res) {
     new ResetToken({token: req.params.token})
     .where('expires', '>', Date.now())
-    .fetch({required: true, withRelated: 'user'})
+    .fetch({withRelated: 'user'})
     .then(function (token) {
         res.render('passwordChange', { errorMessage: req.flash('login') });
     })
@@ -36,7 +36,7 @@ router.post('/:token', function(req, res) {
 
     var tokenPromise = new ResetToken({token: req.params.token})
     .where('expires', '>', Date.now())
-    .fetch({required: true, withRelated: 'user'})
+    .fetch({withRelated: 'user'})
     .catch(function (err){
         req.flash('login', 'Password reset token is invalid or has expired.');
         res.redirect(303, '/login');

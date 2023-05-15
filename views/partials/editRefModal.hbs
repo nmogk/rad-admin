@@ -2,20 +2,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="close" data-bind="click: revert">&times;</button>
                 <h4 class="modal-title">
                     Edit Reference <span data-bind="text: id"></span>
                 </h4>
             </div>
-            <div class="modal-body">
-                <form data-async data-target="editRefModal" method="POST" data-bind="attr: {action: id}">
+            <form id="refEditForm" data-bind="submit: $data.submitEdits">
+                <div class="modal-body">
                     {{> refFormFields}}
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-info" data-dismiss="modal">Save</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info">Save</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click: revert">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -1,88 +1,11 @@
 /**
- * View model for source information. Sources are kept in a separate index which is searched when
- * needed.
- * @param name - name of reference to query
- */
-function SourceViewModel(name) {
-    "use strict";
-    var self = this;
-
-    // Ref process, take care of null values and unbox from arrays
-    // Boxing in arrays occurs when fields indexed in Solr are listed as multivalued
-    self.refP = function (field) {
-        if (field === undefined) {
-            return "\u2014";
-        }
-        return htmlDecode(field.join(", "));
-    };
-
-    var dunno = "Searching..."; // AJAX call may take some time, so a temporary message is displayed for all fields
-
-    self.name = ko.observable(name);
-    self.phone = ko.observable(dunno);
-    self.fax = ko.observable(dunno);
-    self.email = ko.observable(dunno);
-    self.web = ko.observable(dunno);
-    self.street = ko.observable(dunno);
-    self.city = ko.observable(dunno);
-    self.state = ko.observable(dunno);
-    self.zip = ko.observable(dunno);
-
-    self.address = ko.computed( function () {
-        if (self.city() === dunno || self.city() === "\u2014") {
-            return self.city();
-        }
-        return self.street() + ", " + self.city() + ", " + self.state() + " " + self.zip();
-    });
-
-    $.ajax({
-        url: "/solr/source/select?", // solr-proxy running on port 8008
-        dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
-        jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
-        data: $.param({"q": name}), // Server on backend is set up to search name field by default... I think
-        success: function (data) {
-            var find = data.response.docs[0]; // update information to first result
-            self.name(self.refP(find.name));
-            self.street(self.refP(find.address));
-            self.city(self.refP(find.city));
-            self.state(self.refP(find.state));
-            self.zip(self.refP(find.zip));
-            self.phone(self.refP(find.telephone));
-            self.fax(self.refP(find.fax));
-            self.email(self.refP(find.email));
-            self.web(self.refP(find.website));
-        },
-        error: function (jqXHR) {
-            console.log("ajax error " + jqXHR.status);
-        }
-    });
-}
-
-/**
- * Simple view model for formatted citations. Contains all of the basic info fields. Formatting is
- * determined by the html view.
- * @param ref - a simple javascript object which contains the relevant information
- */
-function CitationView(ref) {
-    "use strict";
-    var self = this;
-
-    self.author = ko.observable(ref.author);
-    self.title = ko.observable(ref.title);
-    self.reference = ko.observable(ref.reference);
-    self.source = ko.observable(ref.source);
-    self.page = ko.observable(ref.page);
-    self.year = ko.observable(ref.year);
-}
-
-/**
  * View model for references, which is the main point of the website. Maintains a list of references
  * as an observable array. This is a single page of results. No displayable elements are set at initial
  * construction. All visible elements are set in a callback which performs the relevant search on the
  * search server. Also sets up dynamic behavior associated with each reference.
  * @param qString - javascript array of search query key/value pairs
  */
-function RefsViewModel(qString) {
+function RefsGridViewModel(qString) {
     "use strict";
     // Set a reminder for updating the hard coded constants in the search configuration.
     if (new Date().getFullYear() >= 2020) {
@@ -101,14 +24,7 @@ function RefsViewModel(qString) {
         return self.start() + " to " + self.end() + " of " + self.numResults() + " results";
     });
 
-    // Ref process, take care of null values
-    self.refP = function (field) {
-        if (field === undefined) {
-            return "\u2014";
-        }
-        return htmlDecode(field);
-    };
-
+   
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
@@ -118,26 +34,8 @@ function RefsViewModel(qString) {
         jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
         data: $.param(qString), // Pass along user's input directly as query string. Server handles escaping of searches.
         success: function (data) {
-            data.response.docs.forEach( function (refi, i) {
-                var pageTitle = "Page"; // Most references list how many pages they are
-                if (/(DVD|CD|cassette)/i.test(refi.reference)) { // Some references refer to media runtime instead
-                    pageTitle = "Run Time";
-                }
-
-                self.refs.push({
-                    author: ko.observable(self.refP(refi.author)),
-                    title: ko.observable(self.refP(refi.title)),
-                    date: ko.observable(self.refP(refi.dt)),
-                    reference: ko.observable(self.refP(refi.reference)),
-                    source: ko.observable(self.refP(refi.source)),
-                    page: ko.observable(self.refP(refi.page)),
-                    abst: ko.observable(self.refP(refi.abstract)),
-                    id: ko.observable(self.refP(refi.id)),
-                    year: ko.observable(self.refP(refi.year)),
-                    colId: "collapse" + (i + 1), // Needed to associate header and collapse
-                    ariaLab: "reshead" + (i + 1),
-                    pageTitle: pageTitle
-                });
+            data.response.docs.forEach( function (refi) {
+                self.refs.push(new RefViewModel(refi));
             });
 
             // Generate spelling suggestions
@@ -237,46 +135,4 @@ function RefsViewModel(qString) {
         }
     });
 
-    self.deleteRef = function (ref) {
-        $.ajax({ // Makes an AJAX query to the server for the source
-            url: "/refs/" + ref.id(),
-            type: "DELETE",
-            error: function (jqXHR) {
-                console.log("ajax error " + jqXHR.status);
-                alert("Error sending delete request");
-            }
-        });
-    }
-
-    // Opens a modal dialog with the source information
-    self.sourceModal = function (ref) {
-        ko.applyBindings(new SourceViewModel(ref.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
-        $("#sourceModal").modal("show");
-    };
-
 }
-
-/**
- * Performs initialization functions after page loads. Specifically, applies the reference view
- * model if a query has been submitted to the page
- */
-function searchInit() {
-    "use strict";
-    // Create an object which contains the query string as keys/values
-    var queryString = parseQuery();
-    
-    if (queryString.boost !== undefined) {
-        document.getElementById("boostCheck").checked = true;
-    }
-    
-    if (queryString.q !== undefined) {
-        queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
-        document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body
-        document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
-        document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
-        ko.applyBindings(new RefsViewModel(queryString), $("#mainDisplay")[0]);
-    }
-}
-
-// Make sure the whole page is loaded before manipulating it
-$(document).ready(searchInit());

@@ -40,7 +40,7 @@ passport.use('local-signup', new LocalStrategy({
 },
 function(req, email, password, done) {
     let user = new User({email: email});
-    user.fetch({require: true})
+    user.fetch()
     .then(function (user){
         return done(null, false, req.flash('login', 'That email is already taken.'));
     })
@@ -76,7 +76,7 @@ function(req, email, password, done) { // callback with email and password from 
 
     // find a user whose email is the same as the forms email
     // we are checking to see if the user trying to login already exists
-    (new User({email: email})).fetch({require: true})
+    (new User({email: email})).fetch()
     .then(function (user) {
         return user.authenticate(password);
         

@@ -13,14 +13,6 @@ function parseQuery(){
     return queryString;
 }
 
-/**
- * References are stored as objects whose fields are knockout observables. This function gets the
- * values of a subset of those fields in to a regular object for easier manipulation.
- */
-function unpackRef(ref) {
-    "use strict";
-    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), date: ref.date(), "abstract": ref.abst(), year: ref.year()};
-}
 
 /**
  * Decodes an html escaped string into a regular string with special characters.
