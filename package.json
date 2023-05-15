@@ -10,9 +10,11 @@
   "license": "Apache-2.0",
   "author": {
     "name": "Nathan Mogk",
-    "email": "nm8911@gmail.com"
+    "email": "4602943+nmogk@users.noreply.github.com"
   },
   "repository": "github:nmogk/rad-admin",
+  "funding" : "https://give.cornerstone.cc/creationeducation",
+  "main" : "app.js",
   "scripts": {
     "start": "node ./bin/www"
   },
@@ -21,7 +23,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.0",
-    "bcrypt": "^5.0",
     "bluebird": "^3.5",
     "body-parser": "^1.18",
     "bookshelf": "^1.0",
@@ -48,5 +49,8 @@
     "serve-favicon": "^2.4",
     "solr-client": "^0.9.0",
     "when": "^3.7.8"
+  },
+  "overrides": {
+    "bcrypt": "^5.0"
   }
 }

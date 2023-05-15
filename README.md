@@ -8,6 +8,7 @@
 ```
 sudo yum -y install mysql mysql-server git java-1.8.0 nodejs npm openssl
 sudo yum -y remove java-1.7.0-openjdk (if exists)
+sudo update-alternatives --config java
 ```
 ### configure mysql
 (https://dev.mysql.com/doc/refman/5.7/en/linux-installation-yum-repo.html)
@@ -22,12 +23,12 @@ mysql> GRANT ALL ON rad_admin.* to 'db user name'@'localhost';
 ```
 ### install solr
 ```
-sudo mkdir /usr/solr
+sudo mkdir /opt/solr
 sudo useradd -r solr
-cd /usr/solr
+cd /opt/solr
 sudo wget http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/6.3.0/solr-6.3.0.tgz
-sudo tar zxf solr-6.3.0
-sudo chown -R solr:solr solr-6.3.0
+sudo tar zxf solr-6.6.6
+sudo chown -R solr:solr solr-6.6.6
 ```
 ### generate https cert and key
 
@@ -61,7 +62,7 @@ npm install
 ```
 ### get rad index data
 ```
-tar xcf rad.tar.gz
+tar xvf rad.tar.gz
 ```
 	Copy index data into /usr/solr/solr-6.3.0/server/solr, replacing the default solr.xml
 ### localize configuration
@@ -94,6 +95,11 @@ node migration.js
 ### configure iptables/firewall
 
 Open ports 80, and 443 through lightsail (or other relevant) interface
+```
+firewall-cmd --list-all
+sudo firewall-cmd --zone=external --permanent --add-service=https
+sudo firewall-cmd --reload
+```
 
 ### install startup script
 ```
@@ -110,7 +116,7 @@ sudo service radd start
 
 ### Manually
 ```
-/usr/solr/solr-6.3.0/bin/solr start
+/opt/solr/solr-6.6.6/bin/solr start
 sudo systemctl start mysqld
 sudo npm start
 ```
