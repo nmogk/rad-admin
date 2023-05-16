@@ -104,6 +104,9 @@ RefViewModel.prototype.goSource = function () {
 RefViewModel.prototype.generateCitation = function () {
     ko.cleanNode($("#citationModal")[0]) // Must clear bindings in newer version of KO
     ko.applyBindings(this, $("#citationModal")[0]);
+    new ClipboardJS('.copy', {
+        container: document.getElementById('#citationModal')
+    });
     $("#citationModal").modal("show");
 };
 

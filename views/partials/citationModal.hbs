@@ -6,9 +6,12 @@
         <h4 class="modal-title">Chicago Formatted Citation</h4>
       </div>
       <div class="modal-body">
-        <p>
+        <p id="citation">
           <span data-bind="text: author"></span>. &quot;<span data-bind="text: title"></span>.&quot; <i data-bind="text: reference"></i> (<span data-bind="text: year"></span>): <span data-bind="text: page"></span>.
-        </p>
+        </p> 
+        <button class="copy" data-clipboard-target="#citation">
+            <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy formatted citation to clipboard"></span>
+        </button>
         <hr>
         <p>Select the formatted citation above and use <kbd>ctrl</kbd> + <kbd>c</kbd> to copy.</p>
       </div>
