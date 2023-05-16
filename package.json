@@ -19,7 +19,7 @@
     "start": "node ./bin/www"
   },
   "engines": {
-    "node": ">=16.14"
+    "node": "^16.14"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.0",

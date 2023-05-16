@@ -11,7 +11,7 @@ var schema = {
         id: {type: 'increments', nullable: false, primary: true},
         name: {type: 'string', maxlength: 150, nullable: false},
         description: {type: 'text', fieldType: 'text'},
-        refs: {type: 'json'}
+        refs: {type: 'longtext'}
     },
     invitations: {
         token: {type: 'string', maxlength: 150, primary: true},
