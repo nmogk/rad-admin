@@ -13,6 +13,8 @@ var passport = require('./config/passport');
 var bookshelf = require('./config/bookshelf');
 var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
+var rollers = require('streamroller')
+var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
 
 var proxy = require('http-proxy');
 var proxyOpts = require('./config/solr-proxy');
@@ -47,6 +49,10 @@ morgan.token('statusColor', (req, res, args) => {
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
     skip: function(req, res){return req.path.search(/stylesheets|javascripts|manifest/) >= 0}
 })); // log every request to the console
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
+    skip: function(req, res){return req.path.search(/stylesheets|javascripts|manifest/) >= 0},
+    stream: accessLog
+})); // And to a file
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
