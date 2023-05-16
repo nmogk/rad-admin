@@ -231,6 +231,6 @@ function shutdown(){
     console.log("Goobye")
 }
 
-appLog('Startup complete.')
+appLog.info('Startup complete.')
 
 module.exports = app;
