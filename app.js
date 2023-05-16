@@ -10,11 +10,11 @@ var session = require('express-session');
 var KnexSessionStore = require('connect-session-knex')(session);
 
 var passport = require('./config/passport');
-var bookshelf = require('./config/bookshelf');
 var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
 var rollers = require('streamroller')
 var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
+var appLog = log4js.getLogger('default')
 
 var proxy = require('http-proxy');
 var proxyOpts = require('./config/solr-proxy');
@@ -90,6 +90,7 @@ function isLoggedIn(req, res, next) {
 
     // if user is authenticated in the session, carry on 
     if (req.isAuthenticated()) {
+        
         if(typeof req.replacements === "undefined") {
             req.replacements = {}
         }
@@ -101,10 +102,13 @@ function isLoggedIn(req, res, next) {
         req.replacements.deletable = req.user.get("permission") >= 1;
         req.replacements.nav = 1;
         
+        appLog.info(`${req.replacements.username} logged in`);
+
         return next();
     }
 
     // if they aren't redirect them to the login page
+    appLog.debug('Failed login attempt');
     res.redirect('/login');
 }
 
@@ -167,6 +171,7 @@ var proxyLogic = function (request, response){
         request.url = request.originalUrl;
         proxyServer.web(request, response);
     } else {
+        appLog.info(`Illegal Solr request received: ${request.originalUrl}`)
         response.writeHead(403, 'Illegal request');
         response.write('solrProxy: access denied\n');
         response.end();
@@ -221,7 +226,11 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
 function shutdown(){
+    appLog.info("Received shutdown signal.");
     log4js.shutdown();
+    console.log("Goobye")
 }
+
+appLog('Startup complete.')
 
 module.exports = app;
