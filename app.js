@@ -228,7 +228,8 @@ process.on('SIGINT', shutdown);
 function shutdown(){
     appLog.info("Received shutdown signal.");
     log4js.shutdown();
-    console.log("Goobye")
+    console.log("Goodbye");
+    process.exit();
 }
 
 appLog.info('Startup complete.')
