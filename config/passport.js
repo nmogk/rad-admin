@@ -2,6 +2,8 @@ var LocalStrategy   = require('passport-local').Strategy;
 var User            = require('../models/user');
 var passport        = require('passport');
 var validator       = require('../config/passValidator');
+var log4js          = require('log4js');
+var appLog          = log4js.getLogger('default');
 
 // =========================================================================
 // passport session setup ==================================================
@@ -86,9 +88,11 @@ function(req, email, password, done) { // callback with email and password from 
     //     })
     })
     .then(function (user){
+        appLog.info(`${email} logged in`);
         return done(null, user);
     })
     .catch(function (err){
+        appLog.debug(`Failed login attempt: ${email}`);
         return done(null, false, req.flash('loginMessage', 'Unable to log in. Please check your email and password.'));
     });
 

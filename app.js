@@ -102,13 +102,10 @@ function isLoggedIn(req, res, next) {
         req.replacements.deletable = req.user.get("permission") >= 1;
         req.replacements.nav = 1;
         
-        appLog.info(`${req.replacements.username} logged in`);
-
         return next();
     }
 
     // if they aren't redirect them to the login page
-    appLog.debug('Failed login attempt');
     res.redirect('/login');
 }
 
