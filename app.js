@@ -211,4 +211,11 @@ app.use(function (err, req, res, next) {
     res.render('error');
 });
 
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+function shutdown(){
+    log4js.shutdown();
+}
+
 module.exports = app;
