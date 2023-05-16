@@ -1,7 +1,7 @@
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
-var logger = require('morgan');
+var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var hbs = require('hbs');
@@ -27,7 +27,26 @@ app.set('view engine', 'hbs');
 hbs.registerPartials(__dirname + '/views/partials');
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev')); // log every request to the console
+
+morgan.token('statusColor', (req, res, args) => {
+    // get the status code if response written
+    var status = (typeof res.headersSent !== 'boolean' ? Boolean(res.header) : res.headersSent)
+        ? res.statusCode
+        : undefined
+
+    // get status color
+    var color = status >= 500 ? 31 // red
+        : status >= 400 ? 33 // yellow
+            : status >= 300 ? 36 // cyan
+                : status >= 200 ? 32 // green
+                    : 0; // no color
+
+    return '\x1b[' + color + 'm' + status + '\x1b[0m';
+});
+
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
+    skip: function(req, res){return res.path.search(/javascripts|manifest/) >= 0}
+})); // log every request to the console
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
