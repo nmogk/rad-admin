@@ -8,7 +8,7 @@ var hbs = require('hbs');
 var flash = require('connect-flash');
 var session = require('express-session');
 var KnexSessionStore = require('connect-session-knex')(session);
-
+var { cspHeader, NONCE, INLINE, SELF} = require('express-csp-header')
 var passport = require('./config/passport');
 var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
@@ -27,6 +27,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 hbs.registerPartials(__dirname + '/views/partials');
+
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
@@ -174,6 +175,24 @@ var proxyLogic = function (request, response){
         response.end();
     }
 };
+
+app.use(cspHeader({
+    directives: {
+        'default-src': [SELF], 
+        'script-src': [SELF, NONCE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js', 'https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js', 'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js'], 
+        'style-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'],
+        'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts', 'https://fonts.googleapis.com/css?family=News+Cycle:400,700', 'https://fonts.gstatic.com/s/newscycle/'],
+        'img-src': [SELF], 
+        'frame-src': [SELF],
+    },
+    reportOnly: true
+}));
+
+app.use(function (request, response){
+    hbs.registerHelper('nonce', function(opts){
+        return request.nonce;
+    });
+})
 
 // routes ======================================================================
 
