@@ -17,6 +17,7 @@ var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
 var appLog = log4js.getLogger('default')
 
 var proxyLogic = require('./config/solr-proxy');
+var { createProxyMiddleware } = require('http-proxy-middleware');
 
 var app = express();
 
@@ -78,7 +79,8 @@ app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
 
 // Proxy set up
-
+app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
+app.use('/tracker', express.static(process.env.PROXY_DOCROOT));
 
 // custom middleware =============================================================
 
