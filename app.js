@@ -16,8 +16,7 @@ var rollers = require('streamroller')
 var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
 var appLog = log4js.getLogger('default')
 
-var proxy = require('http-proxy');
-var proxyOpts = require('./config/solr-proxy');
+var proxyLogic = require('./config/solr-proxy');
 
 var app = express();
 
@@ -79,8 +78,6 @@ app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
 
 // Proxy set up
-
-var proxyServer = proxy.createProxyServer({target: proxyOpts.backend});
 
 
 // custom middleware =============================================================
@@ -148,32 +145,7 @@ var superuser = function (req, res, next) {
 };
 
 
-/*
- * Returns true if the request satisfies the following conditions:
- *  - HTTP method (e.g., GET) is in options.validHttpMethods
- *  - Path (eg. /solr/update) is in options.validPaths
- *  - All request query params (eg ?q=, ?stream.url=) not in options.invalidParams
- */
-var validateRequest = function(request, options) {
-    return options.validHttpMethods.indexOf(request.method) !== -1 &&
-        options.validPaths.indexOf(request.baseUrl) !== -1 &&
-        Object.keys(request.query).every(function(p) {
-        var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
-        return options.invalidParams.indexOf(paramPrefix) === -1;
-        });
-};
 
-var proxyLogic = function (request, response){
-    if (validateRequest(request, proxyOpts)) {
-        request.url = request.originalUrl;
-        proxyServer.web(request, response);
-    } else {
-        appLog.info(`Illegal Solr request received: ${request.originalUrl}`)
-        response.writeHead(403, 'Illegal request');
-        response.write('solrProxy: access denied\n');
-        response.end();
-    }
-};
 
 // routes ======================================================================
 
