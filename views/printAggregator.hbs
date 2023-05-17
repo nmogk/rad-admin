@@ -64,7 +64,7 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('printListButton')
-                        .addEventListener('click', window.print);
+                        .addEventListener('click', function(){window.print();});
             });
 
             // Deletes the contents of the localStorage key and refreshes the page
