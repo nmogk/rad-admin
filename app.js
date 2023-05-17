@@ -179,7 +179,7 @@ var proxyLogic = function (request, response){
 app.use(expressCspHeader({
     directives: {
         'default-src': [SELF], 
-        'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:'], 
+        'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:', INLINE], 
         'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', 'https://fonts.googleapis.com/css'],
         'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://fonts.gstatic.com/'],
         'img-src': [SELF, 'data:']
