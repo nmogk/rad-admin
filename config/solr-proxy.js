@@ -28,6 +28,8 @@ var validateRequest = function(request, options) {
 };
 
 var proxyLogic = function (request, response){
+  this.backend = proxyOptions.backend;
+
   if (validateRequest(request, proxyOptions)) {
       request.url = request.originalUrl;
       proxyServer.web(request, response);
