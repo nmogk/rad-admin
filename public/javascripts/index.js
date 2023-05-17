@@ -8,6 +8,11 @@ function showStory() {
     document.getElementById("story").setAttribute("aria-hidden", "false");
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('showStoryLink')
+            .addEventListener('click', showStory);
+});
+
 /**
  * Hides the story section and makes the search results section visible
  */
@@ -19,6 +24,11 @@ function hideStory() {
       document.getElementById("mainDisplay").setAttribute("aria-hidden", "false");
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('hideStoryButton')
+            .addEventListener('click', hideStory);
+});
 
 /**
  * References are stored as objects whose fields are knockout observables. This function gets the

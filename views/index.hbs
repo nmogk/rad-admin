@@ -5,7 +5,7 @@
 {{#> layout title="Research Assistance Database"}}
     
     {{#*inline "search-area"}}
-        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" onclick="showStory()">Read</a> our story. <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">Get searching help</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
+        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" id="showStoryLink">Read</a> our story. <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">Get searching help</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
 
         <form role="search" class="form-horizontal">
           <div class="form-group">
@@ -30,7 +30,7 @@
             {{> backstoryContents}}  
 
             <div class="text-center">
-                <button class="btn btn-default" onclick="hideStory()">Return to Search Results</button>
+                <button class="btn btn-default" id="hideStoryButton">Return to Search Results</button>
             </div>
         </div>
 
@@ -124,14 +124,14 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script src="javascripts/FileSaver.min.js"></script>
-        <script src="javascripts/Blob.js"></script>
-        <script src="javascripts/utils.js"></script>
-        <script src="javascripts/refGridView.js"></script>
-        <script src="javascripts/refViewModel.js"></script>
-        <script src="javascripts/sourceViewModel.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/FileSaver.min.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/Blob.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
-        <script src="javascripts/index.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/index.js"></script>
     {{/inline}}
 
 {{/layout}}

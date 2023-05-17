@@ -8,7 +8,7 @@ var hbs = require('hbs');
 var flash = require('connect-flash');
 var session = require('express-session');
 var KnexSessionStore = require('connect-session-knex')(session);
-
+var { expressCspHeader, NONCE, INLINE, SELF, STRICT_DYNAMIC, EVAL} = require('express-csp-header');
 var passport = require('./config/passport');
 var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
@@ -27,6 +27,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 hbs.registerPartials(__dirname + '/views/partials');
+
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
@@ -148,6 +149,23 @@ var superuser = function (req, res, next) {
 
 
 
+
+app.use(expressCspHeader({
+    directives: {
+        'default-src': [SELF], 
+        'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:', INLINE], 
+        'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', 'https://fonts.googleapis.com/css'],
+        'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://fonts.gstatic.com/'],
+        'img-src': [SELF, 'data:']
+    }
+}));
+
+app.use(function (request, response, next){
+    hbs.registerHelper('nonce', function(opts){
+        return request.nonce;
+    });
+    next();
+})
 
 // routes ======================================================================
 

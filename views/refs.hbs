@@ -131,11 +131,11 @@
     {{#*inline "scripts-block"}}
 
       {{!<script> src="private/ajax-form.js"</script>}}
-      <script src="javascripts/utils.js"></script>
-      <script src="javascripts/refGridView.js"></script>
-      <script src="javascripts/refViewModel.js"></script>
-      <script src="javascripts/sourceViewModel.js"></script>
-      <script src="private/refs.js"></script> {{! This is temporary only to check the layout}}
+      <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
+      <script nonce="{{nonce}}" src="private/refs.js"></script> {{! This is temporary only to check the layout}}
     {{/inline}}
 
 {{/layout}}
