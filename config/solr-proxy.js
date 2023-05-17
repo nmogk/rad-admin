@@ -28,7 +28,6 @@ var validateRequest = function(request, options) {
 };
 
 var proxyLogic = function (request, response){
-  this.backend = proxyOptions.backend;
 
   if (validateRequest(request, proxyOptions)) {
       request.url = request.originalUrl;
@@ -40,5 +39,7 @@ var proxyLogic = function (request, response){
       response.end();
   }
 };
+
+proxyLogic.backend = proxyOptions.backend;
 
 module.exports = proxyLogic;
