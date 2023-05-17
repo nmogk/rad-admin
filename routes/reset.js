@@ -6,7 +6,7 @@ var validator       = require('../config/passValidator');
 var Promise = require('bluebird');
 
 router.get('/', function(req, res){
-    res.redirect('/login');
+    res.redirect(302, '/login');
 })
 
 router.get('/:token', function(req, res) {
@@ -18,7 +18,7 @@ router.get('/:token', function(req, res) {
     })
     .catch(function (err){
         req.flash('login', 'Password reset token is invalid or has expired.');
-        res.redirect('/login');
+        res.redirect(303, '/login');
     });
 });
 

@@ -79,9 +79,6 @@ app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
 
-// Proxy set up
-app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
-app.use('/tracker', express.static(process.env.PROXY_DOCROOT));
 
 // custom middleware =============================================================
 
@@ -106,7 +103,7 @@ function isLoggedIn(req, res, next) {
     }
 
     // if they aren't redirect them to the login page
-    res.redirect('/login');
+    res.redirect(302, '/login');
 }
 
 // Middleware which collects flash messages and packages them into the handlebars context
@@ -136,7 +133,7 @@ var forceSsl = function (req, res, next) {
     }
 
     var redirect = ['https://', host, ':', process.env.HTTPSPORT, req.url].join('')
-    return res.redirect(redirect);
+    return res.redirect(308, redirect);
 };
 
 // Redirects to profile page if a particular user does not have
@@ -144,7 +141,7 @@ var forceSsl = function (req, res, next) {
 var superuser = function (req, res, next) {
     if (req.user.get("permission") >= 2) { 
         return next(); }
-    res.redirect('/profile');
+    res.redirect(302, '/profile'); // This is a transparent redirect. May be confusing. Possibly replace with 401 (unauthorized) with a special error popup
 };
 
 
@@ -173,6 +170,10 @@ app.use('/solr/*', proxyLogic);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
 app.use(flashMessageCenter);
+
+// Proxy set up
+app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
+app.use('/tracker', express.static(process.env.PROXY_DOCROOT));
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
