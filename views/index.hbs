@@ -124,14 +124,14 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script src="javascripts/FileSaver.min.js"></script>
-        <script src="javascripts/Blob.js"></script>
-        <script src="javascripts/utils.js"></script>
-        <script src="javascripts/refGridView.js"></script>
-        <script src="javascripts/refViewModel.js"></script>
-        <script src="javascripts/sourceViewModel.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/FileSaver.min.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/Blob.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
-        <script src="javascripts/index.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/index.js"></script>
     {{/inline}}
 
 {{/layout}}

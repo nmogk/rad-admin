@@ -12,7 +12,7 @@
 {{/inline}}
 
 {{#*inline "scripts-block"}}
-    <script src="/usertools.js"></script>
+    <script nonce="{{nonce}}" src="/usertools.js"></script>
 {{/inline}}
 
 {{#*inline "search-area"}}
@@ -116,6 +116,6 @@
 {{/inline}} 
 
 {{#*inline "scripts-block"}}
-<script src="private/usertools.js"></script> 
+<script nonce="{{nonce}}" src="private/usertools.js"></script> 
 {{/inline}} 
 {{/layout}}
