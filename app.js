@@ -183,8 +183,7 @@ app.use(expressCspHeader({
         'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', 'https://fonts.googleapis.com/css'],
         'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://fonts.gstatic.com/'],
         'img-src': [SELF, 'data:']
-    },
-    reportOnly: true
+    }
 }));
 
 app.use(function (request, response, next){
