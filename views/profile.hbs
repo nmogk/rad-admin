@@ -74,7 +74,7 @@
               <p>Are you sure you want to delete? This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="sendDelete()" class="btn btn-danger">Delete</button>
+                <button type="button" id="deleteSelfConfirm" class="btn btn-danger">Delete</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>
@@ -93,6 +93,11 @@
                 window.location.reload(true);
 
             }
+
+            document.addEventListener('DOMContentLoaded', function () {
+              document.getElementById('deleteSelfConfirm')
+              .addEventListener('click', sendDelete);
+          });
 
         </script>
     {{/inline}} 
