@@ -51,7 +51,7 @@ app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[
     skip: function(req, res){return req.path.search(/stylesheets|javascripts|manifest/) >= 0}
 })); // log every request to the console
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
-    skip: function(req, res){return req.path.search(/stylesheets|javascripts|manifest/) >= 0},
+    skip: function(req, res){return req.path.search(/fonts|stylesheets|javascripts|manifest/) >= 0},
     stream: accessLog
 })); // And to a file
 app.use(bodyParser.json()); // get information from html forms
@@ -176,7 +176,6 @@ app.use(flashMessageCenter);
 
 // Proxy set up
 app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
-app.use('/tracker', express.static(process.env.PROXY_DOCROOT));
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
