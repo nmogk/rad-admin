@@ -5,14 +5,62 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
         <h4 class="modal-title">Chicago Formatted Citation</h4>
       </div>
-      <div class="modal-body">
-        <p id="citation">
-          <span data-bind="text: author"></span>. &quot;<span data-bind="text: title"></span>.&quot; <i data-bind="text: reference"></i> (<span data-bind="text: year"></span>): <span data-bind="text: page"></span>.
-        </p> 
-        <button class="copy" data-clipboard-target="#citation">
-            <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy formatted citation to clipboard"></span>
-        </button>
-        <hr>
+      <div class="modal-body"><table>
+        <tr colspan="2"><h5>CRSQ/ICC Style</h5></tr>
+        <tr>
+          <td><p id="crsq-citation">
+            <span data-bind="text: author"></span>. <span data-bind="text: year"></span>. <span data-bind="text: title"></span>. <i data-bind="text: reference"></i>:<span data-bind="text: page"></span>.
+          </p></td>
+          <td><button class="copy" data-clipboard-target="#crsq-citation">
+              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy CRSQ and ICC formatted citation to clipboard"></span>
+          </button></td>
+        <hr></tr>
+        <tr colspan="2"><h5>ARJ Style</h5></tr>
+        <tr>
+          <td><p id="arj-citation">
+            <span data-bind="text: author"></span>. &quot;<span data-bind="text: year"></span>. <span data-bind="text: title"></span>.&quot; <i data-bind="text: reference"></i>:<span data-bind="text: page"></span>.
+          </p></td>
+          <td><button class="copy" data-clipboard-target="#arj-citation">
+              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy ARJ formatted citation to clipboard"></span>
+          </button></td>
+        <hr></tr>
+        <tr colspan="2"><h5>JoC Style</h5></tr>
+        <tr>
+          <td><p id="joc-citation">
+            <span data-bind="text: author"></span>, <span data-bind="text: title"></span>, <i data-bind="text: reference"></i>:<span data-bind="text: page"></span>.
+          </p></td>
+          <td><button class="copy" data-clipboard-target="#joc-citation">
+              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy JoC formatted citation to clipboard"></span>
+          </button></td>
+        <hr></tr>
+        <tr colspan="2"><h5>MLA Style</h5></tr>
+        <tr>
+          <td><p id="mla-citation">
+            <span data-bind="text: author"></span>. &quot;<span data-bind="text: title"></span>.&quot; <i data-bind="text: reference"></i>, p.p. <span data-bind="text: page"></span>.
+          </p></td>
+          <td><button class="copy" data-clipboard-target="#mla-citation">
+              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy MLA formatted citation to clipboard"></span>
+          </button></td>
+        <hr></tr>
+        <tr colspan="2"><h5>APA Style</h5></tr>
+        <tr>
+          <td><p id="apa-citation">
+            <span data-bind="text: author"></span>. (<span data-bind="text: year"></span>). <span data-bind="text: title"></span>. <i data-bind="text: reference"></i>, <span data-bind="text: page"></span>.
+          </p></td> 
+          <td><button class="copy" data-clipboard-target="#apa-citation">
+              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy APA formatted citation to clipboard"></span>
+          </button></td>
+        <hr></tr>
+        <tr colspan="2"><h5>Chicago Style</h5></tr>
+        <tr>
+          <td><p id="chicago-citation">
+            <span data-bind="text: author"></span>. &quot;<span data-bind="text: title"></span>.&quot; <i data-bind="text: reference"></i> (<span data-bind="text: year"></span>): <span data-bind="text: page"></span>.
+          </p></td>
+          <td><button class="copy" data-clipboard-target="#chicago-citation">
+              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard" aria-label="Copy Chicago formatted citation to clipboard"></span>
+          </button></td>
+        <hr></tr>
+        </table>
         <p>Select the formatted citation above and use <kbd>ctrl</kbd> + <kbd>c</kbd> to copy.</p>
       </div>
       <div class="modal-footer">
