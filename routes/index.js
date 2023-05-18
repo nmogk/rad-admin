@@ -9,7 +9,7 @@ router.get('/', function(req, res, next) {
   res.render('index', dbMeta);
 });
 
-router.get('/printAggregator.html', function(req, res, next) {
+router.get('/aggregator.html', function(req, res, next) {
   res.render('printAggregator');
 });
 

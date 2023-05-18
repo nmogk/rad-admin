@@ -137,7 +137,7 @@ RefViewModel.prototype.downloadCitation = function () {
         }
 
         localStorage[store] = JSON.stringify(toAdd);
-        window.open("printAggregator.html", "printer");
+        window.open("aggregator.html", "printer");
     } else {
         alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
     }
