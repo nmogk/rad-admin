@@ -1,4 +1,4 @@
-{{#> layout title="Print References"}}
+{{#> layout title="Saved References"}}
 
     {{#*inline "header-block"}}
         <style media="print" type="text/css">
@@ -28,8 +28,8 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
-        <p>Use this page to collect references to print. Each reference you select on the main search results page for printing will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
-        <a href="#" class="btn btn-primary" onclick="window.print()"><span class="glyphicon glyphicon-print"></span> Print</a><a href="#" class="btn btn-default" onclick="clearPrintList()"><span class="glyphicon glyphicon-trash"></span> Clear</a>
+        <p>Use this page to collect references to print. Each reference you select on the main search results page with the &quot;<span class="glyphicon glyphicon-bookmark"></span> Save reference&quot; menu option will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
+        <a href="#" class="btn btn-primary" id="printListButton"><span class="glyphicon glyphicon-print"></span> Print</a><a href="#" class="btn btn-default" id="clearListButton"><span class="glyphicon glyphicon-trash"></span> Clear</a>
     {{/inline}}  
 
     {{#*inline "results-area"}}
@@ -59,14 +59,25 @@
     {{/inline}} 
 
     {{#*inline "scripts-block"}}
-        <script>
+        <script nonce="{{nonce}}">
             var store = 'printRefs';
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('printListButton')
+                        .addEventListener('click', function(){window.print();});
+            });
 
             // Deletes the contents of the localStorage key and refreshes the page
             function clearPrintList(){
                 localStorage[store] = null;
                 window.location.reload(false);
             }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('clearListButton')
+                        .addEventListener('click', clearPrintList);
+            });
+
 
             // Very simple (static) view model to display references
             function PrinterViewModel(){

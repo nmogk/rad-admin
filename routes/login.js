@@ -7,6 +7,8 @@ var Reset = require('../models/invitations');
 var Promise = require('bluebird');
 var mail = require('../config/mailer');
 var token = require('../models/tokens');
+var log4js = require('log4js');
+var appLog = log4js.getLogger('default');
 
 // =====================================
 // LOGIN ===============================
@@ -39,13 +41,15 @@ router.post('/forgot', function (req, res, next) {
             return mail.sendResetMail(req, user.get('email'), invite.get('token'));
         })
         .then(function () { // Success
+            appLog.info(`Password reset email sent to: ${req.body.email}`);
             return req.flash('login', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
         })
         .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
+            appLog.info(`Password reset request by non-user: ${req.body.email}`);
             return req.flash('login', 'No account with that email address exists.');
         })
         .catch(function (err) { // Other errors
-            console.log(err);
+            appLog.err(`Problem sending password reset email to: ${req.body.email}`);;
             return req.flash('login', 'Problem sending reset.');
         })
         .finally(function () { // All responses get redirected to /login to display flash message

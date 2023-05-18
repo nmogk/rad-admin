@@ -8,6 +8,11 @@ function showStory() {
     document.getElementById("story").setAttribute("aria-hidden", "false");
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('showStoryLink')
+            .addEventListener('click', showStory);
+});
+
 /**
  * Hides the story section and makes the search results section visible
  */
@@ -19,6 +24,11 @@ function hideStory() {
       document.getElementById("mainDisplay").setAttribute("aria-hidden", "false");
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('hideStoryButton')
+            .addEventListener('click', hideStory);
+});
 
 /**
  * References are stored as objects whose fields are knockout observables. This function gets the
@@ -104,6 +114,9 @@ RefViewModel.prototype.goSource = function () {
 RefViewModel.prototype.generateCitation = function () {
     ko.cleanNode($("#citationModal")[0]) // Must clear bindings in newer version of KO
     ko.applyBindings(this, $("#citationModal")[0]);
+    new ClipboardJS('.copy', {
+        container: document.getElementById('#citationModal')
+    });
     $("#citationModal").modal("show");
 };
 
@@ -124,7 +137,7 @@ RefViewModel.prototype.downloadCitation = function () {
         }
 
         localStorage[store] = JSON.stringify(toAdd);
-        window.open("printAggregator.html", "printer");
+        window.open("aggregator.html", "printer");
     } else {
         alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
     }

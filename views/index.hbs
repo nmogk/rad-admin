@@ -5,15 +5,15 @@
 {{#> layout title="Research Assistance Database"}}
     
     {{#*inline "search-area"}}
-        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" onclick="showStory()">Read</a> our story. <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">Get searching help</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
+        <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" id="showStoryLink">Read</a> our story. Get searching <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#searchHelp">help</a>. View your <a target="printer" href="aggregator.html">saved references</a>.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
 
         <form role="search" class="form-horizontal">
           <div class="form-group">
-            <label class="control-label col-sm-2">Query:</label>
+            <label for="searchInput" class="control-label col-sm-2">Query:</label>
             <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
           </div>
           <div class="form-group">
-            <label class="control-label col-sm-2">Results per page:</label>
+            <label for="rowsInput" class="control-label col-sm-2">Results per page:</label>
             <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
             <div class="col-sm-6 checkbox">
               <label><input id="boostCheck" type="checkbox" name="boost" value="1"> Disable date boost</label>
@@ -30,7 +30,7 @@
             {{> backstoryContents}}  
 
             <div class="text-center">
-                <button class="btn btn-default" onclick="hideStory()">Return to Search Results</button>
+                <button class="btn btn-default" id="hideStoryButton">Return to Search Results</button>
             </div>
         </div>
 
@@ -77,7 +77,7 @@
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: downloadCitation"><span class="glyphicon glyphicon-print"></span> Print</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: downloadCitation"><span class="glyphicon glyphicon-bookmark"></span> Save reference</a></li>
                     </ul>
                   </div>
                 </div>
@@ -86,7 +86,7 @@
                 <div class="panel-body">
                   <div class="row">
                     <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
-                    <div class="col-sm-5"><h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: $parent.sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
+                    <div class="col-sm-5"><h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
                     <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="textPretty: page"></span></div>
                     <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
                   </div>
@@ -124,14 +124,14 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script src="javascripts/FileSaver.min.js"></script>
-        <script src="javascripts/Blob.js"></script>
-        <script src="javascripts/utils.js"></script>
-        <script src="javascripts/refGridView.js"></script>
-        <script src="javascripts/refViewModel.js"></script>
-        <script src="javascripts/sourceViewModel.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/FileSaver.min.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/Blob.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
-        <script src="javascripts/index.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/index.js"></script>
     {{/inline}}
 
 {{/layout}}

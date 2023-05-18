@@ -1,21 +1,23 @@
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
-var logger = require('morgan');
+var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var hbs = require('hbs');
 var flash = require('connect-flash');
 var session = require('express-session');
 var KnexSessionStore = require('connect-session-knex')(session);
-
+var { expressCspHeader, NONCE, INLINE, SELF, STRICT_DYNAMIC, EVAL, NONE} = require('express-csp-header');
 var passport = require('./config/passport');
-var bookshelf = require('./config/bookshelf');
 var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
+var rollers = require('streamroller')
+var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
+var appLog = log4js.getLogger('default')
 
-var proxy = require('http-proxy');
-var proxyOpts = require('./config/solr-proxy');
+var proxyLogic = require('./config/solr-proxy');
+var { createProxyMiddleware } = require('http-proxy-middleware');
 
 var app = express();
 
@@ -26,8 +28,32 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 hbs.registerPartials(__dirname + '/views/partials');
 
+
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev')); // log every request to the console
+
+morgan.token('statusColor', (req, res, args) => {
+    // get the status code if response written
+    var status = (typeof res.headersSent !== 'boolean' ? Boolean(res.header) : res.headersSent)
+        ? res.statusCode
+        : undefined
+
+    // get status color
+    var color = status >= 500 ? 31 // red
+        : status >= 400 ? 33 // yellow
+            : status >= 300 ? 36 // cyan
+                : status >= 200 ? 32 // green
+                    : 0; // no color
+
+    return '\x1b[' + color + 'm' + status + '\x1b[0m';
+});
+
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
+    skip: function(req, res){return req.path.search(/fonts|stylesheets|javascripts|manifest/) >= 0}
+})); // log every request to the console
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
+    skip: function(req, res){return req.path.search(/fonts|stylesheets|javascripts|manifest/) >= 0},
+    stream: accessLog
+})); // And to a file
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
@@ -53,10 +79,6 @@ app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
 
-// Proxy set up
-
-var proxyServer = proxy.createProxyServer({target: proxyOpts.backend});
-
 
 // custom middleware =============================================================
 
@@ -65,6 +87,7 @@ function isLoggedIn(req, res, next) {
 
     // if user is authenticated in the session, carry on 
     if (req.isAuthenticated()) {
+        
         if(typeof req.replacements === "undefined") {
             req.replacements = {}
         }
@@ -80,7 +103,7 @@ function isLoggedIn(req, res, next) {
     }
 
     // if they aren't redirect them to the login page
-    res.redirect('/login');
+    res.redirect(302, '/login');
 }
 
 // Middleware which collects flash messages and packages them into the handlebars context
@@ -110,7 +133,7 @@ var forceSsl = function (req, res, next) {
     }
 
     var redirect = ['https://', host, ':', process.env.HTTPSPORT, req.url].join('')
-    return res.redirect(redirect);
+    return res.redirect(308, redirect);
 };
 
 // Redirects to profile page if a particular user does not have
@@ -118,35 +141,32 @@ var forceSsl = function (req, res, next) {
 var superuser = function (req, res, next) {
     if (req.user.get("permission") >= 2) { 
         return next(); }
-    res.redirect('/profile');
+    res.redirect(302, '/profile'); // This is a transparent redirect. May be confusing. Possibly replace with 401 (unauthorized) with a special error popup
 };
 
 
-/*
- * Returns true if the request satisfies the following conditions:
- *  - HTTP method (e.g., GET) is in options.validHttpMethods
- *  - Path (eg. /solr/update) is in options.validPaths
- *  - All request query params (eg ?q=, ?stream.url=) not in options.invalidParams
- */
-var validateRequest = function(request, options) {
-    return options.validHttpMethods.indexOf(request.method) !== -1 &&
-        options.validPaths.indexOf(request.baseUrl) !== -1 &&
-        Object.keys(request.query).every(function(p) {
-        var paramPrefix = p.split('.')[0]; // invalidate not just "stream", but "stream.*"
-        return options.invalidParams.indexOf(paramPrefix) === -1;
-        });
-};
+// app.use(function (req, res, next) {
+//     res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+//     next()
+// })
 
-var proxyLogic = function (request, response){
-    if (validateRequest(request, proxyOpts)) {
-        request.url = request.originalUrl;
-        proxyServer.web(request, response);
-    } else {
-        response.writeHead(403, 'Illegal request');
-        response.write('solrProxy: access denied\n');
-        response.end();
+app.use(expressCspHeader({
+    directives: {
+        'default-src': [SELF], 
+        'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:', INLINE], 
+        'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', 'https://fonts.googleapis.com/css'],
+        'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://fonts.gstatic.com/'],
+        'img-src': [SELF, 'data:'],
+        'frame-ancestors': [NONE]
     }
-};
+}));
+
+app.use(function (request, response, next){
+    hbs.registerHelper('nonce', function(opts){
+        return request.nonce;
+    });
+    next();
+})
 
 // routes ======================================================================
 
@@ -154,6 +174,9 @@ app.use('/solr/*', proxyLogic);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
 app.use(flashMessageCenter);
+
+// Proxy set up
+app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
@@ -191,5 +214,17 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+function shutdown(){
+    appLog.info("Received shutdown signal.");
+    log4js.shutdown();
+    console.log("Goodbye");
+    process.exit();
+}
+
+appLog.info('Startup complete.')
 
 module.exports = app;
