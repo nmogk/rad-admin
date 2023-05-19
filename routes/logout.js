@@ -5,8 +5,9 @@ var router = express.Router();
 // LOGOUT ==============================
 // =====================================
 router.get('/', function(req, res) {
-    req.logout();
-    res.redirect(303, '/');
+    req.logout(function(err){
+        res.redirect(303, '/');
+    });
 });
 
 module.exports = router;
