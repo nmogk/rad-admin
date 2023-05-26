@@ -14,10 +14,14 @@ var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
 var rollers = require('streamroller')
 var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
+var botLog = new rollers.RollingFileStream('logs/bot.log', 1073741824, 5);
 var appLog = log4js.getLogger('default')
 
 var proxyLogic = require('./config/solr-proxy');
 var { createProxyMiddleware } = require('http-proxy-middleware');
+
+const logExcludes = /fonts|stylesheets|javascripts|manifest|favicon|apple-touch-icon/
+const validPaths = /public|solr|tracker|private|login|logout|reset|signup|profile|refs|sources|campaigns|site|users/
 
 var app = express();
 
@@ -47,13 +51,8 @@ morgan.token('statusColor', (req, res, args) => {
     return '\x1b[' + color + 'm' + status + '\x1b[0m';
 });
 
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
-    skip: function(req, res){return req.path.search(/fonts|stylesheets|javascripts|manifest/) >= 0}
-})); // log every request to the console
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor\x1b[36m:url\x1b[0m :response-time ms - length|:res[content-length]`, {
-    skip: function(req, res){return req.path.search(/fonts|stylesheets|javascripts|manifest/) >= 0},
-    stream: accessLog
-})); // And to a file
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`)); // log every request to the console
+
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
@@ -174,6 +173,16 @@ app.use('/solr/*', proxyLogic);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
 app.use(flashMessageCenter);
+
+// The position of these logs should not pick up requests to URLs that need to be re-queried as https or calls to the SOLR proxy
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
+    skip: function(req, res){return req.path.search(logExcludes) >= 0 || (req.path != '/' && req.path.search(validPaths) < 0)},
+    stream: accessLog
+})); // Log legitimate requests to a file - Unlogged in attempts to read protected files should show up here
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
+    skip: function(req, res){return req.path == '/' || req.path.search(logExcludes) >= 0 || req.path.search(validPaths) >=0},
+    stream: botLog
+})); // And random bot attacks to a separate file
 
 // Proxy set up
 app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
