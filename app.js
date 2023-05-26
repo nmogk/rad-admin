@@ -21,7 +21,7 @@ var proxyLogic = require('./config/solr-proxy');
 var { createProxyMiddleware } = require('http-proxy-middleware');
 
 const logExcludes = /fonts|stylesheets|javascripts|manifest|favicon|apple-touch-icon/
-const validPaths = /public|solr|tracker|private|login|logout|reset|signup|profile|refs|sources|campaigns|site|users/
+const validPaths = /public|solr|tracker|private|login|logout|reset|signup|profile|refs|sources|campaigns|site|users|aggregator/
 
 var app = express();
 
