@@ -176,11 +176,11 @@ app.use(flashMessageCenter);
 
 // The position of these logs should not pick up requests to URLs that need to be re-queried as https or calls to the SOLR proxy
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: function(req, res){return req.path.search(logExcludes) >= 0 || (req.path !== '/' && req.path.search(validPaths) < 0)},
+    skip: function(req, res){return req.path.search(logExcludes) >= 0 || (req.path !== '/' && req.path.search(validPaths) < 0) || (req.path === '/' && req.method === 'POST')},
     stream: accessLog
 })); // Log legitimate requests to a file - Unlogged in attempts to read protected files should show up here
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: function(req, res){return req.path === '/' || req.path.search(logExcludes) === 1 || req.path.search(validPaths) === 1},
+    skip: function(req, res){return (req.path === '/' && req.method === 'GET') || req.path.search(logExcludes) === 1 || req.path.search(validPaths) === 1},
     stream: botLog
 })); // And random bot attacks to a separate file
 
