@@ -15,6 +15,7 @@ var log4js = require('./config/logger'); // Configures logger. All subsequent re
 var rollers = require('streamroller')
 var accessLog = new rollers.RollingFileStream('logs/access.log', 1073741824, 5);
 var botLog = new rollers.RollingFileStream('logs/bot.log', 1073741824, 5);
+var queryLog = new rollers.RollingFileStream('logs/queries.log', 1073741824, 5);
 var appLog = log4js.getLogger('default')
 
 var proxyLogic = require('./config/solr-proxy');
@@ -183,6 +184,11 @@ app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b
     skip: function(req, res){return (req.path === '/' && req.method === 'GET') || req.path.search(logExcludes) === 1 || req.path.search(validPaths) === 1},
     stream: botLog
 })); // And random bot attacks to a separate file
+app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
+    skip: function(req, res){return req.originalUrl.search('/?q=') !== 0},
+    stream: queryLog
+}));
+
 
 // Proxy set up
 app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
