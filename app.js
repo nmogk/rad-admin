@@ -185,7 +185,7 @@ app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b
     stream: botLog
 })); // And random bot attacks to a separate file
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: function(req, res){return req.originalUrl.search('/?q=') !== 0},
+    skip: function(req, res){return req.originalUrl.search(/\/\?q=/) !== 0},
     stream: queryLog
 }));
 
