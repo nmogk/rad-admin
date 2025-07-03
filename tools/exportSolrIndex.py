@@ -17,7 +17,7 @@ def fetch_all_documents(core_name):
         'rows': ROWS_PER_REQUEST,
         'wt': 'json',
         'sort': 'id asc',  # Required for cursorMark
-        'start': cursor_mark,
+        'cursorMark': cursor_mark,
     }
 
     select = 'refs' if core_name == 'rad' else 'select'
