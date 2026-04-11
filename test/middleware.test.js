@@ -177,7 +177,7 @@ describe('Middleware', function () {
         it('should pass through for encrypted connections', function () {
             var req = mockReq({
                 path: '/refs',
-                connection: { encrypted: true }
+                secure: true
             });
             var res = mockRes();
             var next = sinon.spy();
@@ -192,7 +192,7 @@ describe('Middleware', function () {
             var req = mockReq({
                 path: '/login',
                 url: '/login',
-                connection: { encrypted: false },
+                secure: false,
                 get: sinon.stub().returns('example.com:80')
             });
             var res = mockRes();
@@ -211,7 +211,7 @@ describe('Middleware', function () {
             var req = mockReq({
                 path: '/refs',
                 url: '/refs?q=test',
-                connection: { encrypted: false },
+                secure: false,
                 get: sinon.stub().returns('myhost.com:3000')
             });
             var res = mockRes();
@@ -227,7 +227,7 @@ describe('Middleware', function () {
             var req = mockReq({
                 path: '/profile',
                 url: '/profile',
-                connection: { encrypted: false },
+                secure: false,
                 get: sinon.stub().returns('example.com')
             });
             var res = mockRes();

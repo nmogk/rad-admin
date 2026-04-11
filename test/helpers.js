@@ -15,7 +15,7 @@ function mockReq(opts) {
         params: {},
         body: {},
         headers: {},
-        connection: { encrypted: false },
+        secure: false,
         replacements: undefined,
         user: null,
         flash: sinon.stub().returns([]),

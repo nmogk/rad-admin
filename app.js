@@ -71,6 +71,7 @@ app.use(session({
     unset: 'destroy',
     cookie: {
         secure: true,
+        httpOnly: true,
         maxAge: 86400000 // 1 day for now
     }
 })); // session secret

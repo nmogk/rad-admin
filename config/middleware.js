@@ -39,7 +39,7 @@ function flashMessageCenter(req, res, next) {
 // Middleware which detects if the connection is using ssl, and forces
 // it if not and the user is accessing a resource other than /
 var forceSsl = function (req, res, next) {
-    if (req.path === '/' || req.connection.encrypted) {
+    if (req.path === '/' || req.secure) {
         return next();
     }
 
