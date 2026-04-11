@@ -3,7 +3,6 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 var hbs = require('hbs');
 var flash = require('connect-flash');
 var session = require('express-session');
@@ -54,8 +53,8 @@ morgan.token('statusColor', (req, res, args) => {
 
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`)); // log every request to the console
 
-app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
 
 // Session setup required for passport
