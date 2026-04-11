@@ -10,7 +10,16 @@ npm start                # Start server (runs bin/www, loads .env, creates dual 
 node migration.js        # Create database tables and bootstrap admin user
 ```
 
-No test framework is configured. No linter is configured.
+No linter is configured.
+
+```bash
+npm test                 # Run all tests (Mocha)
+npx mocha test/refs.test.js   # Run a single test file
+```
+
+Tests use **Mocha** + **Chai** (expect) + **Sinon** (stubs/spies) + **proxyquire** (dependency injection). Route tests use `proxyquire` to swap out external dependencies (Solr, filesystem, database, email) so tests run without any backend services. Shared mock factories for Express req/res/user objects are in `test/helpers.js`.
+
+Middleware functions are in `config/middleware.js` (extracted from `app.js` for testability).
 
 Utility scripts:
 ```bash
@@ -42,10 +51,11 @@ Node.js/Express app that manages a Solr search database (references/sources) wit
 
 ### Auth Middleware Chain
 
-Three middleware functions gate routes in `app.js`:
+Four middleware functions defined in `config/middleware.js` and imported by `app.js`:
 - **`isLoggedIn`** — checks `req.isAuthenticated()`, populates `req.replacements` with user context (email, name, permission flags). Redirects to `/login` if not authenticated.
 - **`superuser`** — requires `permission >= 2`, redirects to `/profile` otherwise.
 - **`flashMessageCenter`** — collects flash messages into `req.replacements` for templates.
+- **`forceSsl`** — redirects non-root HTTP requests to HTTPS.
 
 Permission levels: 0=basic user, 1=can delete refs, 2=admin (manages users).
 
