@@ -32,7 +32,7 @@ npm-debug.log
 
 view-source_*.html
 
-.claude
+.claude/
 certs
 launch.json
 database.json

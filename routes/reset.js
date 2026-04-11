@@ -3,7 +3,6 @@ var router = express.Router();
 var ResetToken = require('../models/invitations');
 var mail = require('../config/mailer');
 var validator       = require('../config/passValidator');
-var Promise = require('bluebird');
 
 router.get('/', function(req, res){
     res.redirect(302, '/login');
@@ -51,7 +50,9 @@ router.post('/:token', function(req, res) {
         return user.save();
     });
 
-    Promise.join(tokenPromise, userPromise, function(token, user){
+    Promise.all([tokenPromise, userPromise])
+    .then(function (results) {
+        var token = results[0], user = results[1];
         mail.sendPassChangeConfirmation(user.get('email'));
         req.flash('login', 'Success! Your password has been changed.');
         token.destroy();

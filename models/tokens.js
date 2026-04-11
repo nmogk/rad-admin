@@ -1,13 +1,14 @@
-var Promise = require('bluebird');
 var Reset = require('../models/invitations');
-var crypto = Promise.promisifyAll(require('crypto'));
+var crypto = require('crypto');
+var { promisify } = require('util');
+var randomBytesAsync = promisify(crypto.randomBytes);
 
 var self = this;
 var byteLength = 20;
 
 // Returns a token promise
 self.getToken = function (expireHours) {
-    return crypto.randomBytesAsync(byteLength)
+    return randomBytesAsync(byteLength)
         .then(function (buf) {
             var token = buf.toString('hex');
             let date = new Date();

@@ -3,7 +3,6 @@ var router = express.Router();
 var validator = require('../config/passValidator');
 var mail = require('../config/mailer');
 var tokens = require('../models/tokens');
-var Promise = require('bluebird');
 
 // =====================================
 // PROFILE SECTION =====================
@@ -24,7 +23,7 @@ router.post('/', function(req, res, next) {
     }
 
     req.user.save()
-    .done(function (user){
+    .then(function (user){
         res.render('profile', req.replacements);
     });
     

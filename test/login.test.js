@@ -44,7 +44,6 @@ var loginRouter = proxyquire('../routes/login', {
     '../models/user': UserStub,
     '../models/invitations': function () {},
     '../models/tokens': tokenStub,
-    'bluebird': require('bluebird'),
     'log4js': log4jsStub
 });
 

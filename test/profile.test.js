@@ -10,8 +10,7 @@ var tokensStub = { clearRelated: sinon.stub().resolves() };
 var profileRouter = proxyquire('../routes/profile', {
     '../config/passValidator': validatorStub,
     '../config/mailer': mailStub,
-    '../models/tokens': tokensStub,
-    'bluebird': require('bluebird')
+    '../models/tokens': tokensStub
 });
 
 describe('Profile Routes', function () {
