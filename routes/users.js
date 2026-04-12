@@ -97,7 +97,7 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
       req.flash('error', 'Problem resending invite.');
     })
     .finally(function () { // All responses get redirected to /login to display flash message
-      res.redirect(278, '/users'); // 278 is an unused success status code. It prevents ajax from
+      res.json({ redirect: '/users' });
     });
 });
 
@@ -122,7 +122,7 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
       req.flash('error', 'Problem updating user');
     })
     .finally(function () {
-      res.redirect(278, '/users');
+      res.json({ redirect: '/users' });
     });
 
 });
@@ -142,7 +142,7 @@ router.delete('/:id(\\d+)', function (req, res, next) {
       req.flash('error', 'Problem deleting user');
     })
     .finally(function () {
-      res.redirect(278, '/users');
+      res.json({ redirect: '/users' });
     });
 });
 
