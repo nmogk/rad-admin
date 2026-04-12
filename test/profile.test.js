@@ -35,6 +35,47 @@ describe('Profile Routes', function () {
         });
     });
 
+    describe('POST / (profile update)', function () {
+
+        it('should reject weak passwords submitted via profile update', function () {
+            validatorStub.validate.returns(false);
+            var user = mockUser();
+            var req = mockReq({
+                body: { password: 'weak' },
+                user: user,
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(profileRouter, 'post', '/');
+            handler(req, res, next);
+
+            expect(validatorStub.validate.calledWith('weak')).to.be.true;
+            expect(req.flash.calledOnce).to.be.true;
+            expect(res.redirect.calledWith(303, '/profile')).to.be.true;
+            expect(user.set.neverCalledWith('password')).to.be.true;
+        });
+
+        it('should accept valid passwords submitted via profile update', function () {
+            validatorStub.validate.returns(true);
+            var user = mockUser();
+            user.save = sinon.stub().resolves(user);
+            var req = mockReq({
+                body: { password: 'StrongPass1' },
+                user: user,
+                replacements: {}
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(profileRouter, 'post', '/');
+            handler(req, res, next);
+
+            expect(user.set.calledWith('password', 'StrongPass1')).to.be.true;
+        });
+    });
+
     describe('POST /password', function () {
 
         it('should reject mismatched passwords', function () {

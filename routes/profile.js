@@ -19,6 +19,11 @@ router.post('/', function(req, res, next) {
     } else if (req.body.email) {
         req.user.set("email", req.body.email);
     } else if (req.body.password) {
+        if(! validator.validate(req.body.password)) {
+            req.flash('error', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
+            res.redirect(303, '/profile');
+            return;
+        }
         req.user.set("password", req.body.password);
     }
 
