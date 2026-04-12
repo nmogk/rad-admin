@@ -84,7 +84,7 @@ function(req, email, password, done) { // callback with email and password from 
         
     //     .catch(function (err){
     //         // if the user is found but the password is wrong
-    //         return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
+    //         return done(null, false, req.flash('login', 'Oops! Wrong password.'));
     //     })
     })
     .then(function (user){
@@ -93,7 +93,7 @@ function(req, email, password, done) { // callback with email and password from 
     })
     .catch(function (err){
         appLog.debug(`Failed login attempt: ${email}`);
-        return done(null, false, req.flash('loginMessage', 'Unable to log in. Please check your email and password.'));
+        return done(null, false, req.flash('login', 'Unable to log in. Please check your email and password.'));
     });
 
 

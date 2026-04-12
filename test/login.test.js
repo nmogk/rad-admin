@@ -77,8 +77,24 @@ describe('Login Routes', function () {
 
             expect(res.render.firstCall.args[1]).to.have.property('errorMessage');
         });
+
+        it('should read flash messages from the "login" key', function () {
+            var flashStore = { login: ['Bad password'] };
+            var req = mockReq({
+                flash: sinon.stub().callsFake(function (key) { return flashStore[key] || []; })
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(loginRouter, 'get', '/');
+            handler(req, res, next);
+
+            expect(req.flash.calledWith('login')).to.be.true;
+            expect(res.render.firstCall.args[1].errorMessage).to.deep.equal(['Bad password']);
+        });
     });
 });
+
 
 function findHandler(router, method, path) {
     var layer = router.stack.find(function (l) {
