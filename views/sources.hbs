@@ -1,13 +1,122 @@
-{{#> layout title="Sources" nav=1}}
-    {{!--{{#*inline "custom-title"}}{{/inline}} --}}
-    {{#*inline "header-block"}}{{/inline}} 
-    {{#*inline "search-area"}}{{/inline}}  
-    {{#*inline "results-area"}}{{/inline}} 
+{{!--
+    This is the administration page for sources
+--}}
+
+{{#> layout title="Sources" nav=1 srcActive=1}}
+
+    {{#*inline "custom-title"}}
+    {{/inline}}
+
+    {{#*inline "search-area"}}
+        <form role="search" class="form-horizontal">
+          <div class="form-group">
+            <label for="searchInput" class="control-label col-sm-2">Query:</label>
+            <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
+          </div>
+          <div class="form-group">
+            <label for="rowsInput" class="control-label col-sm-2">Results per page:</label>
+            <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-5">
+              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="glyphicon glyphicon-search"></span> Search</button>
+            </div>
+            <div class="col-xs-offset-right-2 col-sm-3 text-right">
+              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newSourceModal" data-backdrop="static"><span class="glyphicon glyphicon-plus"></span> Add new source</button>
+            </div>
+          </div>
+        </form>
+
+    {{/inline}}
+
+    {{#*inline "results-area"}}
+
+        {{! Results header }}
+        <div id="mainDisplay" aria-hidden="true" role="main">
+          <div id="res-head" class="panel-body">
+            <div>
+              <span data-bind="text: summary"></span>
+            </div>
+            <div class="row">
+              <h4>
+                <span class="col-sm-6">Name</span>
+                <span class="col-sm-3">City</span>
+                <span class="col-sm-2">State</span>
+                <span class="col-sm-1"></span>
+              </h4>
+            </div>
+            <hr>
+            <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any sources. Make sure all words are spelled correctly. Try a less complex search or alternate search terms.</div>
+          </div>
+
+          {{! Results group }}
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" aria-live="assertive">
+
+            <!-- ko foreach: sources -->
+            <div class="panel panel-default">
+              <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
+              <div class="row">
+                  <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
+                    <div class="col-sm-6"><h5><span data-bind="textPretty: name">Name</span></h5></div>
+                    <div class="col-sm-3"><h5><span data-bind="textPretty: city">City</span></h5></div>
+                    <div class="col-sm-2"><h5><span data-bind="textPretty: state">State</span></h5></div>
+                  </a>
+                  <div class="dropdown col-sm-1" aria-haspopup="true">
+                    <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
+                    <span class="glyphicon glyphicon-option-vertical"></span></button>
+                    <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: editSource"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
+                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteSource"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-sm-4"><h4>Address</h4><span data-bind="textPretty: address"></span></div>
+                    <div class="col-sm-2"><h4>Zip</h4><span data-bind="textPretty: zip"></span></div>
+                    <div class="col-sm-3"><h4>Telephone</h4><span data-bind="textPretty: telephone"></span></div>
+                    <div class="col-sm-3"><h4>Fax</h4><span data-bind="textPretty: fax"></span></div>
+                  </div>
+                  <div class="row" style="margin-top: 10px;">
+                    <div class="col-sm-4"><h4>Email</h4><span data-bind="textPretty: email"></span></div>
+                    <div class="col-sm-4"><h4>Website</h4><span data-bind="textPretty: website"></span></div>
+                    <div class="col-sm-4"><span class="small text-muted">id: </span><span class="small text-muted" data-bind="text: id"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /ko -->
+            <div id="paginationAlert" class="alert alert-warning" aria-hidden="true" aria-live="polite">
+              <a href='#' class='close' data-dismiss='alert' aria-label='close' tabindex=0>&times;</a>
+              <strong>Warning!</strong> A 'start' value which is not evenly divisible by 'rows' or a very large 'rows' value will cause pagination to behave non-intuitively.
+            </div>
+          </div>
+          <div id="pages" class="text-center" role="navigation" aria-live="polite">
+            <p id="pageSummary" data-bind="text: summary"></p>
+          </div>
+        </div>
+    {{/inline}}
+
     {{#*inline "modal-block"}}
-    
+        {{> newSourceModal}}
+
+        {{> editSourceModal}}
+
         {{> adminHelp}}
 
-    {{/inline}}  
-    {{!--{{#*inline "footer-block"}}{{/inline}} --}}
-    {{#*inline "scripts-block"}}{{/inline}}
+    {{/inline}}
+
+    {{#*inline "footer-block"}}
+        {{> footerBasic}} <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a>!
+    {{/inline}}
+
+    {{#*inline "scripts-block"}}
+      <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/srcGridView.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/srcViewModel.js"></script>
+      <script nonce="{{nonce}}" src="private/sources.js"></script>
+    {{/inline}}
+
 {{/layout}}

@@ -70,13 +70,4 @@ ko.utils.extend(RefViewModel.prototype, {
     }
 });
 
-/**
- * Custom binding which supplies a default value (em dash) for observables with undefined values
- */
-ko.bindingHandlers.textPretty = {
-    update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-        var value = valueAccessor();
-        var text = ko.unwrap(value) || "\u2014";
-        ko.bindingHandlers.text.update(element, function() { return text; });
-    }
-}
+// textPretty binding is defined in utils.js

@@ -21,3 +21,14 @@ function htmlDecode(value) {
     "use strict";
     return $("<textarea/>").html(value).text();
 }
+
+/**
+ * Custom binding which supplies a default value (em dash) for observables with undefined values
+ */
+ko.bindingHandlers.textPretty = {
+    update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        var value = valueAccessor();
+        var text = ko.unwrap(value) || "\u2014";
+        ko.bindingHandlers.text.update(element, function() { return text; });
+    }
+};
