@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(wc:*)",
-      "Bash(grep -v \"//\")",
-      "Bash(grep -rn \"console.log\\\\|console.error\\\\|process.env\" /c/Users/nm89/Workspaces/Javascript/rad-admin/routes /c/Users/nm89/Workspaces/Javascript/rad-admin/config --include=*.js)"
-    ]
-  }
-}
