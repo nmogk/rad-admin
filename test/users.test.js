@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
-var { mockReq, mockRes } = require('./helpers');
+var { mockReq, mockRes, mockUser } = require('./helpers');
 
 var fakeUsers = [
     { id: 1, email: 'admin@test.com', name: 'Admin', permission: 2, validated: 1, last_login: '2026-04-10T12:00:00Z' },
@@ -14,8 +14,21 @@ var userModels = fakeUsers.map(function (u) {
     };
 });
 
-var UserStub = function () {};
+var destroyStub = sinon.stub().resolves();
+var fetchedUser = {
+    id: 5,
+    get: sinon.stub().returns('test@example.com'),
+    set: sinon.stub().returnsThis(),
+    save: sinon.stub().resolves(),
+    destroy: destroyStub
+};
+
+var UserStub = function () {
+    return { fetch: sinon.stub().resolves(fetchedUser) };
+};
 UserStub.fetchAll = sinon.stub().resolves({ models: userModels });
+UserStub.NoRowsUpdatedError = class NoRowsUpdatedError extends Error {};
+UserStub.NotFoundError = class NotFoundError extends Error {};
 
 var mailStub = { sendInviteMail: sinon.stub().resolves() };
 var tokensStub = {
@@ -34,6 +47,26 @@ var usersRouter = proxyquire('../routes/users', {
 
 describe('Users Routes', function () {
 
+    beforeEach(function () {
+        destroyStub.resetHistory();
+    });
+
+    describe('GET /', function () {
+
+        it('should pass currentUserId in replacements', function () {
+            var user = mockUser({ id: 7, permission: 2 });
+            var req = mockReq({ user: user, replacements: {} });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(usersRouter, 'get', '/');
+            handler(req, res, next);
+
+            expect(res.render.calledOnce).to.be.true;
+            expect(req.replacements.currentUserId).to.equal(7);
+        });
+    });
+
     describe('GET /all', function () {
 
         it('should return all users as JSON with last_login field', function (done) {
@@ -50,6 +83,51 @@ describe('Users Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(usersRouter, 'get', '/all');
+            handler(req, res, next);
+        });
+    });
+
+    describe('DELETE /:id', function () {
+
+        it('should call req.logout on self-delete', function (done) {
+            var logoutStub = sinon.stub().callsFake(function (cb) { cb(); });
+            var user = mockUser({ id: 5, permission: 2 });
+            var req = mockReq({
+                user: user,
+                params: { id: '5' },
+                flash: sinon.stub(),
+                logout: logoutStub
+            });
+            var res = mockRes();
+            res.json = sinon.stub().callsFake(function (data) {
+                expect(logoutStub.calledOnce).to.be.true;
+                expect(data.redirect).to.equal('/login');
+                done();
+            });
+            var next = sinon.spy();
+
+            var handler = findHandler(usersRouter, 'delete', '/:id(\\d+)');
+            handler(req, res, next);
+        });
+
+        it('should not logout when deleting a different user', function (done) {
+            var logoutStub = sinon.stub();
+            var user = mockUser({ id: 99, permission: 2 });
+            var req = mockReq({
+                user: user,
+                params: { id: '5' },
+                flash: sinon.stub(),
+                logout: logoutStub
+            });
+            var res = mockRes();
+            res.json = sinon.stub().callsFake(function (data) {
+                expect(logoutStub.called).to.be.false;
+                expect(data.redirect).to.equal('/users');
+                done();
+            });
+            var next = sinon.spy();
+
+            var handler = findHandler(usersRouter, 'delete', '/:id(\\d+)');
             handler(req, res, next);
         });
     });

@@ -8,6 +8,7 @@ var mail = require('../config/mailer');
 
 // GET users listing.
 router.get('/', function (req, res, next) {
+  req.replacements.currentUserId = req.user.id;
   res.render('users', req.replacements);
 });
 
@@ -130,19 +131,25 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
 
 // Delete a particular user
 router.delete('/:id(\\d+)', function (req, res, next) {
+  var isSelf = req.user.id === parseInt(req.params.id, 10);
   var userPromise = new User({ id: req.params.id }).fetch()
   Promise.all([userPromise, tokens.clearRelated(userPromise)])
     .then(function (results) {
       return results[0].destroy();
     })
     .then(function (user) {
+      if (isSelf) {
+        req.logout(function (err) {
+          res.json({ redirect: '/login' });
+        });
+        return;
+      }
       req.flash('yay', 'User successfully deleted');
+      res.json({ redirect: '/users' });
     })
     .catch(function (err) {
       console.log(err);
       req.flash('error', 'Problem deleting user');
-    })
-    .finally(function () {
       res.json({ redirect: '/users' });
     });
 });
