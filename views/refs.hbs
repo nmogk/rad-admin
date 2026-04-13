@@ -118,6 +118,8 @@
 
         {{> editRefModal}}
 
+        {{> newSourceModal}}
+
         {{> adminHelp}}
 
     {{/inline}}
@@ -135,7 +137,8 @@
       <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
       <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
-      <script nonce="{{nonce}}" src="private/refs.js"></script> {{! This is temporary only to check the layout}}
+      <script nonce="{{nonce}}" src="javascripts/srcViewModel.js"></script>
+      <script nonce="{{nonce}}" src="private/refs.js"></script>
     {{/inline}}
 
 {{/layout}}

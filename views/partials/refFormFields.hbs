@@ -17,7 +17,18 @@
 </div>
 <div class="form-group">
     <label for="sourceField">Source</label>
-    <input class="form-control" type="text" name="sourceField" id="sourceField" data-bind="textInput: source">
+    <input class="form-control" type="text" name="sourceField" id="sourceField" data-bind="textInput: source" autocomplete="off">
+    <!-- ko if: sourceSuggestions().length > 0 -->
+    <ul class="list-group" style="position: absolute; z-index: 1000; width: calc(100% - 30px); max-height: 200px; overflow-y: auto; margin-top: 0;">
+        <!-- ko foreach: sourceSuggestions -->
+        <li class="list-group-item list-group-item-action" style="cursor: pointer; padding: 6px 12px;" data-bind="text: $data, click: function() { selectSource($data); }">
+        </li>
+        <!-- /ko -->
+    </ul>
+    <!-- /ko -->
+    <!-- ko if: sourceNotFound() -->
+    <small class="text-warning">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
+    <!-- /ko -->
 </div>
 <div class="form-group">
     <label for="pageField">Page</label>
