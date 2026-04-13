@@ -5,12 +5,13 @@
                 <button type="button" class="close" data-dismiss="modal" aria-label="close" data-bind="click: revert">&times;</button>
                 <h4 class="modal-title">Add New Reference</h4>
             </div>
-            <form id="refInput" method="post" action="/refs/new" data-bind="submit: $data.newRefHandler">
+            <form id="refInput" data-bind="submit: $data.newRefHandler">
                 <div class="modal-body">
+                    <div class="alert alert-danger" style="display:none" data-bind="visible: $root.formError, text: $root.formError"></div>
                     {{> refFormFields}}
                 </div>
                 <div class="modal-footer">
-                    <input type="checkbox" class="form-check-input" id="holdInputCheck" value="persistInput"> 
+                    <input type="checkbox" class="form-check-input" id="holdInputCheck" value="persistInput">
                     <label class="form-check-label" for="holdInputCheck">Input hold</label>
                     <button type="submit" class="btn btn-info">Save</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click: revert">Cancel</button>

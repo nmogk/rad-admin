@@ -62,7 +62,7 @@ describe('Refs Routes', function () {
 
     describe('POST /new', function () {
 
-        it('should reject empty submissions with flash error', function () {
+        it('should reject empty submissions with JSON error', function () {
             var req = mockReq({
                 method: 'POST',
                 body: {},
@@ -72,18 +72,17 @@ describe('Refs Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            // Find the POST /new handler
             var handler = findHandler(refsRouter, 'post', '/new');
             handler(req, res, next);
 
-            expect(req.flash.calledWith('error', 'No data input. Reference not created.')).to.be.true;
-            expect(res.redirect.calledWith(303, '/refs')).to.be.true;
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.equal('No data input. Reference not created.');
         });
 
-        it('should reject invalid ISO 8601 dates', function () {
+        it('should reject invalid ISO 8601 dates with JSON error', function () {
             var req = mockReq({
                 method: 'POST',
-                body: { dateField: 'not-a-date', titleField: 'Test' },
+                body: { date: 'not-a-date', title: 'Test' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
@@ -93,14 +92,14 @@ describe('Refs Routes', function () {
             var handler = findHandler(refsRouter, 'post', '/new');
             handler(req, res, next);
 
-            expect(req.flash.calledWith('error', 'Incorrect date format entered. Please use ISO 8601.')).to.be.true;
-            expect(res.redirect.calledWith(303, '/refs')).to.be.true;
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('ISO 8601');
         });
 
         it('should accept valid date format', function () {
             var req = mockReq({
                 method: 'POST',
-                body: { titleField: 'Test Title', dateField: '2025-06-15' },
+                body: { title: 'Test Title', date: '2025-06-15' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
@@ -122,7 +121,7 @@ describe('Refs Routes', function () {
         it('should increment highestId and numRecords on success', function () {
             var req = mockReq({
                 method: 'POST',
-                body: { authorField: 'Author' },
+                body: { author: 'Author' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
@@ -140,10 +139,10 @@ describe('Refs Routes', function () {
             expect(written.numRecords).to.equal(101);
         });
 
-        it('should flash error on Solr failure', function () {
+        it('should return JSON error on Solr failure', function () {
             var req = mockReq({
                 method: 'POST',
-                body: { titleField: 'Test' },
+                body: { title: 'Test' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
@@ -155,14 +154,34 @@ describe('Refs Routes', function () {
             var handler = findHandler(refsRouter, 'post', '/new');
             handler(req, res, next);
 
-            expect(req.flash.calledWith('error', 'A problem occurred during submit.')).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res._json.error).to.include('problem occurred');
             expect(fsStub.writeFileSync.called).to.be.false;
+        });
+
+        it('should return JSON redirect on success', function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { author: 'Test Author' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            handler(req, res, next);
+
+            expect(res._json.redirect).to.include('/refs');
+            expect(res._json.redirect).to.include('501');
         });
 
         it('should write audit log on success', function () {
             var req = mockReq({
                 method: 'POST',
-                body: { authorField: 'Test Author' },
+                body: { author: 'Test Author' },
                 user: mockUser({ email: 'editor@test.com' }),
                 flash: sinon.stub()
             });
@@ -178,6 +197,51 @@ describe('Refs Routes', function () {
             var logMsg = auditLoggerStub.info.firstCall.args[0];
             expect(logMsg).to.include('editor@test.com');
             expect(logMsg).to.include('added a new reference');
+        });
+    });
+
+    describe('POST /:id (edit)', function () {
+
+        it('should reject invalid ISO 8601 dates with JSON error', function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { date: 'bad-date', title: 'Test' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('ISO 8601');
+        });
+
+        it('should return JSON error on Solr get failure', function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.callsFake(function (path, query, cb) {
+                cb(new Error('Solr down'), null);
+            });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res._json.error).to.include('audit log');
         });
     });
 

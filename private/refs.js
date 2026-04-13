@@ -17,42 +17,66 @@ RefViewModel.prototype.deleteRef = function () {
 
 /**
  * Provides functionality for populating the edit dialog with the correct
- * ref item. 
+ * ref item.
  */
 RefViewModel.prototype.editRef = function () {
+    formError('');
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     ko.applyBindings(this, $("#editRefModal")[0]);
     $("#editRefModal").modal({ backdrop: 'static' });
 }
 
 RefViewModel.prototype.submitEdits = function () {
-    this.commit();
-    $("#editRefModal").modal("hide");
+    var self = this;
+    formError('');
+    self.commit();
     $.ajax({ // Makes an AJAX query to the server for the source
-        url: "/refs/" + this.id(),
+        url: "/refs/" + self.id(),
         contentType: "application/json",
-        data: JSON.stringify(this.cache.latestData),
+        data: JSON.stringify(self.cache.latestData),
         type: "POST",
         success: function (data) {
+            $("#editRefModal").modal("hide");
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {
-            console.log("ajax error " + jqXHR.status);
-            alert("Error sending edit request");
+            var msg = 'Error sending edit request';
+            if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                msg = jqXHR.responseJSON.error;
+            }
+            formError(msg);
         }
     });
 }
 
 RefViewModel.prototype.newRefHandler = function () {
-    this.commit();
-    if ($("#holdInputCheck").is(":checked")) {
-        this.holdOver(); // Save some fields for the holdover
-    } else {
-        this.blank(); // Clear all fields for a blank submit
-    }
-
-    localStorage['refsEditor'] = ko.toJSON(this);
-    return true;
+    var self = this;
+    formError('');
+    self.commit();
+    $.ajax({
+        url: "/refs/new",
+        contentType: "application/json",
+        data: JSON.stringify(self.cache.latestData),
+        type: "POST",
+        success: function (data) {
+            if ($("#holdInputCheck").is(":checked")) {
+                self.holdOver();
+            } else {
+                self.blank();
+            }
+            localStorage['refsEditor'] = ko.toJSON(self);
+            $("#newRefModal").modal("hide");
+            window.location.href = data.redirect || '/refs';
+        },
+        error: function (jqXHR) {
+            var msg = 'Error creating reference';
+            if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                msg = jqXHR.responseJSON.error;
+            }
+            formError(msg);
+        }
+    });
+    return false; // Prevent traditional form submission
 }
 
 /**
@@ -82,6 +106,9 @@ function searchInit() {
         ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
     }
 }
+
+// Shared observable for form validation errors, accessible from both modals
+var formError = ko.observable('');
 
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());
