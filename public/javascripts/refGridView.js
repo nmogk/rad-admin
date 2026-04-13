@@ -26,6 +26,8 @@ function RefsGridViewModel(qString) {
 
    
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
+    // HTML-encode characters that may be stored as entities in the Solr index
+    qString.q = qString.q.replace(/&/g, "&amp;").replace(/'/g, "&apos;");
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
     $.ajax({
