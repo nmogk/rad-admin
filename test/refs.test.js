@@ -15,8 +15,15 @@ var solrClientStub = {
     deleteByID: sinon.stub()
 };
 
+var sourceClientStub = {
+    get: sinon.stub()
+};
+
 var solrStub = {
-    createClient: sinon.stub().returns(solrClientStub)
+    createClient: sinon.stub().callsFake(function (host, port, core) {
+        if (core === 'source') return sourceClientStub;
+        return solrClientStub;
+    })
 };
 
 var auditLoggerStub = {
@@ -57,6 +64,7 @@ describe('Refs Routes', function () {
         solrClientStub.add.reset();
         solrClientStub.get.reset();
         solrClientStub.deleteByID.reset();
+        sourceClientStub.get.reset();
         auditLoggerStub.info.reset();
     });
 
@@ -178,6 +186,72 @@ describe('Refs Routes', function () {
             expect(res._json.redirect).to.include('501');
         });
 
+        it('should reject unknown source with JSON error', function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Nonexistent Journal' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.callsFake(function (path, query, cb) {
+                cb(null, { response: { numFound: 0, docs: [] } });
+            });
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should accept known source', function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Known Journal' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.callsFake(function (path, query, cb) {
+                cb(null, { response: { numFound: 1, docs: [{ name: 'Known Journal' }] } });
+            });
+            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(res._json.redirect).to.include('/refs');
+        });
+
+        it('should allow save when source index is unreachable', function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Some Journal' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.callsFake(function (path, query, cb) {
+                cb(new Error('Connection refused'), null);
+            });
+            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(res._json.redirect).to.include('/refs');
+        });
+
         it('should write audit log on success', function () {
             var req = mockReq({
                 method: 'POST',
@@ -219,6 +293,30 @@ describe('Refs Routes', function () {
 
             expect(res.status.calledWith(400)).to.be.true;
             expect(res._json.error).to.include('ISO 8601');
+        });
+
+        it('should reject unknown source on edit', function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test', source: 'Bad Source' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.callsFake(function (path, query, cb) {
+                cb(null, { response: { numFound: 0, docs: [] } });
+            });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.get.called).to.be.false;
         });
 
         it('should return JSON error on Solr get failure', function () {

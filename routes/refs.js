@@ -6,8 +6,19 @@ var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
 var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
+var sourceClient = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "source");
 //client.autoCommit = true; //Autocommit is broken apparently.
-const url = require('url');    
+const url = require('url');
+
+function validateSource(sourceName, callback) {
+    sourceClient.get('select', 'q=name:"' + sourceName.replace(/"/g, '\\"') + '"&rows=1', function (err, obj) {
+        if (err) {
+            callback(err, false);
+            return;
+        }
+        callback(null, obj.response && obj.response.numFound > 0);
+    });
+}
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -75,30 +86,47 @@ router.post('/new', function (req, res, next) {
 
     // Send request
 
-    client.add(doc, function (err, data) {
+    function addReference() {
+        client.add(doc, function (err, data) {
 
-        if (err) {
-            console.log(err);
-            res.status(500).json({ error: 'A problem occurred during submit.' });
-        } else { // Success
+            if (err) {
+                console.log(err);
+                res.status(500).json({ error: 'A problem occurred during submit.' });
+            } else { // Success
 
-            // Audit log entry
-            auditLogger.info(req.user.get("email") + " added a new reference:\n" + JSON.stringify(doc));
+                // Audit log entry
+                auditLogger.info(req.user.get("email") + " added a new reference:\n" + JSON.stringify(doc));
 
-            // Record edit information
-            var editDate = new Date();
-            var editDateString = JSON.stringify(editDate);
-            dbParams.updated = editDateString.slice(1, editDateString.search("T"));
-            dbParams.highestId = newId;
-            dbParams.numRecords = dbParams.numRecords + 1;
+                // Record edit information
+                var editDate = new Date();
+                var editDateString = JSON.stringify(editDate);
+                dbParams.updated = editDateString.slice(1, editDateString.search("T"));
+                dbParams.highestId = newId;
+                dbParams.numRecords = dbParams.numRecords + 1;
 
-            fs.writeFileSync("database.json", JSON.stringify(dbParams));
-            req.flash('yay', 'New reference successfully added.');
-            res.json({ redirect: '/refs?rows=1&q=id%3A' + newId });
-        }
+                fs.writeFileSync("database.json", JSON.stringify(dbParams));
+                req.flash('yay', 'New reference successfully added.');
+                res.json({ redirect: '/refs?rows=1&q=id%3A' + newId });
+            }
 
-    });
+        });
+    }
 
+    if (doc.source) {
+        validateSource(doc.source, function (err, exists) {
+            if (err) {
+                console.log(err);
+                // Allow save if source index is unreachable
+                addReference();
+            } else if (!exists) {
+                res.status(400).json({ error: 'Source "' + doc.source + '" not found. Please enter an existing source.' });
+            } else {
+                addReference();
+            }
+        });
+    } else {
+        addReference();
+    }
 
 });
 
@@ -140,36 +168,53 @@ router.post("/:id(\\d+)", function (req, res, next) {
             dbParams.latest = inputDateString.slice(1, inputDateString.search("T"));
         }
     }
-    client.get('refs', query, function (err, obj) {
-        if (err) {
-            console.log(err);
-            res.status(500).json({ error: 'Unable to obtain a copy of object to edit for audit log. Reference not edited.' });
-        } else {
-            oldDoc = obj.response.docs[0];
+    function editReference() {
+        client.get('refs', query, function (err, obj) {
+            if (err) {
+                console.log(err);
+                res.status(500).json({ error: 'Unable to obtain a copy of object to edit for audit log. Reference not edited.' });
+            } else {
+                oldDoc = obj.response.docs[0];
 
-            client.add(doc, function (err, data) {
-                if (err) {
-                    console.log(err);
-                    res.status(500).json({ error: 'A problem occurred during edit submission.' });
-                } else { // Success
+                client.add(doc, function (err, data) {
+                    if (err) {
+                        console.log(err);
+                        res.status(500).json({ error: 'A problem occurred during edit submission.' });
+                    } else { // Success
 
-                    // Audit log entry
-                    auditLogger.info(req.user.get("email") + " edited a reference:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
+                        // Audit log entry
+                        auditLogger.info(req.user.get("email") + " edited a reference:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
 
-                    // Record edit information
-                    var editDate = new Date();
-                    var editDateString = JSON.stringify(editDate);
-                    dbParams.updated = editDateString.slice(1, editDateString.search("T"));
+                        // Record edit information
+                        var editDate = new Date();
+                        var editDateString = JSON.stringify(editDate);
+                        dbParams.updated = editDateString.slice(1, editDateString.search("T"));
 
-                    fs.writeFileSync("database.json", JSON.stringify(dbParams));
+                        fs.writeFileSync("database.json", JSON.stringify(dbParams));
 
-                    req.flash('yay', 'Reference successfully edited.');
-                    res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });
-                }
+                        req.flash('yay', 'Reference successfully edited.');
+                        res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });
+                    }
 
-            });
-        }
-    });
+                });
+            }
+        });
+    }
+
+    if (doc.source) {
+        validateSource(doc.source, function (err, exists) {
+            if (err) {
+                console.log(err);
+                editReference();
+            } else if (!exists) {
+                res.status(400).json({ error: 'Source "' + doc.source + '" not found. Please enter an existing source.' });
+            } else {
+                editReference();
+            }
+        });
+    } else {
+        editReference();
+    }
 });
 
 router.delete("/:id(\\d+)", function (req, res, next) {
