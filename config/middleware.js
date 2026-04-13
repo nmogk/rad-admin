@@ -14,6 +14,7 @@ function isLoggedIn(req, res, next) {
         req.replacements.username = req.user.get("name") || req.user.get("email");
         req.replacements.users = req.user.get("permission") >= 2;
         req.replacements.deletable = req.user.get("permission") >= 1;
+        req.replacements.pendingEmail = req.user.get("pending_email");
         req.replacements.nav = 1;
 
         return next();

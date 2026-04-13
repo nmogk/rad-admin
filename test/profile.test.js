@@ -4,13 +4,30 @@ var proxyquire = require('proxyquire').noCallThru();
 var { mockReq, mockRes, mockUser } = require('./helpers');
 
 var validatorStub = { validate: sinon.stub() };
-var mailStub = { sendPassChangeConfirmation: sinon.stub().resolves() };
-var tokensStub = { clearRelated: sinon.stub().resolves() };
+var mailStub = {
+    sendPassChangeConfirmation: sinon.stub().resolves(),
+    sendEmailVerification: sinon.stub().resolves(),
+    sendEmailChangeNotice: sinon.stub().resolves()
+};
+var tokensStub = { clearRelated: sinon.stub().resolves(), getToken: sinon.stub() };
+
+var fakeToken = {
+    get: sinon.stub().callsFake(function (key) {
+        if (key === 'token') return 'abc123';
+    }),
+    set: sinon.stub(),
+    save: sinon.stub().resolves()
+};
+fakeToken.set.returns(fakeToken);
+tokensStub.getToken.resolves(fakeToken);
+
+var resetTokenStub = sinon.stub();
 
 var profileRouter = proxyquire('../routes/profile', {
     '../config/passValidator': validatorStub,
     '../config/mailer': mailStub,
-    '../models/tokens': tokensStub
+    '../models/tokens': tokensStub,
+    '../models/invitations': resetTokenStub
 });
 
 describe('Profile Routes', function () {
@@ -18,6 +35,12 @@ describe('Profile Routes', function () {
     beforeEach(function () {
         validatorStub.validate.reset();
         mailStub.sendPassChangeConfirmation.reset();
+        mailStub.sendEmailVerification.reset();
+        mailStub.sendEmailChangeNotice.reset();
+        tokensStub.getToken.resetHistory();
+        tokensStub.clearRelated.reset();
+        fakeToken.set.resetHistory();
+        fakeToken.save.resetHistory();
     });
 
     describe('GET /', function () {
@@ -73,6 +96,63 @@ describe('Profile Routes', function () {
             handler(req, res, next);
 
             expect(user.set.calledWith('password', 'StrongPass1')).to.be.true;
+        });
+
+        it('should reject invalid email format', function () {
+            var user = mockUser();
+            var req = mockReq({
+                body: { email: 'notanemail' },
+                user: user,
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(profileRouter, 'post', '/');
+            handler(req, res, next);
+
+            expect(req.flash.calledWith('error', 'Please enter a valid email address.')).to.be.true;
+            expect(res.redirect.calledWith(303, '/profile')).to.be.true;
+        });
+
+        it('should reject email change to same address', function () {
+            var user = mockUser({ email: 'test@example.com' });
+            var req = mockReq({
+                body: { email: 'test@example.com' },
+                user: user,
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(profileRouter, 'post', '/');
+            handler(req, res, next);
+
+            expect(req.flash.calledWith('error', 'New email is the same as current email.')).to.be.true;
+            expect(res.redirect.calledWith(303, '/profile')).to.be.true;
+        });
+
+        it('should set pending_email and send verification for valid new email', function (done) {
+            var user = mockUser({ email: 'old@example.com' });
+            user.save = sinon.stub().resolves(user);
+            var req = mockReq({
+                body: { email: 'new@example.com' },
+                user: user,
+                flash: sinon.stub(),
+                get: sinon.stub().returns('localhost')
+            });
+            var res = mockRes();
+            res.redirect = sinon.stub().callsFake(function () {
+                expect(user.set.calledWith('pending_email', 'new@example.com')).to.be.true;
+                expect(mailStub.sendEmailVerification.calledOnce).to.be.true;
+                expect(mailStub.sendEmailChangeNotice.calledOnce).to.be.true;
+                expect(req.flash.calledWith('info', sinon.match('verification email'))).to.be.true;
+                done();
+            });
+            var next = sinon.spy();
+
+            var handler = findHandler(profileRouter, 'post', '/');
+            handler(req, res, next);
         });
     });
 
