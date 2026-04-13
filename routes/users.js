@@ -24,7 +24,8 @@ router.get('/all', function (req, res, next) {
         email: user.get("email"),
         name: user.get("name"),
         permission: user.get("permission"),
-        validated: user.get("validated")
+        validated: user.get("validated"),
+        last_login: user.get("last_login")
       }); // Unpack user object, dropping password_digest
     })
   })

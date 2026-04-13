@@ -17,6 +17,7 @@ function UserViewModel(qString) {
                     email: ko.observable(user.email),
                     name: ko.observable(user.name),
                     validated: user.validated ? "Yes" : "No",
+                    lastLogin: user.last_login ? new Date(user.last_login).toLocaleString() : "Never",
                     perm0: user.permission === 0 ? "btn btn-primary active disabled" : "btn btn-outline-primary",
                     perm1: user.permission === 1 ? "btn btn-primary active disabled" : "btn btn-outline-primary",
                     perm2: user.permission === 2 ? "btn btn-primary active disabled" : "btn btn-outline-primary",

@@ -41,6 +41,7 @@
                     <th>Email</th>
                     <th>Display Name</th>
                     <th class="fit" colspan="2">Validated</th>
+                    <th class="fit">Last Login</th>
                     <th class="fit" colspan="3">Permissions</th>
                     <th class="fit">Delete</th>
                 </tr>
@@ -59,7 +60,10 @@
                     <td class="fit">
                         <a class='btn btn-primary' data-toggle="tooltip" title="Resend invitation (or administrative password reset)" data-bind="click: $parent.resendInvite">
                             <span class="glyphicon glyphicon-open-file"></span>
-                        </a>  
+                        </a>
+                    </td>
+                    <td class="fit">
+                        <span data-bind="text: lastLogin"></span>
                     </td>
                     <td class="fit">
                         <button type="button" data-bind="click: $parent.updatePerms.bind($data, 0), attr: {'class': perm0}">Normal</button>

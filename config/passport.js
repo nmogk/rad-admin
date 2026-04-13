@@ -51,6 +51,7 @@ function(req, email, password, done) {
             return done(null, false, req.flash('login', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.'));
         }
         user.set({password: password});
+        user.set('last_login', new Date());
         user.save() // {method: 'insert'}
         .then(function (user){
             return done(null, user);
@@ -89,6 +90,8 @@ function(req, email, password, done) { // callback with email and password from 
     })
     .then(function (user){
         appLog.info(`${email} logged in`);
+        user.set('last_login', new Date());
+        user.save();
         return done(null, user);
     })
     .catch(function (err){
