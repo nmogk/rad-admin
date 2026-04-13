@@ -1,13 +1,85 @@
-{{#> layout title="Site" nav=1}}
-    {{!--{{#*inline "custom-title"}}{{/inline}} --}}
-    {{#*inline "header-block"}}{{/inline}} 
-    {{#*inline "search-area"}}{{/inline}}  
-    {{#*inline "results-area"}}{{/inline}} 
+{{#> layout title="Site" nav=1 sitActive=1}}
+
+    {{#*inline "header-block"}}
+    <style>
+        .section-editor textarea {
+            font-family: monospace;
+            font-size: 13px;
+            min-height: 400px;
+            resize: vertical;
+        }
+        .section-meta {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+    </style>
+    {{/inline}}
+
+    {{#*inline "search-area"}}
+    <p>Edit the public-facing website content. Changes are reflected immediately on the homepage.</p>
+    {{/inline}}
+
+    {{#*inline "results-area"}}
+    <div id="mainDisplay" role="main">
+        <ul class="nav nav-tabs" role="tablist" data-bind="foreach: sectionList">
+            <li role="presentation" data-bind="css: { active: $root.selectedKey() === key }">
+                <a href="#" data-bind="text: label, click: function() { $root.selectSection(key); }"></a>
+            </li>
+        </ul>
+
+        <div class="tab-content" style="padding-top: 20px;">
+            <!-- ko with: currentSection -->
+            <div class="section-editor">
+                <div class="form-group">
+                    <label>Section Title</label>
+                    <input type="text" class="form-control" data-bind="value: title" placeholder="Section title">
+                </div>
+                <div class="form-group">
+                    <label>Content (HTML)</label>
+                    <textarea class="form-control" data-bind="value: content"></textarea>
+                </div>
+                <div class="section-meta" data-bind="visible: updated_by">
+                    Last updated by <span data-bind="text: updated_by"></span>
+                    on <span data-bind="text: updated_at_display"></span>
+                </div>
+                {{#if editable}}
+                <button class="btn btn-primary" data-bind="click: $root.save">
+                    <span class="glyphicon glyphicon-floppy-disk"></span> Save
+                </button>
+                <button class="btn btn-default" data-bind="click: $root.togglePreview">
+                    <span class="glyphicon glyphicon-eye-open"></span>
+                    <span data-bind="text: $root.showPreview() ? 'Hide Preview' : 'Show Preview'"></span>
+                </button>
+                {{/if}}
+            </div>
+            <!-- ko if: $root.showPreview -->
+            <div class="well" style="margin-top: 15px;">
+                <h4>Preview</h4>
+                <hr>
+                <div data-bind="html: content"></div>
+            </div>
+            <!-- /ko -->
+            <!-- /ko -->
+
+            <!-- ko ifnot: currentSection -->
+            <div class="alert alert-info">
+                No content sections found. Run the seed script to populate initial content.
+            </div>
+            <!-- /ko -->
+        </div>
+    </div>
+    {{/inline}}
+
     {{#*inline "modal-block"}}
-    
     {{> adminHelp}}
-    
-    {{/inline}}  
-    {{!--{{#*inline "footer-block"}}{{/inline}} --}}
-    {{#*inline "scripts-block"}}{{/inline}}
+    {{/inline}}
+
+    {{#*inline "scripts-block"}}
+    <script nonce="{{nonce}}">
+        var siteContentData = {{{sectionsJson}}};
+    </script>
+    <script nonce="{{nonce}}" src="private/site.js"></script>
+    {{/inline}}
+
 {{/layout}}
