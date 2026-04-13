@@ -52,6 +52,7 @@ RefViewModel.prototype.submitEdits = function () {
 RefViewModel.prototype.newRefHandler = function () {
     var self = this;
     formError('');
+    formSuccess('');
     self.commit();
     $.ajax({
         url: "/refs/new",
@@ -59,11 +60,7 @@ RefViewModel.prototype.newRefHandler = function () {
         data: JSON.stringify(self.cache.latestData),
         type: "POST",
         success: function (data) {
-            if ($("#holdInputCheck").is(":checked")) {
-                self.holdOver();
-            } else {
-                self.blank();
-            }
+            self.blank();
             localStorage['refsEditor'] = ko.toJSON(self);
             $("#newRefModal").modal("hide");
             window.location.href = data.redirect || '/refs';
@@ -77,6 +74,35 @@ RefViewModel.prototype.newRefHandler = function () {
         }
     });
     return false; // Prevent traditional form submission
+}
+
+/**
+ * Saves the current reference, holds over shared fields (date, reference, source),
+ * and keeps the modal open for entering the next reference.
+ */
+RefViewModel.prototype.saveAndAddAnother = function () {
+    var self = this;
+    formError('');
+    formSuccess('');
+    self.commit();
+    $.ajax({
+        url: "/refs/new",
+        contentType: "application/json",
+        data: JSON.stringify(self.cache.latestData),
+        type: "POST",
+        success: function (data) {
+            self.holdOver();
+            localStorage['refsEditor'] = ko.toJSON(self);
+            formSuccess('Reference saved. Enter the next reference below.');
+        },
+        error: function (jqXHR) {
+            var msg = 'Error creating reference';
+            if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                msg = jqXHR.responseJSON.error;
+            }
+            formError(msg);
+        }
+    });
 }
 
 /**
@@ -107,8 +133,9 @@ function searchInit() {
     }
 }
 
-// Shared observable for form validation errors, accessible from both modals
+// Shared observables for form validation errors and success messages
 var formError = ko.observable('');
+var formSuccess = ko.observable('');
 
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());
