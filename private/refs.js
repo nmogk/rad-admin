@@ -16,6 +16,19 @@ RefViewModel.prototype.deleteRef = function () {
 }
 
 /**
+ * Opens the sources page filtered to this reference's source for editing.
+ */
+RefViewModel.prototype.viewSourceForEditing = function () {
+    var sourceName = this.source();
+    if (!sourceName) {
+        alert("This reference does not have a source.");
+        return;
+    }
+    var encodedName = encodeURIComponent('"' + sourceName + '"');
+    window.open('/sources?rows=1&q=name:' + encodedName, '_blank');
+};
+
+/**
  * Provides functionality for populating the edit dialog with the correct
  * ref item.
  */
