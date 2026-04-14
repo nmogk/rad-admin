@@ -7,13 +7,15 @@ function SourceViewModel(name) {
     "use strict";
     var self = this;
 
-    // Ref process, take care of null values and unbox from arrays
-    // Boxing in arrays occurs when fields indexed in Solr are listed as multivalued
+    // Process Solr field values: handle null, arrays, and plain strings
     self.refP = function (field) {
-        if (field === undefined) {
+        if (field === undefined || field === null) {
             return "\u2014";
         }
-        return htmlDecode(field.join(", "));
+        if (Array.isArray(field)) {
+            return htmlDecode(field.join(", "));
+        }
+        return htmlDecode(String(field));
     };
 
     var dunno = "Searching..."; // AJAX call may take some time, so a temporary message is displayed for all fields
@@ -36,10 +38,9 @@ function SourceViewModel(name) {
     });
 
     $.ajax({
-        url: "/solr/source/select?", // solr-proxy running on port 8008
-        dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
-        jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
-        data: $.param({"q": name}), // Server on backend is set up to search name field by default... I think
+        url: "/solr/source/select?",
+        dataType: "json",
+        data: $.param({"q": name}),
         success: function (data) {
             var find = data.response.docs[0]; // update information to first result
             self.name(self.refP(find.name));

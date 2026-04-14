@@ -27,8 +27,10 @@ sudo mkdir /opt/solr
 sudo useradd -r solr
 cd /opt/solr
 sudo wget http://mirror.cc.columbia.edu/pub/software/apache/lucene/solr/6.3.0/solr-6.3.0.tgz
-sudo tar zxf solr-6.6.6
-sudo chown -R solr:solr solr-6.6.6
+sudo tar zxf solr-9.x.x
+sudo chown -R solr:solr solr-9.x.x
+
+bash tools/solr-setup.sh
 ```
 ### generate https cert and key
 
@@ -64,7 +66,7 @@ npm install
 ```
 tar xvf rad.tar.gz
 ```
-	Copy index data into /usr/solr/solr-6.3.0/server/solr, replacing the default solr.xml
+	Index data into /opt/solr/solr-9.x.x/bin/solr post
 ### localize configuration
 ```
 touch .env
@@ -117,7 +119,7 @@ sudo service radd start
 
 ### Manually
 ```
-/opt/solr/solr-6.6.6/bin/solr start
+/opt/solr/solr-9.x.x/bin/solr start
 sudo systemctl start mysqld
 sudo npm start
 ```

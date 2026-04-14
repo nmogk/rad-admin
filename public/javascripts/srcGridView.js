@@ -25,8 +25,7 @@ function SrcGridViewModel(qString) {
 
     $.ajax({
         url: self.sourcesURI,
-        dataType: "jsonp",
-        jsonp: "json.wrf",
+        dataType: "json",
         data: $.param(qString),
         success: function (data) {
             data.response.docs.forEach( function (src) {

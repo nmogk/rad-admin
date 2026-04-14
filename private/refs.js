@@ -176,8 +176,7 @@ function lookupSources(value) {
     _sourceTimer = setTimeout(function () {
         $.ajax({
             url: "/solr/source/select?",
-            dataType: "jsonp",
-            jsonp: "json.wrf",
+            dataType: "json",
             data: $.param({ q: 'name:' + value + '*', rows: 8, fl: 'name' }),
             success: function (data) {
                 var names = [];

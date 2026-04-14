@@ -89,10 +89,9 @@ function convertArrayOfObjectsToCSV(args) {
 
 // Opens the webpage referenced by the source of the reference
 RefViewModel.prototype.goSource = function () {
-    $.ajax({ // Makes an AJAX query to the server for the source
+    $.ajax({
         url: "/solr/source/select?",
-        dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
-        jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
+        dataType: "json",
         data: $.param({"q": this.source()}),
         success: function (data) {
             var src = data.response.docs[0]; // first result only
