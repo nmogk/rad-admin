@@ -47,7 +47,27 @@ function SiteViewModel() {
     };
 
     self.togglePreview = function () {
-        self.showPreview(!self.showPreview());
+        var section = self.currentSection();
+        if (!section) return;
+
+        // Help sections contain full modal HTML — render as a modal popup
+        if (section.section_key === 'search_help' || section.section_key === 'rest_help') {
+            var container = $('#previewContainer');
+            container.empty();
+            container.html(section.content());
+            var modal = container.find('.modal');
+            if (modal.length) {
+                modal.on('hidden.bs.modal', function () {
+                    container.empty();
+                });
+                modal.modal('show');
+            } else {
+                // Content doesn't contain a modal — fall back to inline preview
+                self.showPreview(!self.showPreview());
+            }
+        } else {
+            self.showPreview(!self.showPreview());
+        }
     };
 
     self.save = function () {
