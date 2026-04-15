@@ -21,17 +21,17 @@ echo "Solr URL: $SOLR_URL"
 echo ""
 
 # ============================================================
-# 1. Create cores using the _default configset
+# 1. Create cores using a copy of the _default configset
 # ============================================================
 
 echo "--- Creating cores ---"
 
 echo "Creating 'rad' core..."
-curl -sf "$SOLR_URL/solr/admin/cores?action=CREATE&name=rad&configSet=_default" > /dev/null
+curl -sf "$SOLR_URL/solr/admin/cores?action=CREATE&name=rad" > /dev/null
 echo "  OK"
 
 echo "Creating 'source' core..."
-curl -sf "$SOLR_URL/solr/admin/cores?action=CREATE&name=source&configSet=_default" > /dev/null
+curl -sf "$SOLR_URL/solr/admin/cores?action=CREATE&name=source" > /dev/null
 echo "  OK"
 
 # ============================================================
@@ -59,6 +59,7 @@ echo ""
 echo "--- Configuring 'rad' core schema ---"
 
 # Remove the default wildcard copy field so we control what is searchable
+# Note: solr reports that this field is not present by default, but we include this step in case it exists to ensure only relevant fields are copied to _text_.
 echo "Removing wildcard copy field..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/schema" -d '{
@@ -76,6 +77,7 @@ curl -sf -X POST -H 'Content-type:application/json' \
     { "name": "year",      "type": "pint",         "stored": true, "indexed": true, "multiValued": false },
     { "name": "reference", "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
     { "name": "source",    "type": "string",       "stored": true, "indexed": true, "multiValued": false },
+    { "name": "publisher", "type": "string",       "stored": true, "indexed": true, "multiValued": false },
     { "name": "page",      "type": "string",       "stored": true, "indexed": true, "multiValued": false },
     { "name": "abstract",  "type": "text_general", "stored": true, "indexed": true, "multiValued": false }
   ],
@@ -102,7 +104,7 @@ echo "  OK"
 echo "Adding /refs request handler with spellcheck..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/config" -d '{
-  "add-searchcomponent": {
+  "modify-searchcomponent": {
     "name": "spellcheck",
     "class": "solr.SpellCheckComponent",
     "spellchecker": {
@@ -163,7 +165,8 @@ echo "  OK"
 echo ""
 echo "--- Configuring 'source' core schema ---"
 
-# Remove the default wildcard copy field
+# Remove the default wildcard copy field\
+# Note: solr reports that this field is not present by default, but we include this step in case it exists to ensure only relevant fields are copied to _text_.
 echo "Removing wildcard copy field..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/source/schema" -d '{
@@ -201,31 +204,32 @@ echo "  OK"
 # Solr must auto-generate a UUID for new documents.
 # ============================================================
 
-echo "Configuring UUID auto-generation for source documents..."
-curl -sf -X POST -H 'Content-type:application/json' \
-  "$SOLR_URL/solr/source/config" -d '{
-  "add-updateprocessor": {
-    "name": "uuid-processor",
-    "class": "solr.UUIDUpdateProcessorFactory",
-    "fieldName": "id"
-  },
-  "update-requesthandler": {
-    "/update": {
-      "name": "/update",
-      "class": "solr.UpdateRequestHandler",
-      "update.chain": "uuid-chain"
-    }
-  },
-  "add-updateprocessorchain": {
-    "name": "uuid-chain",
-    "processor": [
-      "uuid-processor",
-      "log",
-      "run"
-    ]
-  }
-}' > /dev/null
-echo "  OK"
+# Turned off for now since Solr generates a sequential ID by default if no ID is provided, which is sufficient for our needs 
+# If we want to switch to UUIDs in the future, we can enable this configuration.
+
+# echo "Configuring UUID auto-generation for source documents..."
+# curl -sf -X POST -H 'Content-type:application/json' \
+#   "$SOLR_URL/solr/source/config" -d '{
+#   "add-updateprocessor": {
+#     "name": "uuid-processor",
+#     "class": "solr.UUIDUpdateProcessorFactory",
+#     "fieldName": "id"
+#   },
+#   "update-requesthandler": {
+#     "name": "/update",
+#     "class": "solr.UpdateRequestHandler",
+#     "update.chain": "uuid-chain"
+#   },
+#   "add-updateprocessorchain": {
+#     "name": "uuid-chain",
+#     "processor": [
+#       "uuid-processor",
+#       "log",
+#       "run"
+#     ]
+#   }
+# }' > /dev/null
+# echo "  OK"
 
 # ============================================================
 # 6. SOURCE core default query field
@@ -238,15 +242,13 @@ echo "Setting default query field for source core..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/source/config" -d '{
   "update-requesthandler": {
-    "/select": {
-      "name": "/select",
-      "class": "solr.SearchHandler",
-      "defaults": {
-        "df": "_text_",
-        "echoParams": "explicit",
-        "rows": 10,
-        "wt": "json"
-      }
+    "name": "/select",
+    "class": "solr.SearchHandler",
+    "defaults": {
+      "df": "_text_",
+      "echoParams": "explicit",
+      "rows": 10,
+      "wt": "json"
     }
   }
 }' > /dev/null
