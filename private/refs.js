@@ -205,9 +205,21 @@ function selectSource(name) {
             ctx.source(name);
         }
     }
+    // Cancel any pending lookup triggered by the source change above
+    if (_sourceTimer) { clearTimeout(_sourceTimer); _sourceTimer = null; }
     sourceSuggestions([]);
     sourceNotFound(false);
 }
+
+// Dismiss source suggestions when clicking outside the source field area
+$(document).on('mousedown', function (e) {
+    if (sourceSuggestions().length === 0 && !sourceNotFound()) { return; }
+    var $target = $(e.target);
+    if (!$target.closest('#sourceField, .list-group').length) {
+        sourceSuggestions([]);
+        sourceNotFound(false);
+    }
+});
 
 function createSourceFromRef() {
     // Find the active ref modal's source value
