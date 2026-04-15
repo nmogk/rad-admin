@@ -43,6 +43,11 @@ ko.bindingHandlers.datePicker = {
     init: function (element, valueAccessor) {
         var observable = valueAccessor();
 
+        // Clear any previously created UI (handles re-binding after ko.cleanNode)
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+
         // --- Build UI ---
         var row = document.createElement('div');
         row.className = 'form-inline';
