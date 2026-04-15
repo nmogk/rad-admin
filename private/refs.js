@@ -5,6 +5,9 @@ RefViewModel.prototype.deleteRef = function () {
     $.ajax({ // Makes an AJAX query to the server for the source
         url: "/refs/" + this.id(),
         type: "DELETE",
+        success: function (data) {
+            window.location.href = data.redirect || '/refs';
+        },
         error: function (jqXHR) {
             console.log("ajax error " + jqXHR.status);
             alert("Error sending delete request");
@@ -30,6 +33,9 @@ RefViewModel.prototype.submitEdits = function () {
         contentType: "application/json",
         data: JSON.stringify(this.cache.latestData),
         type: "POST",
+        success: function (data) {
+            window.location.href = data.redirect || '/refs';
+        },
         error: function (jqXHR) {
             console.log("ajax error " + jqXHR.status);
             alert("Error sending edit request");

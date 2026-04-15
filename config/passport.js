@@ -51,6 +51,7 @@ function(req, email, password, done) {
             return done(null, false, req.flash('login', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.'));
         }
         user.set({password: password});
+        user.set('last_login', new Date());
         user.save() // {method: 'insert'}
         .then(function (user){
             return done(null, user);
@@ -84,16 +85,18 @@ function(req, email, password, done) { // callback with email and password from 
         
     //     .catch(function (err){
     //         // if the user is found but the password is wrong
-    //         return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
+    //         return done(null, false, req.flash('login', 'Oops! Wrong password.'));
     //     })
     })
     .then(function (user){
         appLog.info(`${email} logged in`);
+        user.set('last_login', new Date());
+        user.save();
         return done(null, user);
     })
     .catch(function (err){
         appLog.debug(`Failed login attempt: ${email}`);
-        return done(null, false, req.flash('loginMessage', 'Unable to log in. Please check your email and password.'));
+        return done(null, false, req.flash('login', 'Unable to log in. Please check your email and password.'));
     });
 
 

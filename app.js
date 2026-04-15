@@ -3,7 +3,6 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 var hbs = require('hbs');
 var flash = require('connect-flash');
 var session = require('express-session');
@@ -54,8 +53,8 @@ morgan.token('statusColor', (req, res, args) => {
 
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`)); // log every request to the console
 
-app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // read cookies (needed for auth)
 
 // Session setup required for passport
@@ -72,6 +71,7 @@ app.use(session({
     unset: 'destroy',
     cookie: {
         secure: true,
+        httpOnly: true,
         maxAge: 86400000 // 1 day for now
     }
 })); // session secret
@@ -81,68 +81,7 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 
 
 // custom middleware =============================================================
-
-// route middleware to make sure a user is logged in and establishes some handlebars context elements.
-function isLoggedIn(req, res, next) {
-
-    // if user is authenticated in the session, carry on 
-    if (req.isAuthenticated()) {
-        
-        if(typeof req.replacements === "undefined") {
-            req.replacements = {}
-        }
-
-        req.replacements.email = req.user.get("email");
-        req.replacements.dispname = req.user.get("name")
-        req.replacements.username = req.user.get("name") || req.user.get("email");
-        req.replacements.users = req.user.get("permission") >= 2;
-        req.replacements.deletable = req.user.get("permission") >= 1;
-        req.replacements.nav = 1;
-        
-        return next();
-    }
-
-    // if they aren't redirect them to the login page
-    res.redirect(302, '/login');
-}
-
-// Middleware which collects flash messages and packages them into the handlebars context
-function flashMessageCenter(req, res, next) {
-    if(typeof req.replacements === "undefined") {
-        req.replacements = {}
-    }
-
-    req.replacements.errorMessage = req.flash("error");
-    req.replacements.yayMessage = req.flash("yay");
-    req.replacements.infoMessage = req.flash("info");
-    
-    return next();
-}
-
-// Middleware which detects if the connection is using ssl, and forces
-// it if not and the user is accessing a resource other than /
-var forceSsl = function (req, res, next) {
-    if (req.path === '/' || req.connection.encrypted) {
-        return next();
-    }
-
-    var host = req.get('Host');
-    var colonidx = host.indexOf(':');
-    if (colonidx !== -1) {
-        host = host.slice(0, colonidx);
-    }
-
-    var redirect = ['https://', host, ':', process.env.HTTPSPORT, req.url].join('')
-    return res.redirect(308, redirect);
-};
-
-// Redirects to profile page if a particular user does not have
-// Sufficient permissions to use the user editing interface
-var superuser = function (req, res, next) {
-    if (req.user.get("permission") >= 2) { 
-        return next(); }
-    res.redirect(302, '/profile'); // This is a transparent redirect. May be confusing. Possibly replace with 401 (unauthorized) with a special error popup
-};
+var { isLoggedIn, flashMessageCenter, forceSsl, superuser } = require('./config/middleware');
 
 
 // app.use(function (req, res, next) {

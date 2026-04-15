@@ -91,6 +91,7 @@ Add entries for the following values:
 ### run initial database migration
 ```
 node migration.js
+node tools/seedSiteContent.js
 ```
 ### configure iptables/firewall
 

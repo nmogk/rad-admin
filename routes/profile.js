@@ -3,7 +3,7 @@ var router = express.Router();
 var validator = require('../config/passValidator');
 var mail = require('../config/mailer');
 var tokens = require('../models/tokens');
-var Promise = require('bluebird');
+var ResetToken = require('../models/invitations');
 
 // =====================================
 // PROFILE SECTION =====================
@@ -18,16 +18,54 @@ router.post('/', function(req, res, next) {
     if(req.body.name){
         req.user.set("name", req.body.name);
     } else if (req.body.email) {
-        req.user.set("email", req.body.email);
+        var newEmail = req.body.email.trim();
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            req.flash('error', 'Please enter a valid email address.');
+            res.redirect(303, '/profile');
+            return;
+        }
+        if(newEmail === req.user.get('email')) {
+            req.flash('error', 'New email is the same as current email.');
+            res.redirect(303, '/profile');
+            return;
+        }
+        var oldEmail = req.user.get('email');
+        var userPromise = Promise.resolve(req.user);
+        req.user.set('pending_email', newEmail);
+        Promise.all([tokens.getToken(24), req.user.save(), tokens.clearRelated(userPromise)])
+        .then(function (results) {
+            var invite = results[0];
+            invite.set('user_id', req.user.id).save(null, { method: 'insert' });
+            return Promise.all([
+                mail.sendEmailVerification(req, newEmail, invite.get('token')),
+                mail.sendEmailChangeNotice(oldEmail, newEmail)
+            ]);
+        })
+        .then(function () {
+            req.flash('info', 'A verification email has been sent to ' + newEmail + '. Please check your inbox to confirm the change.');
+        })
+        .catch(function (err) {
+            console.log(err);
+            req.flash('error', 'Problem initiating email change.');
+        })
+        .finally(function () {
+            res.redirect(303, '/profile');
+        });
+        return;
     } else if (req.body.password) {
+        if(! validator.validate(req.body.password)) {
+            req.flash('error', 'Password is not strong enough. Passwords must have 9-72 characters and contain at least one numeral, uppercase, and lowercase letters.');
+            res.redirect(303, '/profile');
+            return;
+        }
         req.user.set("password", req.body.password);
     }
 
     req.user.save()
-    .done(function (user){
+    .then(function (user){
         res.render('profile', req.replacements);
     });
-    
+
 });
 
 router.delete('/', function (req, res, next){
@@ -35,6 +73,33 @@ router.delete('/', function (req, res, next){
     .then(function (clear){
         req.user.destroy()
         res.end();
+    });
+});
+
+router.get('/verify/:token', function (req, res, next) {
+    new ResetToken({token: req.params.token})
+    .where('expires', '>', Date.now())
+    .fetch({withRelated: 'user'})
+    .then(function (token) {
+        var user = token.related('user');
+        var pendingEmail = user.get('pending_email');
+        if(!pendingEmail) {
+            req.flash('error', 'No pending email change found.');
+            res.redirect(303, '/profile');
+            return;
+        }
+        user.set('email', pendingEmail);
+        user.set('pending_email', null);
+        return user.save()
+        .then(function () {
+            token.destroy();
+            req.flash('yay', 'Your email has been changed to ' + pendingEmail + '.');
+            res.redirect(303, '/profile');
+        });
+    })
+    .catch(function (err) {
+        req.flash('error', 'Email verification link is invalid or has expired.');
+        res.redirect(303, '/profile');
     });
 });
 

@@ -32,6 +32,7 @@ npm-debug.log
 
 view-source_*.html
 
+.claude/
 certs
 launch.json
 database.json

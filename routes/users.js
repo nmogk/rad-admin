@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 var User = require('../models/user');
-var Promise = require('bluebird');
 var _ = require('lodash');
 var tokens = require('../models/tokens');
 var Invite = require('../models/invitations');
@@ -9,6 +8,7 @@ var mail = require('../config/mailer');
 
 // GET users listing.
 router.get('/', function (req, res, next) {
+  req.replacements.currentUserId = req.user.id;
   res.render('users', req.replacements);
 });
 
@@ -25,7 +25,8 @@ router.get('/all', function (req, res, next) {
         email: user.get("email"),
         name: user.get("name"),
         permission: user.get("permission"),
-        validated: user.get("validated")
+        validated: user.get("validated"),
+        last_login: user.get("last_login")
       }); // Unpack user object, dropping password_digest
     })
   })
@@ -50,16 +51,18 @@ router.post('/invite', function (req, res, next) {
   // This will fail if there is already an invite
   newUserPromise = new User({ email: req.body.newUserEmail, password: newUserPass }).save(null, { method: "insert" });
 
-  Promise.join(tokens.getToken(24), newUserPromise, tokens.clearRelated(newUserPromise), 
-  function (invite, user, clear) {
+  Promise.all([tokens.getToken(24), newUserPromise, tokens.clearRelated(newUserPromise)])
+  .then(function (results) {
+    var invite = results[0], user = results[1];
     invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
 
     return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
   })
-    .catch(User.NoRowsUpdatedError, function (err) { // User was not saved in database
-      req.flash('error', 'User already exists. New user not created.');
-    })
-    .catch(function (err) { // Other errors
+    .catch(function (err) {
+      if (err instanceof User.NoRowsUpdatedError) { // User was not saved in database
+        req.flash('error', 'User already exists. New user not created.');
+        return;
+      }
       console.log(err);
       req.flash('error', 'Problem resending invite.');
     })
@@ -77,8 +80,9 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
   var userPromise = new User({ id: req.params.id }).fetch()
 
   // Wait for all the ingredients to return before using them
-  Promise.join(tokens.getToken(24), userPromise, tokens.clearRelated(userPromise),
-    function (invite, user, clear) {
+  Promise.all([tokens.getToken(24), userPromise, tokens.clearRelated(userPromise)])
+    .then(function (results) {
+      var invite = results[0], user = results[1];
       invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
 
       return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
@@ -86,15 +90,16 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
     .then(function () { // Success
       req.flash('info', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
     })
-    .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
-      req.flash('error', 'No account with that email address exists.');
-    })
-    .catch(function (err) { // Other errors
+    .catch(function (err) {
+      if (err instanceof User.NotFoundError) { // Reset attempted with wrong account
+        req.flash('error', 'No account with that email address exists.');
+        return;
+      }
       console.log(err);
       req.flash('error', 'Problem resending invite.');
     })
     .finally(function () { // All responses get redirected to /login to display flash message
-      res.redirect(278, '/users'); // 278 is an unused success status code. It prevents ajax from 
+      res.json({ redirect: '/users' });
     });
 });
 
@@ -119,26 +124,33 @@ router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
       req.flash('error', 'Problem updating user');
     })
     .finally(function () {
-      res.redirect(278, '/users');
+      res.json({ redirect: '/users' });
     });
 
 });
 
 // Delete a particular user
 router.delete('/:id(\\d+)', function (req, res, next) {
+  var isSelf = req.user.id === parseInt(req.params.id, 10);
   var userPromise = new User({ id: req.params.id }).fetch()
-  Promise.join(userPromise, tokens.clearRelated(userPromise), function (user, clear) {
-      return user.destroy();
+  Promise.all([userPromise, tokens.clearRelated(userPromise)])
+    .then(function (results) {
+      return results[0].destroy();
     })
     .then(function (user) {
+      if (isSelf) {
+        req.logout(function (err) {
+          res.json({ redirect: '/login' });
+        });
+        return;
+      }
       req.flash('yay', 'User successfully deleted');
+      res.json({ redirect: '/users' });
     })
     .catch(function (err) {
       console.log(err);
       req.flash('error', 'Problem deleting user');
-    })
-    .finally(function () {
-      res.redirect(278, '/users');
+      res.json({ redirect: '/users' });
     });
 });
 

@@ -11,7 +11,7 @@
             <dt>Display Name: <a href='#' class="btn btn-link" data-toggle="modal" data-target="#dispNameModal"><span class="glyphicon glyphicon-pencil"></span> Change</a></dt>
             <dd>{{#if dispname}}{{dispname}}{{else}}(Not added yet){{/if}}</dd>
             <dt>Email: <a href="#" class="btn btn-link" data-toggle="modal" data-target="#emailModal"><span class="glyphicon glyphicon-pencil"></span> Change</a></dt>
-            <dd>{{email}}</dd>
+            <dd>{{email}}{{#if pendingEmail}} <span class="label label-warning">Pending change to {{pendingEmail}} &mdash; check your inbox</span>{{/if}}</dd>
         </dl>
     {{/inline}}  
 

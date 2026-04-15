@@ -1,4 +1,6 @@
 var proxy = require('http-proxy');
+var log4js = require('log4js');
+var appLog = log4js.getLogger('default');
 
 var proxyOptions = {
     validHttpMethods: ['GET'],
@@ -41,5 +43,7 @@ var proxyLogic = function (request, response){
 };
 
 proxyLogic.backend = proxyOptions.backend;
+proxyLogic.validateRequest = validateRequest;
+proxyLogic.proxyOptions = proxyOptions;
 
 module.exports = proxyLogic;

@@ -16,15 +16,14 @@
   "funding" : "https://give.cornerstone.cc/creationeducation",
   "main" : "app.js",
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "test": "mocha"
   },
   "engines": {
-    "node": "^16.14"
+    "node": "^20.11 || ^22.0 || ^24.0"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.0",
-    "bluebird": "^3.5",
-    "body-parser": "^1.18",
+    "@aws-sdk/client-sesv2": "^3.0",
     "bookshelf": "^1.0",
     "bookshelf-secure-password": "^5.0",
     "bookshelf-virtuals-plugin": "^1.0.0",
@@ -44,7 +43,7 @@
     "log4js": "^6.3",
     "morgan": "^1.9",
     "mysql2": "^3.3",
-    "nodemailer": "^6.7",
+    "nodemailer": "^8.0",
     "passport": "^0.6.0",
     "passport-local": "^1.0",
     "password-validator": "^5.0",
@@ -52,6 +51,16 @@
     "solr-client": "^0.9.0",
     "streamroller": "^3.1",
     "when": "^3.7.8"
+  },
+  "dependenciesComments": {
+    "when": "when is a promise library used by bookshelf. It is not used directly in our code, but it is required to run the application."
+  },
+  "devDependencies": {
+    "chai": "^4.3",
+    "mocha": "^10.2",
+    "proxyquire": "^2.1",
+    "sinon": "^15.0",
+    "supertest": "^6.3"
   },
   "overrides": {
     "bcrypt": "^5.0"

@@ -27,7 +27,7 @@
     
     {{#*inline "results-area"}}
         <div id="story" role="complementary" aria-hidden="true" aria-live="assertive">
-            {{> backstoryContents}}  
+            {{#if backstory}}{{{backstory}}}{{else}}{{> backstoryContents}}{{/if}}
 
             <div class="text-center">
                 <button class="btn btn-default" id="hideStoryButton">Return to Search Results</button>
@@ -112,9 +112,9 @@
 
         {{> citationModal}}
 
-        {{> searchHelp}}   
-        
-        {{> restHelp}}      
+        {{#if search_help}}{{{search_help}}}{{else}}{{> searchHelp}}{{/if}}
+
+        {{#if rest_help}}{{{rest_help}}}{{else}}{{> restHelp}}{{/if}}      
     {{/inline}}
     
     {{#*inline "footer-block"}}

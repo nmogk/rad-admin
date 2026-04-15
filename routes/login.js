@@ -4,7 +4,6 @@ var passport = require('../config/passport');
 var nodemailer = require('nodemailer');
 var User = require('../models/user');
 var Reset = require('../models/invitations');
-var Promise = require('bluebird');
 var mail = require('../config/mailer');
 var token = require('../models/tokens');
 var log4js = require('log4js');
@@ -34,8 +33,9 @@ router.post('/forgot', function (req, res, next) {
     var userPromise = new User({ email: req.body.email }).fetch()
 
     // Wait for all the ingredients to return before using them
-    Promise.join(token.getToken(1), userPromise, token.clearRelated(userPromise),
-        function (invite, user, clear) {
+    Promise.all([token.getToken(1), userPromise, token.clearRelated(userPromise)])
+        .then(function (results) {
+            var invite = results[0], user = results[1];
             invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
 
             return mail.sendResetMail(req, user.get('email'), invite.get('token'));
@@ -44,11 +44,11 @@ router.post('/forgot', function (req, res, next) {
             appLog.info(`Password reset email sent to: ${req.body.email}`);
             return req.flash('login', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
         })
-        .catch(User.NotFoundError, function (err) { // Reset attempted with wrong account
-            appLog.info(`Password reset request by non-user: ${req.body.email}`);
-            return req.flash('login', 'No account with that email address exists.');
-        })
-        .catch(function (err) { // Other errors
+        .catch(function (err) {
+            if (err instanceof User.NotFoundError) { // Reset attempted with wrong account
+                appLog.info(`Password reset request by non-user: ${req.body.email}`);
+                return req.flash('login', 'No account with that email address exists.');
+            }
             appLog.err(`Problem sending password reset email to: ${req.body.email}`);;
             return req.flash('login', 'Problem sending reset.');
         })
