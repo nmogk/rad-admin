@@ -20,8 +20,8 @@ var sourceClientStub = {
 };
 
 var solrStub = {
-    createClient: sinon.stub().callsFake(function (host, port, core) {
-        if (core === 'source') return sourceClientStub;
+    createClient: sinon.stub().callsFake(function (opts) {
+        if (opts.core === 'source') return sourceClientStub;
         return solrClientStub;
     })
 };

@@ -4,7 +4,7 @@ var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
-var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "source");
+var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source", solrVersion: "5.1" });
 const url = require('url');
 
 /* GET sources page. */

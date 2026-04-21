@@ -204,32 +204,29 @@ echo "  OK"
 # Solr must auto-generate a UUID for new documents.
 # ============================================================
 
-# Turned off for now since Solr generates a sequential ID by default if no ID is provided, which is sufficient for our needs 
-# If we want to switch to UUIDs in the future, we can enable this configuration.
-
-# echo "Configuring UUID auto-generation for source documents..."
-# curl -sf -X POST -H 'Content-type:application/json' \
-#   "$SOLR_URL/solr/source/config" -d '{
-#   "add-updateprocessor": {
-#     "name": "uuid-processor",
-#     "class": "solr.UUIDUpdateProcessorFactory",
-#     "fieldName": "id"
-#   },
-#   "update-requesthandler": {
-#     "name": "/update",
-#     "class": "solr.UpdateRequestHandler",
-#     "update.chain": "uuid-chain"
-#   },
-#   "add-updateprocessorchain": {
-#     "name": "uuid-chain",
-#     "processor": [
-#       "uuid-processor",
-#       "log",
-#       "run"
-#     ]
-#   }
-# }' > /dev/null
-# echo "  OK"
+echo "Configuring UUID auto-generation for source documents..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/source/config" -d '{
+  "add-updateprocessor": {
+    "name": "uuid-processor",
+    "class": "solr.UUIDUpdateProcessorFactory",
+    "fieldName": "id"
+  },
+  "add-updateprocessorchain": {
+    "name": "uuid-chain",
+    "processor": [
+      "uuid-processor",
+      "log",
+      "run"
+    ]
+  },
+  "update-requesthandler": {
+    "name": "/update",
+    "class": "solr.UpdateRequestHandler",
+    "update.chain": "uuid-chain"
+  }
+}' > /dev/null
+echo "  OK"
 
 # ============================================================
 # 6. SOURCE core default query field

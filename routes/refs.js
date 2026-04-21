@@ -5,8 +5,8 @@ var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('solr-client');
-var client = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "rad");
-var sourceClient = solr.createClient(proxyOpts.backend.host, proxyOpts.backend.port, "source");
+var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "rad", solrVersion: "5.1" });
+var sourceClient = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source", solrVersion: "5.1" });
 //client.autoCommit = true; //Autocommit is broken apparently.
 const url = require('url');
 
