@@ -3,7 +3,6 @@ var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
 var { mockReq, mockRes, mockUser } = require('./helpers');
 
-// Stubs for external dependencies
 var solrClientStub = {
     add: sinon.stub(),
     get: sinon.stub(),
@@ -26,9 +25,8 @@ var fakeProxy = {
     createProxyServer: sinon.stub().returns({ web: sinon.stub() })
 };
 
-// Load the sources router with mocked dependencies
 var sourcesRouter = proxyquire('../routes/sources', {
-    'solr-client': solrStub,
+    '../config/solr-client': solrStub,
     'log4js': log4jsStub,
     '../config/solr-proxy': proxyquire('../config/solr-proxy', {
         'http-proxy': fakeProxy
@@ -46,7 +44,7 @@ describe('Sources Routes', function () {
 
     describe('POST /new', function () {
 
-        it('should reject submissions without a name', function () {
+        it('should reject submissions without a name', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: { city: 'Springfield' },
@@ -57,13 +55,13 @@ describe('Sources Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(sourcesRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(res.status.calledWith(400)).to.be.true;
             expect(res._json.error).to.include('name is required');
         });
 
-        it('should accept valid source and return redirect', function () {
+        it('should accept valid source and return redirect', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: { name: 'Test Journal', city: 'Springfield' },
@@ -73,10 +71,10 @@ describe('Sources Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+            solrClientStub.add.resolves({});
 
             var handler = findHandler(sourcesRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(solrClientStub.add.calledOnce).to.be.true;
             var doc = solrClientStub.add.firstCall.args[0];
@@ -86,7 +84,7 @@ describe('Sources Routes', function () {
             expect(res._json.redirect).to.include('name:');
         });
 
-        it('should return JSON error on Solr failure', function () {
+        it('should return JSON error on Solr failure', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: { name: 'Test Journal' },
@@ -96,16 +94,16 @@ describe('Sources Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(new Error('Solr down'), null); });
+            solrClientStub.add.rejects(new Error('Solr down'));
 
             var handler = findHandler(sourcesRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(res.status.calledWith(500)).to.be.true;
             expect(res._json.error).to.include('problem occurred');
         });
 
-        it('should write audit log on success', function () {
+        it('should write audit log on success', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: { name: 'Test Journal' },
@@ -115,10 +113,10 @@ describe('Sources Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+            solrClientStub.add.resolves({});
 
             var handler = findHandler(sourcesRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(auditLoggerStub.info.calledOnce).to.be.true;
             var logMsg = auditLoggerStub.info.firstCall.args[0];
@@ -129,7 +127,7 @@ describe('Sources Routes', function () {
 
     describe('POST /:id (edit)', function () {
 
-        it('should return JSON error on Solr get failure', function () {
+        it('should return JSON error on Solr get failure', async function () {
             var req = mockReq({
                 method: 'POST',
                 params: { id: 'abc-123' },
@@ -141,18 +139,16 @@ describe('Sources Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.get.callsFake(function (path, query, cb) {
-                cb(new Error('Solr down'), null);
-            });
+            solrClientStub.get.rejects(new Error('Solr down'));
 
             var handler = findHandler(sourcesRouter, 'post', '/:id');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(res.status.calledWith(500)).to.be.true;
             expect(res._json.error).to.include('audit log');
         });
 
-        it('should update source and return redirect', function () {
+        it('should update source and return redirect', async function () {
             var req = mockReq({
                 method: 'POST',
                 params: { id: 'abc-123' },
@@ -164,13 +160,11 @@ describe('Sources Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.get.callsFake(function (path, query, cb) {
-                cb(null, { response: { docs: [{ id: 'abc-123', name: 'Old Journal' }] } });
-            });
-            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+            solrClientStub.get.resolves({ response: { docs: [{ id: 'abc-123', name: 'Old Journal' }] } });
+            solrClientStub.add.resolves({});
 
             var handler = findHandler(sourcesRouter, 'post', '/:id');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(solrClientStub.add.calledOnce).to.be.true;
             var doc = solrClientStub.add.firstCall.args[0];
@@ -183,7 +177,7 @@ describe('Sources Routes', function () {
 
     describe('DELETE /:id', function () {
 
-        it('should reject users with permission < 1', function () {
+        it('should reject users with permission < 1', async function () {
             var req = mockReq({
                 method: 'DELETE',
                 params: { id: 'abc-123' },
@@ -195,12 +189,12 @@ describe('Sources Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(sourcesRouter, 'delete', '/:id');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(res.redirect.firstCall.args[0]).to.equal(403);
         });
 
-        it('should delete source and return redirect', function () {
+        it('should delete source and return redirect', async function () {
             var req = mockReq({
                 method: 'DELETE',
                 params: { id: 'abc-123' },
@@ -211,24 +205,21 @@ describe('Sources Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.get.callsFake(function (path, query, cb) {
-                cb(null, { response: { docs: [{ id: 'abc-123', name: 'Test Journal' }] } });
-            });
-            solrClientStub.deleteByID.callsFake(function (id, cb) { cb(null, {}); });
+            solrClientStub.deleteByID.resolves({ id: 'abc-123', name: 'Test Journal' });
 
             var handler = findHandler(sourcesRouter, 'delete', '/:id');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(solrClientStub.deleteByID.calledOnce).to.be.true;
+            expect(solrClientStub.deleteByID.firstCall.args[0]).to.equal('abc-123');
             expect(res._json.redirect).to.include('/sources');
             expect(auditLoggerStub.info.calledOnce).to.be.true;
+            var logMsg = auditLoggerStub.info.firstCall.args[0];
+            expect(logMsg).to.include('Test Journal');
         });
     });
 });
 
-/**
- * Helper to find a route handler from an Express router by method and path.
- */
 function findHandler(router, method, path) {
     var layer = router.stack.find(function (l) {
         return l.route &&
