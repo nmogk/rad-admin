@@ -6,6 +6,7 @@ var proxyOpts = require('../config/solr-proxy');
 var solr = require('../config/solr-client');
 var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source" });
 const url = require('url');
+const { randomUUID } = require('crypto');
 
 function buildDoc(body) {
     var doc = {};
@@ -34,6 +35,7 @@ router.post('/new', async function (req, res, next) {
     }
 
     var doc = buildDoc(req.body);
+    doc.id = randomUUID();
 
     try {
         await client.add(doc);
