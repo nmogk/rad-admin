@@ -55,13 +55,13 @@ describe('config/solr-client', function () {
     });
 
     describe('get(route, query)', function () {
-        it('issues GET to /api/cores/<core>/<route>?<query>', function () {
+        it('issues GET to /solr/<core>/<route>?<query>', function () {
             var p = client.get('select', 'q=name:%22X%22&rows=1');
             var entry = httpStub._captured[0];
             expect(entry.opts.method).to.equal('GET');
             expect(entry.opts.host).to.equal('example');
             expect(entry.opts.port).to.equal(9999);
-            expect(entry.opts.path).to.equal('/api/cores/rad/select?q=name:%22X%22&rows=1');
+            expect(entry.opts.path).to.equal('/solr/rad/select?q=name:%22X%22&rows=1');
             entry.req._respond(200, '{"response":{"numFound":0,"docs":[]}}');
             return p.then(function (obj) {
                 expect(obj.response.numFound).to.equal(0);
@@ -70,7 +70,7 @@ describe('config/solr-client', function () {
 
         it('omits the query string when query is empty', function () {
             var p = client.get('select', '');
-            expect(httpStub._captured[0].opts.path).to.equal('/api/cores/rad/select');
+            expect(httpStub._captured[0].opts.path).to.equal('/solr/rad/select');
             httpStub._captured[0].req._respond(200, '{}');
             return p;
         });
@@ -112,7 +112,7 @@ describe('config/solr-client', function () {
             var p = client.add(doc);
             var entry = httpStub._captured[0];
             expect(entry.opts.method).to.equal('POST');
-            expect(entry.opts.path).to.equal('/api/cores/rad/update?commit=true');
+            expect(entry.opts.path).to.equal('/solr/rad/update?commit=true');
             expect(entry.opts.headers['Content-Type']).to.match(/application\/json/);
             var body = JSON.parse(entry.body.toString());
             expect(body).to.deep.equal({ add: { doc: doc, overwrite: true } });
@@ -128,14 +128,14 @@ describe('config/solr-client', function () {
             // First call: select
             var sel = httpStub._captured[0];
             expect(sel.opts.method).to.equal('GET');
-            expect(sel.opts.path).to.equal('/api/cores/rad/select?q=id:42&rows=1');
+            expect(sel.opts.path).to.equal('/solr/rad/select?q=id:42&rows=1');
             sel.req._respond(200, '{"response":{"docs":[{"id":42,"title":"Old"}]}}');
 
             // Need to wait for the next request to be issued
             return new Promise(function (resolve) { setImmediate(resolve); }).then(function () {
                 var del = httpStub._captured[1];
                 expect(del.opts.method).to.equal('POST');
-                expect(del.opts.path).to.equal('/api/cores/rad/update?commit=true');
+                expect(del.opts.path).to.equal('/solr/rad/update?commit=true');
                 var body = JSON.parse(del.body.toString());
                 expect(body).to.deep.equal({ delete: { id: '42' } });
                 del.req._respond(200, '{"responseHeader":{"status":0}}');
@@ -159,7 +159,7 @@ describe('config/solr-client', function () {
         it('encodes special characters in the id for the pre-select query', function () {
             client.deleteByID('foo bar/baz');
             expect(httpStub._captured[0].opts.path).to.equal(
-                '/api/cores/rad/select?q=id:' + encodeURIComponent('foo bar/baz') + '&rows=1'
+                '/solr/rad/select?q=id:' + encodeURIComponent('foo bar/baz') + '&rows=1'
             );
         });
     });
@@ -168,7 +168,7 @@ describe('config/solr-client', function () {
         it('targets a different core when constructed with one', function () {
             var sourceClient = solr.createClient({ host: 'example', port: 9999, core: 'source' });
             sourceClient.get('select', 'q=*:*');
-            expect(httpStub._captured[0].opts.path).to.equal('/api/cores/source/select?q=*:*');
+            expect(httpStub._captured[0].opts.path).to.equal('/solr/source/select?q=*:*');
         });
     });
 });

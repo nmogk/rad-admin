@@ -1,6 +1,11 @@
-// V2-API Solr client. Replaces the defunct `solr-client` npm package (issue #104).
+// In-repo Solr client. Replaces the defunct `solr-client` npm package (issue #104).
 // One client instance per Solr core. All methods return Promises.
 // Database.json updates live in `./database-json.js`.
+//
+// Uses the V1 path `/solr/<core>` because Solr 9's V2 endpoint
+// `/api/cores/<core>/update` routes to the JSON-docs ingester, which treats
+// the whole body as one document and ignores the `add`/`delete` command
+// wrappers we send. V1's `/update` handler parses those commands correctly.
 
 var http = require('http');
 var log4js = require('log4js');
@@ -16,7 +21,7 @@ function createClient(opts) {
     var host = opts.host;
     var port = opts.port;
     var core = opts.core;
-    var basePath = '/api/cores/' + core;
+    var basePath = '/solr/' + core;
 
     function request(method, path, body) {
         var bodyStr = body == null ? null : JSON.stringify(body);
