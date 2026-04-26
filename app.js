@@ -149,6 +149,7 @@ app.use('/refs', isLoggedIn, require('./routes/refs'));
 app.use('/sources',   isLoggedIn, require('./routes/sources'));
 app.use('/campaigns', isLoggedIn, require('./routes/campaigns'));
 app.use('/site',      isLoggedIn, require('./routes/site'));
+app.use('/database',     isLoggedIn, superuser, require('./routes/database'));
 app.use('/users',        isLoggedIn, superuser, require('./routes/users'));
 app.use('/users/signup', isLoggedIn, superuser, require('./routes/signup'));
 
