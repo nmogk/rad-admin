@@ -133,13 +133,6 @@
 {{> adminHelp}}
 {{/inline}} 
 
-{{#*inline "footer-block"}} 
-{{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}} 
-
-{{> footerBasic}}
-
-<a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a>! 
-{{/inline}} 
 
 {{#*inline "scripts-block"}}
 <script nonce="{{nonce}}" src="private/usertools.js"></script> 

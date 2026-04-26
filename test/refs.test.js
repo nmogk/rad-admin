@@ -3,10 +3,13 @@ var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
 var { mockReq, mockRes, mockUser } = require('./helpers');
 
-// Stubs for external dependencies
-var fsStub = {
-    readFileSync: sinon.stub(),
-    writeFileSync: sinon.stub()
+var dbStub = {
+    read: sinon.stub(),
+    getHighestId: sinon.stub(),
+    reserveId: sinon.stub(),
+    recordInsert: sinon.stub(),
+    recordEdit: sinon.stub(),
+    recordDelete: sinon.stub()
 };
 
 var solrClientStub = {
@@ -15,8 +18,15 @@ var solrClientStub = {
     deleteByID: sinon.stub()
 };
 
+var sourceClientStub = {
+    get: sinon.stub()
+};
+
 var solrStub = {
-    createClient: sinon.stub().returns(solrClientStub)
+    createClient: sinon.stub().callsFake(function (opts) {
+        if (opts.core === 'source') return sourceClientStub;
+        return solrClientStub;
+    })
 };
 
 var auditLoggerStub = {
@@ -31,38 +41,45 @@ var fakeProxy = {
     createProxyServer: sinon.stub().returns({ web: sinon.stub() })
 };
 
-// Load the refs router with mocked dependencies
 var refsRouter = proxyquire('../routes/refs', {
-    'fs': fsStub,
-    'solr-client': solrStub,
+    '../config/solr-client': solrStub,
+    '../config/database-json': dbStub,
     'log4js': log4jsStub,
     '../config/solr-proxy': proxyquire('../config/solr-proxy', {
         'http-proxy': fakeProxy
     })
 });
 
-var dbJson = {
-    numRecords: 100,
-    highestId: 500,
-    latest: '2025-01-01',
-    updated: '2025-01-01'
-};
+// Wait one full microtask cycle so .then() callbacks queued by stubs run.
+function flush() {
+    return new Promise(function (r) { setImmediate(r); });
+}
 
 describe('Refs Routes', function () {
 
     beforeEach(function () {
-        // Reset stubs
-        fsStub.readFileSync.returns(JSON.stringify(dbJson));
-        fsStub.writeFileSync.reset();
+        dbStub.read.reset();
+        dbStub.read.resolves({ numRecords: 100, highestId: 500, latest: '2025-01-01', updated: '2025-01-01' });
+        dbStub.getHighestId.reset();
+        dbStub.getHighestId.resolves(500);
+        dbStub.reserveId.reset();
+        dbStub.reserveId.resolves(501);
+        dbStub.recordInsert.reset();
+        dbStub.recordInsert.resolves();
+        dbStub.recordEdit.reset();
+        dbStub.recordEdit.resolves();
+        dbStub.recordDelete.reset();
+        dbStub.recordDelete.resolves();
         solrClientStub.add.reset();
         solrClientStub.get.reset();
         solrClientStub.deleteByID.reset();
+        sourceClientStub.get.reset();
         auditLoggerStub.info.reset();
     });
 
     describe('POST /new', function () {
 
-        it('should reject empty submissions with flash error', function () {
+        it('should reject empty submissions with JSON error', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: {},
@@ -72,18 +89,17 @@ describe('Refs Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            // Find the POST /new handler
             var handler = findHandler(refsRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
-            expect(req.flash.calledWith('error', 'No data input. Reference not created.')).to.be.true;
-            expect(res.redirect.calledWith(303, '/refs')).to.be.true;
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.equal('No data input. Reference not created.');
         });
 
-        it('should reject invalid ISO 8601 dates', function () {
+        it('should reject invalid ISO 8601 dates with JSON error', async function () {
             var req = mockReq({
                 method: 'POST',
-                body: { dateField: 'not-a-date', titleField: 'Test' },
+                body: { date: 'not-a-date', title: 'Test' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
@@ -91,26 +107,26 @@ describe('Refs Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(refsRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
-            expect(req.flash.calledWith('error', 'Incorrect date format entered. Please use ISO 8601.')).to.be.true;
-            expect(res.redirect.calledWith(303, '/refs')).to.be.true;
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('ISO 8601');
         });
 
-        it('should accept valid date format', function () {
+        it('should accept valid date format', async function () {
             var req = mockReq({
                 method: 'POST',
-                body: { titleField: 'Test Title', dateField: '2025-06-15' },
+                body: { title: 'Test Title', date: '2025-06-15' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+            solrClientStub.add.resolves({});
 
             var handler = findHandler(refsRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(solrClientStub.add.calledOnce).to.be.true;
             var doc = solrClientStub.add.firstCall.args[0];
@@ -119,60 +135,138 @@ describe('Refs Routes', function () {
             expect(doc.id).to.equal(501);
         });
 
-        it('should increment highestId and numRecords on success', function () {
+        it('should call recordInsert with the doc date on success', async function () {
             var req = mockReq({
                 method: 'POST',
-                body: { authorField: 'Author' },
+                body: { author: 'Author', date: '2025-06-15' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+            solrClientStub.add.resolves({});
 
             var handler = findHandler(refsRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
-            expect(fsStub.writeFileSync.calledOnce).to.be.true;
-            var written = JSON.parse(fsStub.writeFileSync.firstCall.args[1]);
-            expect(written.highestId).to.equal(501);
-            expect(written.numRecords).to.equal(101);
+            expect(dbStub.recordInsert.calledOnce).to.be.true;
+            expect(dbStub.recordInsert.firstCall.args[0]).to.equal('2025-06-15');
         });
 
-        it('should flash error on Solr failure', function () {
+        it('should return JSON error on Solr failure and not record insert', async function () {
             var req = mockReq({
                 method: 'POST',
-                body: { titleField: 'Test' },
+                body: { title: 'Test' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(new Error('Solr down'), null); });
+            solrClientStub.add.rejects(new Error('Solr down'));
 
             var handler = findHandler(refsRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
-            expect(req.flash.calledWith('error', 'A problem occurred during submit.')).to.be.true;
-            expect(fsStub.writeFileSync.called).to.be.false;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res._json.error).to.include('problem occurred');
+            expect(dbStub.recordInsert.called).to.be.false;
         });
 
-        it('should write audit log on success', function () {
+        it('should return JSON redirect on success', async function () {
             var req = mockReq({
                 method: 'POST',
-                body: { authorField: 'Test Author' },
+                body: { author: 'Test Author' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res._json.redirect).to.include('/refs');
+            expect(res._json.redirect).to.include('501');
+        });
+
+        it('should reject unknown source with JSON error', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Nonexistent Journal' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should accept known source', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Known Journal' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [{ name: 'Known Journal' }] } });
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(res._json.redirect).to.include('/refs');
+        });
+
+        it('should allow save when source index is unreachable', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Some Journal' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.rejects(new Error('Connection refused'));
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(res._json.redirect).to.include('/refs');
+        });
+
+        it('should write audit log on success', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { author: 'Test Author' },
                 user: mockUser({ email: 'editor@test.com' }),
                 flash: sinon.stub()
             });
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.add.callsFake(function (doc, cb) { cb(null, {}); });
+            solrClientStub.add.resolves({});
 
             var handler = findHandler(refsRouter, 'post', '/new');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(auditLoggerStub.info.calledOnce).to.be.true;
             var logMsg = auditLoggerStub.info.firstCall.args[0];
@@ -181,9 +275,74 @@ describe('Refs Routes', function () {
         });
     });
 
+    describe('POST /:id (edit)', function () {
+
+        it('should reject invalid ISO 8601 dates with JSON error', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { date: 'bad-date', title: 'Test' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('ISO 8601');
+        });
+
+        it('should reject unknown source on edit', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test', source: 'Bad Source' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.get.called).to.be.false;
+        });
+
+        it('should return JSON error on Solr get failure', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.rejects(new Error('Solr down'));
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res._json.error).to.include('audit log');
+        });
+    });
+
     describe('DELETE /:id', function () {
 
-        it('should reject users with permission < 1', function () {
+        it('should reject users with permission < 1', async function () {
             var req = mockReq({
                 method: 'DELETE',
                 params: { id: '42' },
@@ -195,12 +354,13 @@ describe('Refs Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(refsRouter, 'delete', '/:id(\\d+)');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(res.redirect.firstCall.args[0]).to.equal(403);
+            expect(solrClientStub.deleteByID.called).to.be.false;
         });
 
-        it('should decrement numRecords on successful delete', function () {
+        it('should call recordDelete on successful delete', async function () {
             var req = mockReq({
                 method: 'DELETE',
                 params: { id: '42' },
@@ -211,24 +371,43 @@ describe('Refs Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
-            solrClientStub.get.callsFake(function (path, query, cb) {
-                cb(null, { response: { docs: [{ id: 42, title: 'Old Doc' }] } });
+            solrClientStub.deleteByID.resolves({ id: 42, title: 'Old Doc' });
+
+            var handler = findHandler(refsRouter, 'delete', '/:id(\\d+)');
+            await handler(req, res, next);
+            await flush();
+
+            expect(solrClientStub.deleteByID.calledOnce).to.be.true;
+            expect(solrClientStub.deleteByID.firstCall.args[0]).to.equal('42');
+            expect(dbStub.recordDelete.calledOnce).to.be.true;
+            expect(auditLoggerStub.info.calledOnce).to.be.true;
+            var logMsg = auditLoggerStub.info.firstCall.args[0];
+            expect(logMsg).to.include('Old Doc');
+        });
+
+        it('should respond with redirect immediately, before delete completes', async function () {
+            var req = mockReq({
+                method: 'DELETE',
+                params: { id: '42' },
+                query: {},
+                user: mockUser({ permission: 1 }),
+                flash: sinon.stub()
             });
-            solrClientStub.deleteByID.callsFake(function (id, cb) { cb(null, {}); });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.deleteByID.resolves({ id: 42 });
 
             var handler = findHandler(refsRouter, 'delete', '/:id(\\d+)');
             handler(req, res, next);
 
-            expect(fsStub.writeFileSync.calledOnce).to.be.true;
-            var written = JSON.parse(fsStub.writeFileSync.firstCall.args[1]);
-            expect(written.numRecords).to.equal(99);
+            // res.json should already have been called synchronously
+            expect(res._json).to.not.be.null;
+            expect(res._json.redirect).to.include('/refs');
         });
     });
 });
 
-/**
- * Helper to find a route handler from an Express router by method and path.
- */
 function findHandler(router, method, path) {
     var layer = router.stack.find(function (l) {
         return l.route &&

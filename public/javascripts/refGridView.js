@@ -26,12 +26,13 @@ function RefsGridViewModel(qString) {
 
    
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
+    // HTML-encode characters that may be stored as entities in the Solr index
+    qString.q = qString.q.replace(/&/g, "&amp;").replace(/'/g, "&apos;");
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
     $.ajax({
         url: self.refsURI,
-        dataType: "jsonp", // jsonp is to get around cross-origin request issues. Solr server does not handle preflight checks to use CORS
-        jsonp: "json.wrf", // This is the name of the function to return. This is magic sauce. I don't know why Solr requires this name to use jsonp
+        dataType: "json",
         data: $.param(qString), // Pass along user's input directly as query string. Server handles escaping of searches.
         success: function (data) {
             data.response.docs.forEach( function (refi) {

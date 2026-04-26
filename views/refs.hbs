@@ -80,7 +80,7 @@
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: editRef"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: "}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" target="_blank" {{! TODO data-bind="click: "}}><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewSourceForEditing"><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
                       {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteRef"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
@@ -118,6 +118,8 @@
 
         {{> editRefModal}}
 
+        {{> newSourceModal}}
+
         {{> adminHelp}}
 
     {{/inline}}
@@ -125,7 +127,7 @@
     {{#*inline "footer-block"}}
         {{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}}
       
-        {{> footerBasic}} <a href="#" style="cursor: pointer" data-toggle="modal" data-target="#adminHelp">Help</a>!
+        {{> footerAdmin}}
     {{/inline}}
     
     {{#*inline "scripts-block"}}
@@ -135,7 +137,8 @@
       <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
       <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
-      <script nonce="{{nonce}}" src="private/refs.js"></script> {{! This is temporary only to check the layout}}
+      <script nonce="{{nonce}}" src="javascripts/srcViewModel.js"></script>
+      <script nonce="{{nonce}}" src="private/refs.js"></script>
     {{/inline}}
 
 {{/layout}}

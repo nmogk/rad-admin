@@ -63,6 +63,10 @@ router.post('/', function(req, res, next) {
 
     req.user.save()
     .then(function (user){
+        // Refresh display name so the change is visible immediately
+        var updatedName = req.user.get("name");
+        req.replacements.dispname = updatedName;
+        req.replacements.username = updatedName || req.user.get("email");
         res.render('profile', req.replacements);
     });
 
