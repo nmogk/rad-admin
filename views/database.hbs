@@ -1,0 +1,93 @@
+{{!-- Database admin page: Solr index backups (and future backend tools) --}}
+{{#> layout title="Database" nav=1 dbActive=1}}
+
+{{#*inline "header-block"}}
+    <style>
+        .table td.fit,
+        .table th.fit {
+            white-space: nowrap;
+            width: 1%;
+        }
+    </style>
+{{/inline}}
+
+{{#*inline "search-area"}}
+<form class="form inline" id="createBackupForm">
+    <div class="form-group">
+        <label for="backupCore">Backup core:</label>
+        <select class="form-control" id="backupCore" name="core">
+            <option value="rad">References (rad)</option>
+            <option value="source">Sources (source)</option>
+            <option value="both">Both</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary" id="createBackupButton">
+        <span class="glyphicon glyphicon-floppy-disk"></span> Create Backup
+    </button>
+    <span id="backupStatus" class="text-muted" style="margin-left: 1em;"></span>
+</form>
+{{/inline}}
+
+{{#*inline "results-area"}}
+<div id="mainDisplay" role="main">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th class="fit">Core</th>
+                    <th class="fit">Created</th>
+                    <th class="fit">Size</th>
+                    <th class="fit">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each backups}}
+                <tr>
+                    <td>{{name}}</td>
+                    <td class="fit">{{core}}</td>
+                    <td class="fit">{{mtime}}</td>
+                    <td class="fit">{{sizeFormatted}}</td>
+                    <td class="fit">
+                        <a class="btn btn-default delete-backup" data-filename="{{name}}" title="Delete backup">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+                {{/each}}
+                {{#unless backups.length}}
+                <tr>
+                    <td colspan="5" class="text-muted text-center">No backups yet. Use the form above to create one.</td>
+                </tr>
+                {{/unless}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{/inline}}
+
+{{#*inline "modal-block"}}
+<div class="modal fade" id="deleteBackupConfirm" role="dialog" tabindex=0>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <h4 class="modal-title">Delete this backup?</h4>
+            </div>
+            <div class="modal-body">
+                <p>About to delete <strong id="deleteBackupName"></strong>. This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal" id="confirm-delete-backup-button">Delete</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{/inline}}
+
+{{#*inline "scripts-block"}}
+<script nonce="{{nonce}}" src="private/databaseTools.js"></script>
+{{/inline}}
+
+{{/layout}}
