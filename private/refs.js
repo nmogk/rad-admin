@@ -341,6 +341,45 @@ $(document).on('click', '[data-odd-chars]', function (e) {
     searchOddChars(this.getAttribute('data-odd-chars'));
 });
 
+// Builds and submits a search for refs whose `source` doesn't match any
+// document in the source core. Two-step flow because Solr can't join across
+// cores: pull every source name, then exclude them from a query against rad.
+function searchOrphanSources() {
+    var btn = document.getElementById('orphanSourceBtn');
+    var originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="glyphicon glyphicon-refresh"></span>';
+    $.ajax({
+        url: '/solr/source/select?',
+        dataType: 'json',
+        data: $.param({ q: '*:*', rows: 10000, fl: 'name' }),
+        success: function (data) {
+            var names = [];
+            data.response.docs.forEach(function (doc) {
+                var n = doc.name;
+                if (Array.isArray(n)) { n = n[0]; }
+                if (n) { names.push(escapeSolrPhrase(n)); }
+            });
+            var input = document.getElementById('searchInput');
+            if (!names.length) {
+                input.value = 'source:[* TO *]';
+            } else {
+                input.value = 'source:[* TO *] AND -source:(' + names.join(' OR ') + ')';
+            }
+            input.form.submit();
+        },
+        error: function (jqXHR) {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            alert('Could not load source list (status ' + jqXHR.status + ').');
+        }
+    });
+}
+
+$(document).on('click', '#orphanSourceBtn', function () {
+    searchOrphanSources();
+});
+
 // Friendly labels for the problematic chars surfaced in the edit-modal banner.
 var ODD_CHAR_LABELS = [
     [/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, 'control character'],

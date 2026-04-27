@@ -23,6 +23,16 @@ function htmlDecode(value) {
 }
 
 /**
+ * Wraps a string as a Solr quoted phrase, escaping backslashes and quotes
+ * so the value can be substituted into queries like name:"<phrase>".
+ */
+function escapeSolrPhrase(value) {
+    "use strict";
+    if (typeof value !== 'string') { return '""'; }
+    return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+}
+
+/**
  * Custom binding which supplies a default value (em dash) for observables with undefined values
  */
 ko.bindingHandlers.textPretty = {

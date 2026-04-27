@@ -18,6 +18,13 @@
               <li><strong>Smart punctuation</strong> &mdash; curly quotes, en dash, em dash, and ellipsis. These render fine but break literal-string searches typed with straight ASCII equivalents.</li>
             </ul>
             <p>The search uses Solr's regex query syntax against indexed terms. Characters that the field's tokenizer treats as word boundaries (e.g. non-breaking space) may be missed.</p>
+          <h4>Cross-Reference: Refs vs. Sources</h4>
+            <p>Solr can't join across the references and sources cores in a single query, so these two buttons do the work in two steps: pull one side's full list, then build a Solr query that excludes those values from the other side.</p>
+            <ul>
+              <li>On the <strong>References</strong> page, the <span class="glyphicon glyphicon-warning-sign"></span> button finds refs whose <code>source</code> field doesn't match any source's <code>name</code>. The matches are the ones you'll want to either correct (typo in the ref) or follow up on by adding the missing source.</li>
+              <li>On the <strong>Sources</strong> page, the <span class="glyphicon glyphicon-eye-close"></span> button finds sources that no reference points to. Useful for pruning dead entries.</li>
+            </ul>
+            <p>Both buttons fill the search box with the generated Solr query so you can refine it or share the URL. Note that they degrade once the source list passes Solr's default boolean-clause limit (~1024 entries); if that ceiling is reached, queries will start failing and the underlying approach needs to change.</p>
         <h3>Automatic Input Cleanup</h3>
           <p>When you save a new or edited reference, the server normalises common copy-paste artefacts before storing the record. This keeps the database consistent so that literal-string searches reliably match what you see on screen. Specifically:</p>
           <ul>
