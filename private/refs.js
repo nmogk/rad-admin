@@ -38,6 +38,11 @@ RefViewModel.prototype.editRef = function () {
     sourceNotFound(false);
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     this.source.subscribe(lookupSources);
+    // Live computed of problematic chars currently in the form. Note: chars
+    // that htmlDecode silently drops on the way from Solr to the observable
+    // (NBSP, zero-width, etc.) won't appear here — the search button is the
+    // canonical source for "this record contains invisibles."
+    attachOddCharReport(this);
     ko.applyBindings(this, $("#editRefModal")[0]);
     $("#editRefModal").modal({ backdrop: 'static' });
 }
@@ -146,7 +151,23 @@ function searchInit() {
     }
     // Subscribe to source field changes for autocomplete
     blankRefViewModel.source.subscribe(lookupSources);
+    attachOddCharReport(blankRefViewModel);
     ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
+
+    var orphanNotice = null;
+    try { orphanNotice = sessionStorage.getItem('orphanRefsNotice'); } catch (e) {}
+    if (orphanNotice) {
+        try { sessionStorage.removeItem('orphanRefsNotice'); } catch (e) {}
+        try {
+            var n = JSON.parse(orphanNotice);
+            var alertEl = document.getElementById('orphanCapAlert');
+            if (alertEl) {
+                document.getElementById('orphanCapShown').textContent = n.shown;
+                document.getElementById('orphanCapTotal').textContent = n.total;
+                alertEl.style.display = '';
+            }
+        } catch (e) {}
+    }
 
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
@@ -270,6 +291,227 @@ function createSourceFromRef() {
 
     ko.applyBindings(blankSource, $("#newSourceModal")[0]);
     $("#newSourceModal").modal({ backdrop: 'static' });
+}
+
+var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'page', 'abstract', 'dt'];
+
+function buildBlankFieldQuery(field) {
+    if (!field) {
+        // "At least one field missing" via De Morgan: NOT (all fields present).
+        // A parenthesised OR of pure negations evaluates against nothing in Solr
+        // and returns zero hits, even when ANDed with *:*.
+        var clauses = BLANK_QUERYABLE_FIELDS.map(function (f) { return f + ':[* TO *]'; });
+        return '*:* AND -(' + clauses.join(' AND ') + ')';
+    }
+    return '*:* AND -' + field + ':[* TO *]';
+}
+
+function searchBlankField(field) {
+    var input = document.getElementById('searchInput');
+    input.value = buildBlankFieldQuery(field);
+    input.form.submit();
+}
+
+$(document).on('click', '#blankSearchBtn', function () {
+    searchBlankField('');
+});
+
+$(document).on('click', '[data-blank-field]', function (e) {
+    e.preventDefault();
+    searchBlankField(this.getAttribute('data-blank-field'));
+});
+
+var ODD_CHAR_SEARCH_FIELDS = ['title', 'author', 'abstract', 'reference', 'source', 'page'];
+
+// Lucene RegExp character-class bodies. NUL is omitted because it does not
+// survive HTTP transport reliably. Tab/LF/CR are omitted from "control"
+// because they appear legitimately in abstracts.
+var ODD_CHAR_CLASSES = {
+    control: '\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFD',
+    invisible: '\u00A0\u00AD\u200B\u200C\u200D\u2028\u2029\uFEFF',
+    smart: '\u2018\u2019\u201C\u201D\u2013\u2014\u2026'
+};
+
+function buildOddCharQuery(category) {
+    var chars = category
+        ? (ODD_CHAR_CLASSES[category] || '')
+        : ODD_CHAR_CLASSES.control + ODD_CHAR_CLASSES.invisible + ODD_CHAR_CLASSES.smart;
+    var regex = '/.*[' + chars + '].*/';
+    var clauses = ODD_CHAR_SEARCH_FIELDS.map(function (f) { return f + ':' + regex; });
+    return '(' + clauses.join(' OR ') + ')';
+}
+
+function searchOddChars(category) {
+    var input = document.getElementById('searchInput');
+    input.value = buildOddCharQuery(category);
+    input.form.submit();
+}
+
+$(document).on('click', '#oddCharSearchBtn', function () {
+    searchOddChars('');
+});
+
+$(document).on('click', '[data-odd-chars]', function (e) {
+    e.preventDefault();
+    searchOddChars(this.getAttribute('data-odd-chars'));
+});
+
+// Builds and submits a search for refs whose `source` doesn't match any
+// document in the source core. Solr can't join across cores, and putting
+// every source name in the URL trips the server's URI length limit, so we
+// compute the diff in JS and submit only the (usually small) list of
+// orphan IDs.
+function searchOrphanSources() {
+    var btn = document.getElementById('orphanSourceBtn');
+    var progress = document.getElementById('orphanSourceProgress');
+    var originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>';
+    progress.style.display = '';
+    progress.textContent = 'Loading sources…';
+
+    var pageSize = 1000;
+
+    function fail(msg) {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        progress.style.display = 'none';
+        progress.textContent = '';
+        alert(msg);
+    }
+
+    function fetchAllSourceNames(callback) {
+        var names = {};
+        var loaded = 0;
+        function fetchPage(start) {
+            $.ajax({
+                url: '/solr/source/select?',
+                dataType: 'json',
+                data: $.param({ q: '*:*', rows: pageSize, start: start, fl: 'name' }),
+                success: function (data) {
+                    (data.response.docs || []).forEach(function (d) {
+                        var n = d.name;
+                        if (Array.isArray(n)) { n = n[0]; }
+                        if (n) { names[n] = true; }
+                    });
+                    loaded += (data.response.docs || []).length;
+                    progress.textContent = 'Loading sources… ' + loaded + ' of ' + data.response.numFound;
+                    if (start + pageSize >= data.response.numFound) { callback(names); }
+                    else { fetchPage(start + pageSize); }
+                },
+                error: function (jqXHR) { fail('Could not load source list (status ' + jqXHR.status + ').'); }
+            });
+        }
+        fetchPage(0);
+    }
+
+    function paginateRefs(sourceSet) {
+        var orphanIds = [];
+        var scanned = 0;
+        function fetchPage(start) {
+            $.ajax({
+                url: '/solr/rad/refs?',
+                dataType: 'json',
+                data: $.param({ q: 'source:[* TO *]', rows: pageSize, start: start, fl: 'id,source' }),
+                success: function (data) {
+                    (data.response.docs || []).forEach(function (d) {
+                        var s = d.source;
+                        if (Array.isArray(s)) { s = s[0]; }
+                        if (s && !sourceSet[s] && d.id !== undefined) { orphanIds.push(d.id); }
+                    });
+                    scanned += (data.response.docs || []).length;
+                    progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
+                    if (start + pageSize >= data.response.numFound) { finish(orphanIds); }
+                    else { fetchPage(start + pageSize); }
+                },
+                error: function (jqXHR) { fail('Could not scan refs (status ' + jqXHR.status + ').'); }
+            });
+        }
+        fetchPage(0);
+    }
+
+    function finish(orphanIds) {
+        var input = document.getElementById('searchInput');
+        if (!orphanIds.length) {
+            input.value = '-*:*'; // matches nothing
+        } else {
+            // Cap to keep URL under server header limits. Editors fix the
+            // visible batch, re-run, see the next batch.
+            var CAP = 100;
+            if (orphanIds.length > CAP) {
+                try {
+                    sessionStorage.setItem('orphanRefsNotice', JSON.stringify({
+                        total: orphanIds.length, shown: CAP
+                    }));
+                } catch (e) { /* sessionStorage may be unavailable; banner just won't appear */ }
+                orphanIds = orphanIds.slice(0, CAP);
+            }
+            input.value = 'id:(' + orphanIds.join(' OR ') + ')';
+        }
+        input.form.submit();
+    }
+
+    fetchAllSourceNames(paginateRefs);
+}
+
+$(document).on('click', '#orphanSourceBtn', function () {
+    searchOrphanSources();
+});
+
+// Friendly labels for the problematic chars surfaced in the edit-modal banner.
+var ODD_CHAR_LABELS = [
+    [/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, 'control character'],
+    [/\uFFFD/g, 'replacement character'],
+    [/\u00A0/g, 'non-breaking space'],
+    [/\u00AD/g, 'soft hyphen'],
+    [/[\u200B\u200C\u200D]/g, 'zero-width character'],
+    [/[\u2028\u2029]/g, 'line/paragraph separator'],
+    [/\uFEFF/g, 'byte-order mark'],
+    [/[\u2018\u2019]/g, 'smart single quote'],
+    [/[\u201C\u201D]/g, 'smart double quote'],
+    [/\u2013/g, 'en dash'],
+    [/\u2014/g, 'em dash'],
+    [/\u2026/g, 'ellipsis']
+];
+
+function summarizeOddChars(value) {
+    if (typeof value !== 'string' || !value) { return []; }
+    var found = [];
+    ODD_CHAR_LABELS.forEach(function (pair) {
+        var m = value.match(pair[0]);
+        if (m) { found.push({ name: pair[1], count: m.length }); }
+    });
+    return found;
+}
+
+function buildOddCharReport(values) {
+    var fields = [
+        ['title', values.title], ['author', values.author],
+        ['reference', values.reference], ['source', values.source],
+        ['page', values.page], ['abstract', values.abst]
+    ];
+    var lines = [];
+    fields.forEach(function (entry) {
+        var fieldName = entry[0];
+        summarizeOddChars(entry[1]).forEach(function (s) {
+            var label = s.name + (s.count === 1 ? '' : 's');
+            lines.push(fieldName + ' \u2014 ' + s.count + ' ' + label);
+        });
+    });
+    return lines;
+}
+
+// Attaches a live oddCharReport computed observable to a RefViewModel
+// instance. Used by both the edit modal and the new-reference modal so
+// editors see what server-side sanitize will replace as they type or paste.
+function attachOddCharReport(vm) {
+    vm.oddCharReport = ko.pureComputed(function () {
+        return buildOddCharReport({
+            title: vm.title(), author: vm.author(),
+            reference: vm.reference(), source: vm.source(),
+            page: vm.page(), abst: vm.abst()
+        });
+    });
 }
 
 // Make sure the whole page is loaded before manipulating it

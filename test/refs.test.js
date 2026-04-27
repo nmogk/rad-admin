@@ -340,6 +340,131 @@ describe('Refs Routes', function () {
         });
     });
 
+    describe('POST /new sanitization', function () {
+
+        it('normalises smart quotes in title to straight quotes', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'a' + '“' + 'b' + '”' + ' ' + '‘' + 'c' + '’' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.title).to.equal('a"b" \'c\'');
+        });
+
+        it('replaces NBSP in author with a regular space', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { author: 'Jane' + ' ' + 'Doe' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.author).to.equal('Jane Doe');
+        });
+
+        it('replaces en/em dashes in reference with a hyphen', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { reference: 'Vol 1' + '–' + '2' + '—' + 'pages' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.reference).to.equal('Vol 1-2-pages');
+        });
+
+        it('replaces ellipsis in abstract with three dots', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { abst: 'continued' + '…' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.abstract).to.equal('continued...');
+        });
+
+        it('strips zero-width chars from source and queries Solr with the cleaned name', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'T', source: 'Nature' + '​' + '‌' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [{ name: 'Nature' }] } });
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var sourceQuery = sourceClientStub.get.firstCall.args[1];
+            expect(sourceQuery).to.include('name:"Nature"');
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.source).to.equal('Nature');
+        });
+
+        it('strips control characters from title', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Hello' + '' + 'World' + '' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.title).to.equal('HelloWorld');
+        });
+
+        it('preserves tab and LF in abstract', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { abst: 'line1\n\tindented\nline2' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.abstract).to.equal('line1\n\tindented\nline2');
+        });
+    });
+
     describe('DELETE /:id', function () {
 
         it('should reject users with permission < 1', async function () {

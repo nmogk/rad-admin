@@ -10,6 +10,14 @@
             <form id="refEditForm" data-bind="submit: $data.submitEdits">
                 <div class="modal-body">
                     <div class="alert alert-danger" style="display:none" data-bind="visible: $root.formError, text: $root.formError"></div>
+                    <!-- ko if: typeof oddCharReport === 'function' && oddCharReport().length -->
+                    <div class="alert alert-warning">
+                        <strong>Problematic characters detected.</strong> Saving will clean them automatically.
+                        <ul class="list-unstyled" style="margin-bottom:0" data-bind="foreach: oddCharReport">
+                            <li data-bind="text: $data"></li>
+                        </ul>
+                    </div>
+                    <!-- /ko -->
                     {{> refFormFields}}
                 </div>
                 <div class="modal-footer">

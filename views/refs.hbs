@@ -24,8 +24,40 @@
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-5">
               <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="glyphicon glyphicon-search"></span> Search</button>
-              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for empty fields"><span class="glyphicon glyphicon-minus-sign"></span></button>
-              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
+              <div class="btn-group">
+                <button id="blankSearchBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for entries with any blank field"><span class="glyphicon glyphicon-minus-sign"></span></button>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="caret"></span>
+                  <span class="sr-only">Choose a specific blank field</span>
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-label="Blank field search options">
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="">Any field</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="author">Author</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="title">Title</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="reference">Reference</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="source">Source</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="page">Page</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="abstract">Abstract</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="dt">Date</a></li>
+                </ul>
+              </div>
+              <div class="btn-group">
+                <button id="oddCharSearchBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for entries with odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="caret"></span>
+                  <span class="sr-only">Choose a specific character category</span>
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-label="Problematic character search options">
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="">Any problematic</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="control">Control / non-printing</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="invisible">Invisible / zero-width</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="smart">Smart punctuation</a></li>
+                </ul>
+              </div>
+              <button id="orphanSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find refs whose source is not in the source list"><span class="glyphicon glyphicon-warning-sign"></span></button>
+              <span id="orphanSourceProgress" class="text-muted small" style="display:none; margin-left:8px" aria-live="polite"></span>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
               <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newRefModal" data-backdrop="static"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>
@@ -39,6 +71,10 @@
         
         {{! Results header }}
         <div id="mainDisplay" aria-hidden="true" role="main">
+          <div id="orphanCapAlert" class="alert alert-warning" style="display:none" aria-live="polite">
+            <strong>Showing <span id="orphanCapShown"></span> of <span id="orphanCapTotal"></span> orphan refs.</strong>
+            Fix these and re-run the orphan search to see the next batch.
+          </div>
           <div id="res-head" class="panel-body">
             <div>
               <span data-bind="text: summary"></span>

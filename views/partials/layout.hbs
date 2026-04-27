@@ -32,7 +32,9 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
   <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#ffffff">
-  <style>[aria-hidden="true"]{display: none;}</style>
+  <style>[aria-hidden="true"]{display: none;}
+    @keyframes glyphSpin { to { transform: rotate(360deg); } }
+    .glyphicon-spin { animation: glyphSpin 1s linear infinite; display: inline-block; }</style>
   {{#if nav}}<style>body { padding-top: 60px; }</style>{{/if}}
   <script nonce="{{nonce}}" src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <script nonce="{{nonce}}" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>

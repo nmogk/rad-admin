@@ -11,6 +11,21 @@ const url = require('url');
 
 var DATE_RGX = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/;
 
+// Strips non-printing/zero-width chars and normalises common copy-paste
+// artefacts (smart quotes, NBSP, en/em dash, ellipsis) so they don't end up
+// in Solr where they'd break literal-string searches and visible rendering.
+// Tab, LF, CR are intentionally preserved for multi-line abstracts.
+function sanitize(s) {
+    if (typeof s !== 'string') { return s; }
+    return s
+        .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFD\u00AD\u200B\u200C\u200D\uFEFF]/g, '')
+        .replace(/[\u00A0\u2028\u2029]/g, ' ')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2013\u2014]/g, '-')
+        .replace(/\u2026/g, '...');
+}
+
 async function sourceExists(sourceName) {
     var query = 'q=name:"' + sourceName.replace(/"/g, '\\"') + '"&rows=1';
     var obj = await sourceClient.get('select', query);
@@ -19,12 +34,12 @@ async function sourceExists(sourceName) {
 
 function buildDoc(body) {
     var doc = {};
-    if (body.author) { doc.author = body.author; }
-    if (body.title) { doc.title = body.title; }
-    if (body.reference) { doc.reference = body.reference; }
-    if (body.source) { doc.source = body.source; }
-    if (body.page) { doc.page = body.page; }
-    if (body.abst) { doc.abstract = body.abst; }
+    if (body.author) { doc.author = sanitize(body.author); }
+    if (body.title) { doc.title = sanitize(body.title); }
+    if (body.reference) { doc.reference = sanitize(body.reference); }
+    if (body.source) { doc.source = sanitize(body.source); }
+    if (body.page) { doc.page = sanitize(body.page); }
+    if (body.abst) { doc.abstract = sanitize(body.abst); }
     return doc;
 }
 
