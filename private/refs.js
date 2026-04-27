@@ -38,14 +38,16 @@ RefViewModel.prototype.editRef = function () {
     sourceNotFound(false);
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     this.source.subscribe(lookupSources);
-    var self = this;
-    this.oddCharReport = ko.pureComputed(function () {
-        return buildOddCharReport({
-            title: self.title(), author: self.author(),
-            reference: self.reference(), source: self.source(),
-            page: self.page(), abst: self.abst()
-        });
-    });
+    // Scan the raw Solr response (cached on update()) rather than the
+    // observables. jQuery's htmlDecode round-trips through innerHTML on a
+    // textarea and silently drops several invisible characters, so by the
+    // time the values reach the observables NBSP/zero-width/etc. are gone.
+    var raw = this.cache.latestData || {};
+    this.oddCharReport = ko.observable(buildOddCharReport({
+        title: raw.title, author: raw.author,
+        reference: raw.reference, source: raw.source,
+        page: raw.page, abst: raw.abstract
+    }));
     ko.applyBindings(this, $("#editRefModal")[0]);
     $("#editRefModal").modal({ backdrop: 'static' });
 }
