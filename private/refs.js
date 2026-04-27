@@ -38,16 +38,11 @@ RefViewModel.prototype.editRef = function () {
     sourceNotFound(false);
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     this.source.subscribe(lookupSources);
-    // Scan the raw Solr response (cached on update()) rather than the
-    // observables. jQuery's htmlDecode round-trips through innerHTML on a
-    // textarea and silently drops several invisible characters, so by the
-    // time the values reach the observables NBSP/zero-width/etc. are gone.
-    var raw = this.cache.latestData || {};
-    this.oddCharReport = ko.observable(buildOddCharReport({
-        title: raw.title, author: raw.author,
-        reference: raw.reference, source: raw.source,
-        page: raw.page, abst: raw.abstract
-    }));
+    // Live computed of problematic chars currently in the form. Note: chars
+    // that htmlDecode silently drops on the way from Solr to the observable
+    // (NBSP, zero-width, etc.) won't appear here — the search button is the
+    // canonical source for "this record contains invisibles."
+    attachOddCharReport(this);
     ko.applyBindings(this, $("#editRefModal")[0]);
     $("#editRefModal").modal({ backdrop: 'static' });
 }
@@ -156,6 +151,7 @@ function searchInit() {
     }
     // Subscribe to source field changes for autocomplete
     blankRefViewModel.source.subscribe(lookupSources);
+    attachOddCharReport(blankRefViewModel);
     ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
 
     if (queryString.q !== undefined) {
@@ -379,15 +375,26 @@ function buildOddCharReport(values) {
     ];
     var lines = [];
     fields.forEach(function (entry) {
-        var summary = summarizeOddChars(entry[1]);
-        if (summary.length) {
-            var parts = summary.map(function (s) {
-                return s.count + ' ' + s.name + (s.count === 1 ? '' : 's');
-            });
-            lines.push(entry[0] + ' \u2014 ' + parts.join(', '));
-        }
+        var fieldName = entry[0];
+        summarizeOddChars(entry[1]).forEach(function (s) {
+            var label = s.name + (s.count === 1 ? '' : 's');
+            lines.push(fieldName + ' \u2014 ' + s.count + ' ' + label);
+        });
     });
     return lines;
+}
+
+// Attaches a live oddCharReport computed observable to a RefViewModel
+// instance. Used by both the edit modal and the new-reference modal so
+// editors see what server-side sanitize will replace as they type or paste.
+function attachOddCharReport(vm) {
+    vm.oddCharReport = ko.pureComputed(function () {
+        return buildOddCharReport({
+            title: vm.title(), author: vm.author(),
+            reference: vm.reference(), source: vm.source(),
+            page: vm.page(), abst: vm.abst()
+        });
+    });
 }
 
 // Make sure the whole page is loaded before manipulating it
