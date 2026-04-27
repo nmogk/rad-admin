@@ -276,8 +276,11 @@ var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'page', 
 
 function buildBlankFieldQuery(field) {
     if (!field) {
-        var clauses = BLANK_QUERYABLE_FIELDS.map(function (f) { return '-' + f + ':[* TO *]'; });
-        return '*:* AND (' + clauses.join(' OR ') + ')';
+        // "At least one field missing" via De Morgan: NOT (all fields present).
+        // A parenthesised OR of pure negations evaluates against nothing in Solr
+        // and returns zero hits, even when ANDed with *:*.
+        var clauses = BLANK_QUERYABLE_FIELDS.map(function (f) { return f + ':[* TO *]'; });
+        return '*:* AND -(' + clauses.join(' AND ') + ')';
     }
     return '*:* AND -' + field + ':[* TO *]';
 }
