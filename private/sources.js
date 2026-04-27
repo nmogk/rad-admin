@@ -108,20 +108,26 @@ var formSuccess = ko.observable('');
 // the (usually small) list of unused source IDs.
 function searchUnusedSources() {
     var btn = document.getElementById('unusedSourceBtn');
+    var progress = document.getElementById('unusedSourceProgress');
     var originalHTML = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="glyphicon glyphicon-refresh"></span>';
+    btn.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>';
+    progress.style.display = '';
+    progress.textContent = 'Scanning refs…';
 
     var pageSize = 1000;
 
     function fail(msg) {
         btn.disabled = false;
         btn.innerHTML = originalHTML;
+        progress.style.display = 'none';
+        progress.textContent = '';
         alert(msg);
     }
 
     function fetchUsedSourceNames(callback) {
         var used = {};
+        var scanned = 0;
         function fetchPage(start) {
             $.ajax({
                 url: '/solr/rad/refs?',
@@ -133,6 +139,8 @@ function searchUnusedSources() {
                         if (Array.isArray(s)) { s = s[0]; }
                         if (s) { used[s] = true; }
                     });
+                    scanned += (data.response.docs || []).length;
+                    progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { callback(used); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -144,6 +152,7 @@ function searchUnusedSources() {
 
     function paginateSources(usedSet) {
         var unusedIds = [];
+        var scanned = 0;
         function fetchPage(start) {
             $.ajax({
                 url: '/solr/source/select?',
@@ -155,6 +164,8 @@ function searchUnusedSources() {
                         if (Array.isArray(n)) { n = n[0]; }
                         if (n && !usedSet[n] && d.id) { unusedIds.push(d.id); }
                     });
+                    scanned += (data.response.docs || []).length;
+                    progress.textContent = 'Scanning sources… ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { finish(unusedIds); }
                     else { fetchPage(start + pageSize); }
                 },

@@ -363,20 +363,26 @@ $(document).on('click', '[data-odd-chars]', function (e) {
 // orphan IDs.
 function searchOrphanSources() {
     var btn = document.getElementById('orphanSourceBtn');
+    var progress = document.getElementById('orphanSourceProgress');
     var originalHTML = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="glyphicon glyphicon-refresh"></span>';
+    btn.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>';
+    progress.style.display = '';
+    progress.textContent = 'Loading sources…';
 
     var pageSize = 1000;
 
     function fail(msg) {
         btn.disabled = false;
         btn.innerHTML = originalHTML;
+        progress.style.display = 'none';
+        progress.textContent = '';
         alert(msg);
     }
 
     function fetchAllSourceNames(callback) {
         var names = {};
+        var loaded = 0;
         function fetchPage(start) {
             $.ajax({
                 url: '/solr/source/select?',
@@ -388,6 +394,8 @@ function searchOrphanSources() {
                         if (Array.isArray(n)) { n = n[0]; }
                         if (n) { names[n] = true; }
                     });
+                    loaded += (data.response.docs || []).length;
+                    progress.textContent = 'Loading sources… ' + loaded + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { callback(names); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -399,6 +407,7 @@ function searchOrphanSources() {
 
     function paginateRefs(sourceSet) {
         var orphanIds = [];
+        var scanned = 0;
         function fetchPage(start) {
             $.ajax({
                 url: '/solr/rad/refs?',
@@ -410,6 +419,8 @@ function searchOrphanSources() {
                         if (Array.isArray(s)) { s = s[0]; }
                         if (s && !sourceSet[s] && d.id !== undefined) { orphanIds.push(d.id); }
                     });
+                    scanned += (data.response.docs || []).length;
+                    progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { finish(orphanIds); }
                     else { fetchPage(start + pageSize); }
                 },
