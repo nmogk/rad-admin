@@ -11,8 +11,39 @@ self.sesTransporter = nodemailer.createTransport({
     SES: { sesClient, SendEmailCommand }
 });
 
+// Tagged error so route handlers can distinguish a mail-send failure from
+// other failures (DB errors, missing user, etc.) and surface the actionable
+// SES detail to the editor instead of a generic "problem sending" message.
+class MailError extends Error {
+    constructor(message, cause) {
+        super(message);
+        this.name = 'MailError';
+        this.cause = cause;
+    }
+}
+self.MailError = MailError;
+
+function describeMailFailure(err) {
+    var detail = (err && err.message) ? String(err.message).trim() : '';
+    if (!detail) { return 'Email could not be sent.'; }
+    // SES sandbox / unverified sender or recipient — by far the most common
+    // actionable failure, and the one that prompted this error reporting work.
+    if (/not verified/i.test(detail)) {
+        return 'Email address is not verified with the sending service. ' + detail;
+    }
+    return 'Email could not be sent: ' + detail;
+}
+
+async function send(mailOptions) {
+    try {
+        return await self.sesTransporter.sendMail(mailOptions);
+    } catch (err) {
+        throw new MailError(describeMailFailure(err), err);
+    }
+}
+
 self.sendResetMail = function(req, email, token){
-    var mailOptions = {
+    return send({
         to: email,
         from: 'PasswordReset@rad.creationeducation.org',
         subject: 'RAD Admin Account Password Reset',
@@ -20,12 +51,11 @@ self.sendResetMail = function(req, email, token){
           'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
           'https://' + req.get('Host') + '/reset/' + token + '\n\n' +
           'If you did not request this, please ignore this email and your password will remain unchanged.\n'
-    };
-    return self.sesTransporter.sendMail(mailOptions);
+    });
 };
 
 self.sendInviteMail = function(req, email, token){
-    var mailOptions = {
+    return send({
         to: email,
         from: 'DoNotReply@rad.creationeducation.org',
         subject: 'RAD Admin Account Invitation',
@@ -33,12 +63,11 @@ self.sendInviteMail = function(req, email, token){
           'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
           'https://' + req.get('Host') + '/signup/' + token + '\n\n' +
           'If you believe you have received this in error, please ignore this email.\n'
-    };
-    return self.sesTransporter.sendMail(mailOptions);
+    });
 };
 
 self.sendEmailVerification = function(req, newEmail, token){
-    var mailOptions = {
+    return send({
         to: newEmail,
         from: 'DoNotReply@rad.creationeducation.org',
         subject: 'RAD Admin Email Change Verification',
@@ -46,31 +75,28 @@ self.sendEmailVerification = function(req, newEmail, token){
           'Please click on the following link, or paste this into your browser to confirm this new email address:\n\n' +
           'https://' + req.get('Host') + '/profile/verify/' + token + '\n\n' +
           'If you did not request this, please ignore this email.\n'
-    };
-    return self.sesTransporter.sendMail(mailOptions);
+    });
 };
 
 self.sendEmailChangeNotice = function(oldEmail, newEmail){
-    var mailOptions = {
+    return send({
         to: oldEmail,
         from: 'DoNotReply@rad.creationeducation.org',
         subject: 'RAD Admin Email Change Requested',
         text: 'Hello,\n\n' +
             'This is a notification that a request has been made to change the email address on your RAD Admin account from ' + oldEmail + ' to ' + newEmail + '.\n\n' +
             'If you did not make this request, please contact your administrator immediately.\n'
-    };
-    return self.sesTransporter.sendMail(mailOptions);
+    });
 };
 
 self.sendPassChangeConfirmation = function(email){
-    var mailOptions = {
+    return send({
         to: email,
         from: 'PasswordReset@rad.creationeducation.org',
         subject: 'Your RAD Admin password has been changed',
         text: 'Hello,\n\n' +
             'This is a confirmation that the password for your account ' + email + ' has just been changed.\n'
-    };
-    return self.sesTransporter.sendMail(mailOptions);
+    });
 };
 
 module.exports = self;

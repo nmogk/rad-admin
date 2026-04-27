@@ -23,14 +23,28 @@ var fetchedUser = {
     destroy: destroyStub
 };
 
-var UserStub = function () {
+var savedUser = { id: 9, get: sinon.stub().returns('new@example.com') };
+var saveInsertStub = sinon.stub().resolves(savedUser);
+
+var UserStub = function (attrs) {
+    // /invite uses `new User({email, password}).save(null, {method: "insert"})`;
+    // every other route fetches by id.
+    if (attrs && attrs.password) {
+        return { save: saveInsertStub };
+    }
     return { fetch: sinon.stub().resolves(fetchedUser) };
 };
 UserStub.fetchAll = sinon.stub().resolves({ models: userModels });
 UserStub.NoRowsUpdatedError = class NoRowsUpdatedError extends Error {};
 UserStub.NotFoundError = class NotFoundError extends Error {};
 
-var mailStub = { sendInviteMail: sinon.stub().resolves() };
+class MailErrorStub extends Error {
+    constructor(message, cause) { super(message); this.name = 'MailError'; this.cause = cause; }
+}
+var mailStub = {
+    sendInviteMail: sinon.stub().resolves(),
+    MailError: MailErrorStub
+};
 var tokensStub = {
     getToken: sinon.stub().resolves({ get: sinon.stub(), set: sinon.stub().returnsThis(), save: sinon.stub().resolves() }),
     clearRelated: sinon.stub().resolves(),
@@ -49,7 +63,12 @@ describe('Users Routes', function () {
 
     beforeEach(function () {
         destroyStub.resetHistory();
+        mailStub.sendInviteMail = sinon.stub().resolves();
+        saveInsertStub.resetHistory();
+        saveInsertStub.resolves(savedUser);
     });
+
+    function flush() { return new Promise(function (r) { setImmediate(r); }); }
 
     describe('GET /', function () {
 
@@ -84,6 +103,82 @@ describe('Users Routes', function () {
 
             var handler = findHandler(usersRouter, 'get', '/all');
             handler(req, res, next);
+        });
+    });
+
+    describe('POST /invite', function () {
+
+        it('should flash the SES detail and not say "resending" when mail send fails', async function () {
+            mailStub.sendInviteMail = sinon.stub().rejects(
+                new MailErrorStub('Email address is not verified with the sending service. ' +
+                    'Email address is not verified. The following identities failed the check in region US-EAST-1: invitee@unverified.test')
+            );
+            var req = mockReq({
+                method: 'POST',
+                body: { newUserEmail: 'invitee@unverified.test' },
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(usersRouter, 'post', '/invite');
+            handler(req, res, next);
+            await flush(); await flush(); await flush();
+
+            var flashCall = req.flash.getCalls().find(function (c) { return c.args[0] === 'error'; });
+            expect(flashCall, 'an error flash should be set').to.exist;
+            expect(flashCall.args[1]).to.match(/^Invitation not sent\./);
+            expect(flashCall.args[1]).to.include('not verified');
+            expect(flashCall.args[1]).to.not.include('resending');
+        });
+
+        it('should flash a generic invitation message for non-mail failures', async function () {
+            saveInsertStub.rejects(new Error('db blew up'));
+            var req = mockReq({
+                method: 'POST',
+                body: { newUserEmail: 'invitee@example.com' },
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(usersRouter, 'post', '/invite');
+            handler(req, res, next);
+            await flush(); await flush(); await flush();
+
+            var flashCall = req.flash.getCalls().find(function (c) { return c.args[0] === 'error'; });
+            expect(flashCall, 'an error flash should be set').to.exist;
+            expect(flashCall.args[1]).to.equal('Problem creating invitation.');
+        });
+    });
+
+    describe('POST /resend/:id', function () {
+
+        it('should flash the SES detail when mail send fails', async function () {
+            mailStub.sendInviteMail = sinon.stub().rejects(
+                new MailErrorStub('Email address is not verified with the sending service. ' +
+                    'Email address is not verified.')
+            );
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '5' },
+                body: {},
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(usersRouter, 'post', '/resend/:id(\\d+)');
+            handler(req, res, next);
+            await flush(); await flush(); await flush();
+
+            var flashCall = req.flash.getCalls().find(function (c) { return c.args[0] === 'error'; });
+            expect(flashCall, 'an error flash should be set').to.exist;
+            expect(flashCall.args[1]).to.match(/^Invitation not resent\./);
+            expect(flashCall.args[1]).to.include('not verified');
         });
     });
 
