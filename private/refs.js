@@ -272,5 +272,30 @@ function createSourceFromRef() {
     $("#newSourceModal").modal({ backdrop: 'static' });
 }
 
+var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'page', 'abstract', 'dt'];
+
+function buildBlankFieldQuery(field) {
+    if (!field) {
+        var clauses = BLANK_QUERYABLE_FIELDS.map(function (f) { return '-' + f + ':[* TO *]'; });
+        return '*:* AND (' + clauses.join(' OR ') + ')';
+    }
+    return '*:* AND -' + field + ':[* TO *]';
+}
+
+function searchBlankField(field) {
+    var input = document.getElementById('searchInput');
+    input.value = buildBlankFieldQuery(field);
+    input.form.submit();
+}
+
+$(document).on('click', '#blankSearchBtn', function () {
+    searchBlankField('');
+});
+
+$(document).on('click', '[data-blank-field]', function (e) {
+    e.preventDefault();
+    searchBlankField(this.getAttribute('data-blank-field'));
+});
+
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());

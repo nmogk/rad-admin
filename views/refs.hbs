@@ -24,7 +24,24 @@
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-5">
               <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="glyphicon glyphicon-search"></span> Search</button>
-              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for empty fields"><span class="glyphicon glyphicon-minus-sign"></span></button>
+              <div class="btn-group">
+                <button id="blankSearchBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for entries with any blank field"><span class="glyphicon glyphicon-minus-sign"></span></button>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="caret"></span>
+                  <span class="sr-only">Choose a specific blank field</span>
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-label="Blank field search options">
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="">Any field</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="author">Author</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="title">Title</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="reference">Reference</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="source">Source</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="page">Page</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="abstract">Abstract</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="dt">Date</a></li>
+                </ul>
+              </div>
               <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
