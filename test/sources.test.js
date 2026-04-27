@@ -173,6 +173,28 @@ describe('Sources Routes', function () {
             expect(res._json.redirect).to.include('/sources');
             expect(auditLoggerStub.info.calledOnce).to.be.true;
         });
+
+        it('should preserve the request query in the redirect URL', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: 'abc-123' },
+                query: { q: 'name:Journal', rows: '10' },
+                body: { name: 'Updated Journal' },
+                user: mockUser({ email: 'editor@test.com' }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: 'abc-123', name: 'Old' }] } });
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(sourcesRouter, 'post', '/:id');
+            await handler(req, res, next);
+
+            expect(res._json.redirect).to.include('q=name');
+            expect(res._json.redirect).to.include('rows=10');
+        });
     });
 
     describe('DELETE /:id', function () {
@@ -216,6 +238,26 @@ describe('Sources Routes', function () {
             expect(auditLoggerStub.info.calledOnce).to.be.true;
             var logMsg = auditLoggerStub.info.firstCall.args[0];
             expect(logMsg).to.include('Test Journal');
+        });
+
+        it('should preserve the request query in the redirect URL', async function () {
+            var req = mockReq({
+                method: 'DELETE',
+                params: { id: 'abc-123' },
+                query: { q: 'name:Journal', rows: '10' },
+                user: mockUser({ permission: 1 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.deleteByID.resolves({ id: 'abc-123' });
+
+            var handler = findHandler(sourcesRouter, 'delete', '/:id');
+            await handler(req, res, next);
+
+            expect(res._json.redirect).to.include('q=name');
+            expect(res._json.redirect).to.include('rows=10');
         });
     });
 });

@@ -338,6 +338,29 @@ describe('Refs Routes', function () {
             expect(res.status.calledWith(500)).to.be.true;
             expect(res._json.error).to.include('audit log');
         });
+
+        it('should preserve the request query in the redirect URL', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: { q: 'author:Smith', rows: '10' },
+                body: { title: 'Test' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res._json.redirect).to.include('q=author');
+            expect(res._json.redirect).to.include('rows=10');
+        });
     });
 
     describe('POST /new sanitization', function () {
@@ -531,6 +554,26 @@ describe('Refs Routes', function () {
             expect(res._json.redirect).to.include('/refs');
             // Flash must be set before res.json so express-session saves it.
             expect(req.flash.calledBefore(res.json)).to.be.true;
+        });
+
+        it('should preserve the request query in the redirect URL', async function () {
+            var req = mockReq({
+                method: 'DELETE',
+                params: { id: '42' },
+                query: { q: 'author:Smith', rows: '10' },
+                user: mockUser({ permission: 1 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.deleteByID.resolves({ id: 42 });
+
+            var handler = findHandler(refsRouter, 'delete', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res._json.redirect).to.include('q=author');
+            expect(res._json.redirect).to.include('rows=10');
         });
 
         it('should flash an error and respond when delete fails', async function () {
