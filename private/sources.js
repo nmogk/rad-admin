@@ -102,26 +102,17 @@ function searchInit() {
 var formError = ko.observable('');
 var formSuccess = ko.observable('');
 
-// Builds and submits a search for sources whose `name` is not used by any
-// ref's `source` field. Two-step flow because Solr can't join across cores.
-// First tries faceting on rad's source field; falls back to paginated scan
-// if the response looks tokenized (text-analyzed field, not string).
+// Builds and submits a search for sources not used by any ref. Solr can't
+// join across cores, and putting every used name in the URL trips the
+// server's URI length limit, so we compute the diff in JS and submit only
+// the (usually small) list of unused source IDs.
 function searchUnusedSources() {
     var btn = document.getElementById('unusedSourceBtn');
     var originalHTML = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="glyphicon glyphicon-refresh"></span>';
 
-    function finish(usedNames) {
-        var phrases = usedNames.map(escapeSolrPhrase);
-        var input = document.getElementById('searchInput');
-        if (!phrases.length) {
-            input.value = 'name:[* TO *]';
-        } else {
-            input.value = 'name:[* TO *] AND -name:(' + phrases.join(' OR ') + ')';
-        }
-        input.form.submit();
-    }
+    var pageSize = 1000;
 
     function fail(msg) {
         btn.disabled = false;
@@ -129,27 +120,21 @@ function searchUnusedSources() {
         alert(msg);
     }
 
-    function paginateScan() {
-        var pageSize = 1000;
-        var seen = {};
+    function fetchUsedSourceNames(callback) {
+        var used = {};
         function fetchPage(start) {
             $.ajax({
                 url: '/solr/rad/refs?',
                 dataType: 'json',
                 data: $.param({ q: 'source:[* TO *]', rows: pageSize, start: start, fl: 'source' }),
                 success: function (data) {
-                    var docs = (data.response && data.response.docs) || [];
-                    docs.forEach(function (d) {
+                    (data.response.docs || []).forEach(function (d) {
                         var s = d.source;
                         if (Array.isArray(s)) { s = s[0]; }
-                        if (s) { seen[s] = true; }
+                        if (s) { used[s] = true; }
                     });
-                    var total = data.response.numFound;
-                    if (start + pageSize >= total) {
-                        finish(Object.keys(seen));
-                    } else {
-                        fetchPage(start + pageSize);
-                    }
+                    if (start + pageSize >= data.response.numFound) { callback(used); }
+                    else { fetchPage(start + pageSize); }
                 },
                 error: function (jqXHR) { fail('Could not scan refs (status ' + jqXHR.status + ').'); }
             });
@@ -157,35 +142,41 @@ function searchUnusedSources() {
         fetchPage(0);
     }
 
-    // Try faceting first.
-    $.ajax({
-        url: '/solr/rad/refs?',
-        dataType: 'json',
-        data: $.param({
-            q: 'source:[* TO *]',
-            rows: 0,
-            facet: 'true',
-            'facet.field': 'source',
-            'facet.limit': -1,
-            'facet.mincount': 1
-        }),
-        success: function (data) {
-            var ff = data.facet_counts && data.facet_counts.facet_fields && data.facet_counts.facet_fields.source;
-            if (!Array.isArray(ff) || ff.length === 0) { paginateScan(); return; }
-            // facet_fields.source is alternating [term, count, term, count, ...]
-            var names = [];
-            for (var i = 0; i < ff.length; i += 2) {
-                if (typeof ff[i] === 'string' && ff[i].length) { names.push(ff[i]); }
-            }
-            // Heuristic: a tokenized field gives many short single-word terms.
-            // If every term is a single token with no spaces and there are
-            // a lot of them, fall back to paginated scan.
-            var hasSpace = names.some(function (n) { return n.indexOf(' ') !== -1; });
-            if (!hasSpace && names.length > 20) { paginateScan(); return; }
-            finish(names);
-        },
-        error: function () { paginateScan(); }
-    });
+    function paginateSources(usedSet) {
+        var unusedIds = [];
+        function fetchPage(start) {
+            $.ajax({
+                url: '/solr/source/select?',
+                dataType: 'json',
+                data: $.param({ q: '*:*', rows: pageSize, start: start, fl: 'id,name' }),
+                success: function (data) {
+                    (data.response.docs || []).forEach(function (d) {
+                        var n = d.name;
+                        if (Array.isArray(n)) { n = n[0]; }
+                        if (n && !usedSet[n] && d.id) { unusedIds.push(d.id); }
+                    });
+                    if (start + pageSize >= data.response.numFound) { finish(unusedIds); }
+                    else { fetchPage(start + pageSize); }
+                },
+                error: function (jqXHR) { fail('Could not scan sources (status ' + jqXHR.status + ').'); }
+            });
+        }
+        fetchPage(0);
+    }
+
+    function finish(unusedIds) {
+        var input = document.getElementById('searchInput');
+        if (!unusedIds.length) {
+            input.value = '-*:*'; // matches nothing
+        } else {
+            // Source IDs are UUIDs containing hyphens (a Solr metachar), so quote.
+            var quoted = unusedIds.map(escapeSolrPhrase);
+            input.value = 'id:(' + quoted.join(' OR ') + ')';
+        }
+        input.form.submit();
+    }
+
+    fetchUsedSourceNames(paginateSources);
 }
 
 $(document).on('click', '#unusedSourceBtn', function () {

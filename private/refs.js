@@ -342,38 +342,79 @@ $(document).on('click', '[data-odd-chars]', function (e) {
 });
 
 // Builds and submits a search for refs whose `source` doesn't match any
-// document in the source core. Two-step flow because Solr can't join across
-// cores: pull every source name, then exclude them from a query against rad.
+// document in the source core. Solr can't join across cores, and putting
+// every source name in the URL trips the server's URI length limit, so we
+// compute the diff in JS and submit only the (usually small) list of
+// orphan IDs.
 function searchOrphanSources() {
     var btn = document.getElementById('orphanSourceBtn');
     var originalHTML = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="glyphicon glyphicon-refresh"></span>';
-    $.ajax({
-        url: '/solr/source/select?',
-        dataType: 'json',
-        data: $.param({ q: '*:*', rows: 10000, fl: 'name' }),
-        success: function (data) {
-            var names = [];
-            data.response.docs.forEach(function (doc) {
-                var n = doc.name;
-                if (Array.isArray(n)) { n = n[0]; }
-                if (n) { names.push(escapeSolrPhrase(n)); }
+
+    var pageSize = 1000;
+
+    function fail(msg) {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        alert(msg);
+    }
+
+    function fetchAllSourceNames(callback) {
+        var names = {};
+        function fetchPage(start) {
+            $.ajax({
+                url: '/solr/source/select?',
+                dataType: 'json',
+                data: $.param({ q: '*:*', rows: pageSize, start: start, fl: 'name' }),
+                success: function (data) {
+                    (data.response.docs || []).forEach(function (d) {
+                        var n = d.name;
+                        if (Array.isArray(n)) { n = n[0]; }
+                        if (n) { names[n] = true; }
+                    });
+                    if (start + pageSize >= data.response.numFound) { callback(names); }
+                    else { fetchPage(start + pageSize); }
+                },
+                error: function (jqXHR) { fail('Could not load source list (status ' + jqXHR.status + ').'); }
             });
-            var input = document.getElementById('searchInput');
-            if (!names.length) {
-                input.value = 'source:[* TO *]';
-            } else {
-                input.value = 'source:[* TO *] AND -source:(' + names.join(' OR ') + ')';
-            }
-            input.form.submit();
-        },
-        error: function (jqXHR) {
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-            alert('Could not load source list (status ' + jqXHR.status + ').');
         }
-    });
+        fetchPage(0);
+    }
+
+    function paginateRefs(sourceSet) {
+        var orphanIds = [];
+        function fetchPage(start) {
+            $.ajax({
+                url: '/solr/rad/refs?',
+                dataType: 'json',
+                data: $.param({ q: 'source:[* TO *]', rows: pageSize, start: start, fl: 'id,source' }),
+                success: function (data) {
+                    (data.response.docs || []).forEach(function (d) {
+                        var s = d.source;
+                        if (Array.isArray(s)) { s = s[0]; }
+                        if (s && !sourceSet[s] && d.id !== undefined) { orphanIds.push(d.id); }
+                    });
+                    if (start + pageSize >= data.response.numFound) { finish(orphanIds); }
+                    else { fetchPage(start + pageSize); }
+                },
+                error: function (jqXHR) { fail('Could not scan refs (status ' + jqXHR.status + ').'); }
+            });
+        }
+        fetchPage(0);
+    }
+
+    function finish(orphanIds) {
+        var input = document.getElementById('searchInput');
+        if (!orphanIds.length) {
+            input.value = '-*:*'; // matches nothing
+        } else {
+            input.value = 'id:(' + orphanIds.join(' OR ') + ')';
+        }
+        input.form.submit();
+    }
+
+    fetchAllSourceNames(paginateRefs);
 }
 
 $(document).on('click', '#orphanSourceBtn', function () {
