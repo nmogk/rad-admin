@@ -42,7 +42,20 @@
                   <li role="presentation"><a role="menuitem" href="#" data-blank-field="dt">Date</a></li>
                 </ul>
               </div>
-              <button type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
+              <div class="btn-group">
+                <button id="oddCharSearchBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for entries with odd or problematic characters"><span class="glyphicon glyphicon-question-sign"></span></button>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="caret"></span>
+                  <span class="sr-only">Choose a specific character category</span>
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-label="Problematic character search options">
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="">Any problematic</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="control">Control / non-printing</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="invisible">Invisible / zero-width</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="smart">Smart punctuation</a></li>
+                </ul>
+              </div>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
               <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newRefModal" data-backdrop="static"><span class="glyphicon glyphicon-plus"></span> Add new reference</button>

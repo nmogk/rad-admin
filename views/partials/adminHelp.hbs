@@ -10,6 +10,14 @@
           <h4>Find Entries with Blank Fields (<span class="glyphicon glyphicon-minus-sign"></span>)</h4>
             <p>Click the minus-sign button next to <strong>Search</strong> to find references that are missing at least one of: author, title, reference, source, page, abstract, or date. To restrict the search to a single field, use the dropdown caret next to the button and pick a field.</p>
             <p>The button writes the corresponding Solr query into the search box, so you can refine it further or share the resulting URL with another editor.</p>
+          <h4>Find Entries with Problematic Characters (<span class="glyphicon glyphicon-question-sign"></span>)</h4>
+            <p>Click the question-mark button to find references whose author, title, reference, source, page, or abstract field contains an unusual character that may interfere with searching, exporting, or rendering. Use the dropdown caret to narrow to a single category:</p>
+            <ul>
+              <li><strong>Control / non-printing</strong> &mdash; ASCII control characters (excluding tab, line feed, carriage return), DEL, and the Unicode replacement character (U+FFFD), which usually indicates the value was decoded from broken UTF-8.</li>
+              <li><strong>Invisible / zero-width</strong> &mdash; non-breaking space, soft hyphen, zero-width space/joiner/non-joiner, line/paragraph separators, and the byte-order mark.</li>
+              <li><strong>Smart punctuation</strong> &mdash; curly quotes, en dash, em dash, and ellipsis. These render fine but break literal-string searches typed with straight ASCII equivalents.</li>
+            </ul>
+            <p>The search uses Solr's regex query syntax against indexed terms. Characters that the field's tokenizer treats as word boundaries (e.g. non-breaking space) may be missed.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

@@ -300,5 +300,40 @@ $(document).on('click', '[data-blank-field]', function (e) {
     searchBlankField(this.getAttribute('data-blank-field'));
 });
 
+var ODD_CHAR_SEARCH_FIELDS = ['title', 'author', 'abstract', 'reference', 'source', 'page'];
+
+// Lucene RegExp character-class bodies. NUL is omitted because it does not
+// survive HTTP transport reliably. Tab/LF/CR are omitted from "control"
+// because they appear legitimately in abstracts.
+var ODD_CHAR_CLASSES = {
+    control: '\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F\uFFFD',
+    invisible: '\u00A0\u00AD\u200B\u200C\u200D\u2028\u2029\uFEFF',
+    smart: '\u2018\u2019\u201C\u201D\u2013\u2014\u2026'
+};
+
+function buildOddCharQuery(category) {
+    var chars = category
+        ? (ODD_CHAR_CLASSES[category] || '')
+        : ODD_CHAR_CLASSES.control + ODD_CHAR_CLASSES.invisible + ODD_CHAR_CLASSES.smart;
+    var regex = '/.*[' + chars + '].*/';
+    var clauses = ODD_CHAR_SEARCH_FIELDS.map(function (f) { return f + ':' + regex; });
+    return '(' + clauses.join(' OR ') + ')';
+}
+
+function searchOddChars(category) {
+    var input = document.getElementById('searchInput');
+    input.value = buildOddCharQuery(category);
+    input.form.submit();
+}
+
+$(document).on('click', '#oddCharSearchBtn', function () {
+    searchOddChars('');
+});
+
+$(document).on('click', '[data-odd-chars]', function (e) {
+    e.preventDefault();
+    searchOddChars(this.getAttribute('data-odd-chars'));
+});
+
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());
