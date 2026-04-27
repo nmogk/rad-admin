@@ -154,7 +154,7 @@ router.post("/:id(\\d+)", async function (req, res, next) {
     res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });
 });
 
-router.delete("/:id(\\d+)", function (req, res, next) {
+router.delete("/:id(\\d+)", async function (req, res, next) {
     if (req.user.get("permission") < 1) {
         res.redirect(403, "/refs");
         return;
@@ -162,17 +162,17 @@ router.delete("/:id(\\d+)", function (req, res, next) {
 
     var id = req.params.id;
 
-    // Respond immediately; the delete continues in the background.
-    res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });
-
-    client.deleteByID(id).then(async function (doc) {
+    try {
+        var doc = await client.deleteByID(id);
         auditLogger.info(req.user.get("email") + " deleted a reference:\n" + JSON.stringify(doc));
         await db.recordDelete();
         req.flash('yay', 'Reference successfully deleted.');
-    }).catch(function (err) {
+        res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });
+    } catch (err) {
         console.log(err);
         req.flash('error', 'A problem occurred during delete submission.');
-    });
+        res.json({ redirect: '/refs' });
+    }
 });
 
 

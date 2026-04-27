@@ -2,8 +2,10 @@
  * Provides functionality for deleting a source on the server
  */
 SrcViewModel.prototype.deleteSource = function () {
+    // Forward the current page's query string so the server's redirect lands
+    // back on the user's active search rather than an empty /sources page.
     $.ajax({
-        url: "/sources/" + this.id(),
+        url: "/sources/" + this.id() + window.location.search,
         type: "DELETE",
         success: function (data) {
             window.location.href = data.redirect || '/sources';
@@ -31,7 +33,7 @@ SrcViewModel.prototype.submitEdits = function () {
     formError('');
     self.commit();
     $.ajax({
-        url: "/sources/" + self.id(),
+        url: "/sources/" + self.id() + window.location.search,
         contentType: "application/json",
         data: JSON.stringify(self.cache.latestData),
         type: "POST",

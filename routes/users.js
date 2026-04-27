@@ -36,9 +36,8 @@ router.get('/all', function (req, res, next) {
 
 });
 
-// 
+//
 router.post('/invite', function (req, res, next) {
-  console.log(req.body);
   if (!req.body.newUserEmail) {
     req.flash('error', 'No email specified');
     res.redirect(400, '/users');
@@ -63,8 +62,12 @@ router.post('/invite', function (req, res, next) {
         req.flash('error', 'User already exists. New user not created.');
         return;
       }
+      if (err instanceof mail.MailError) {
+        req.flash('error', 'Invitation not sent. ' + err.message);
+        return;
+      }
       console.log(err);
-      req.flash('error', 'Problem resending invite.');
+      req.flash('error', 'Problem creating invitation.');
     })
     .finally(function () { // All responses get redirected to /login to display flash message
       res.redirect(303, '/users'); // 303 ensures that the client uses GET rather than POST.
@@ -93,6 +96,10 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
     .catch(function (err) {
       if (err instanceof User.NotFoundError) { // Reset attempted with wrong account
         req.flash('error', 'No account with that email address exists.');
+        return;
+      }
+      if (err instanceof mail.MailError) {
+        req.flash('error', 'Invitation not resent. ' + err.message);
         return;
       }
       console.log(err);

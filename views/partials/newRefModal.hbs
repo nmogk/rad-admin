@@ -7,8 +7,8 @@
             </div>
             <form id="refInput" data-bind="submit: $data.newRefHandler">
                 <div class="modal-body">
-                    <div class="alert alert-success" style="display:none" data-bind="visible: $root.formSuccess, text: $root.formSuccess"></div>
-                    <div class="alert alert-danger" style="display:none" data-bind="visible: $root.formError, text: $root.formError"></div>
+                    <div class="alert alert-success" style="display:none" data-bind="visible: formSuccess, text: formSuccess"></div>
+                    <div class="alert alert-danger" style="display:none" data-bind="visible: formError, text: formError"></div>
                     <!-- ko if: typeof oddCharReport === 'function' && oddCharReport().length -->
                     <div class="alert alert-warning">
                         <strong>Problematic characters detected.</strong> Saving will clean them automatically.

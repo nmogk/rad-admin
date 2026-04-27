@@ -9,7 +9,7 @@
             </div>
             <form id="sourceEditForm" data-bind="submit: $data.submitEdits">
                 <div class="modal-body">
-                    <div class="alert alert-danger" style="display:none" data-bind="visible: $root.formError, text: $root.formError"></div>
+                    <div class="alert alert-danger" style="display:none" data-bind="visible: formError, text: formError"></div>
                     {{> sourceFormFields}}
                 </div>
                 <div class="modal-footer">

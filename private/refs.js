@@ -2,8 +2,10 @@
  * Provides functionality for deleting a reference on the server
  */
 RefViewModel.prototype.deleteRef = function () {
+    // Forward the current page's query string so the server's redirect lands
+    // back on the user's active search rather than an empty /refs page.
     $.ajax({ // Makes an AJAX query to the server for the source
-        url: "/refs/" + this.id(),
+        url: "/refs/" + this.id() + window.location.search,
         type: "DELETE",
         success: function (data) {
             window.location.href = data.redirect || '/refs';
@@ -54,7 +56,7 @@ RefViewModel.prototype.submitEdits = function () {
     sourceNotFound(false);
     self.commit();
     $.ajax({ // Makes an AJAX query to the server for the source
-        url: "/refs/" + self.id(),
+        url: "/refs/" + self.id() + window.location.search,
         contentType: "application/json",
         data: JSON.stringify(self.cache.latestData),
         type: "POST",
