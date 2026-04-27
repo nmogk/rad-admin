@@ -18,6 +18,17 @@
               <li><strong>Smart punctuation</strong> &mdash; curly quotes, en dash, em dash, and ellipsis. These render fine but break literal-string searches typed with straight ASCII equivalents.</li>
             </ul>
             <p>The search uses Solr's regex query syntax against indexed terms. Characters that the field's tokenizer treats as word boundaries (e.g. non-breaking space) may be missed.</p>
+        <h3>Automatic Input Cleanup</h3>
+          <p>When you save a new or edited reference, the server normalises common copy-paste artefacts before storing the record. This keeps the database consistent so that literal-string searches reliably match what you see on screen. Specifically:</p>
+          <ul>
+            <li>Curly quotes (<code>&ldquo; &rdquo; &lsquo; &rsquo;</code>) become straight quotes (<code>" "</code> and <code>'</code>).</li>
+            <li>En dash and em dash (<code>&ndash; &mdash;</code>) become a hyphen (<code>-</code>).</li>
+            <li>Ellipsis (<code>&hellip;</code>) becomes three dots (<code>...</code>).</li>
+            <li>Non-breaking space and other exotic spaces become a regular space.</li>
+            <li>Control characters, zero-width characters, soft hyphens, byte-order marks, and the Unicode replacement character are removed entirely.</li>
+            <li>Tabs and line breaks in the abstract are preserved.</li>
+          </ul>
+          <p>If you need a character that would otherwise be normalised to remain in the saved record, you'll need to insert it directly in Solr; the admin form will always clean it.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
