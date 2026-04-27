@@ -154,6 +154,21 @@ function searchInit() {
     attachOddCharReport(blankRefViewModel);
     ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
 
+    var orphanNotice = null;
+    try { orphanNotice = sessionStorage.getItem('orphanRefsNotice'); } catch (e) {}
+    if (orphanNotice) {
+        try { sessionStorage.removeItem('orphanRefsNotice'); } catch (e) {}
+        try {
+            var n = JSON.parse(orphanNotice);
+            var alertEl = document.getElementById('orphanCapAlert');
+            if (alertEl) {
+                document.getElementById('orphanCapShown').textContent = n.shown;
+                document.getElementById('orphanCapTotal').textContent = n.total;
+                alertEl.style.display = '';
+            }
+        } catch (e) {}
+    }
+
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body
@@ -409,6 +424,17 @@ function searchOrphanSources() {
         if (!orphanIds.length) {
             input.value = '-*:*'; // matches nothing
         } else {
+            // Cap to keep URL under server header limits. Editors fix the
+            // visible batch, re-run, see the next batch.
+            var CAP = 100;
+            if (orphanIds.length > CAP) {
+                try {
+                    sessionStorage.setItem('orphanRefsNotice', JSON.stringify({
+                        total: orphanIds.length, shown: CAP
+                    }));
+                } catch (e) { /* sessionStorage may be unavailable; banner just won't appear */ }
+                orphanIds = orphanIds.slice(0, CAP);
+            }
             input.value = 'id:(' + orphanIds.join(' OR ') + ')';
         }
         input.form.submit();

@@ -70,6 +70,10 @@
         
         {{! Results header }}
         <div id="mainDisplay" aria-hidden="true" role="main">
+          <div id="orphanCapAlert" class="alert alert-warning" style="display:none" aria-live="polite">
+            <strong>Showing <span id="orphanCapShown"></span> of <span id="orphanCapTotal"></span> orphan refs.</strong>
+            Fix these and re-run the orphan search to see the next batch.
+          </div>
           <div id="res-head" class="panel-body">
             <div>
               <span data-bind="text: summary"></span>
