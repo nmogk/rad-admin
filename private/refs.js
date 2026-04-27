@@ -38,6 +38,14 @@ RefViewModel.prototype.editRef = function () {
     sourceNotFound(false);
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     this.source.subscribe(lookupSources);
+    var self = this;
+    this.oddCharReport = ko.pureComputed(function () {
+        return buildOddCharReport({
+            title: self.title(), author: self.author(),
+            reference: self.reference(), source: self.source(),
+            page: self.page(), abst: self.abst()
+        });
+    });
     ko.applyBindings(this, $("#editRefModal")[0]);
     $("#editRefModal").modal({ backdrop: 'static' });
 }
@@ -334,6 +342,51 @@ $(document).on('click', '[data-odd-chars]', function (e) {
     e.preventDefault();
     searchOddChars(this.getAttribute('data-odd-chars'));
 });
+
+// Friendly labels for the problematic chars surfaced in the edit-modal banner.
+var ODD_CHAR_LABELS = [
+    [/[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, 'control character'],
+    [/\uFFFD/g, 'replacement character'],
+    [/\u00A0/g, 'non-breaking space'],
+    [/\u00AD/g, 'soft hyphen'],
+    [/[\u200B\u200C\u200D]/g, 'zero-width character'],
+    [/[\u2028\u2029]/g, 'line/paragraph separator'],
+    [/\uFEFF/g, 'byte-order mark'],
+    [/[\u2018\u2019]/g, 'smart single quote'],
+    [/[\u201C\u201D]/g, 'smart double quote'],
+    [/\u2013/g, 'en dash'],
+    [/\u2014/g, 'em dash'],
+    [/\u2026/g, 'ellipsis']
+];
+
+function summarizeOddChars(value) {
+    if (typeof value !== 'string' || !value) { return []; }
+    var found = [];
+    ODD_CHAR_LABELS.forEach(function (pair) {
+        var m = value.match(pair[0]);
+        if (m) { found.push({ name: pair[1], count: m.length }); }
+    });
+    return found;
+}
+
+function buildOddCharReport(values) {
+    var fields = [
+        ['title', values.title], ['author', values.author],
+        ['reference', values.reference], ['source', values.source],
+        ['page', values.page], ['abstract', values.abst]
+    ];
+    var lines = [];
+    fields.forEach(function (entry) {
+        var summary = summarizeOddChars(entry[1]);
+        if (summary.length) {
+            var parts = summary.map(function (s) {
+                return s.count + ' ' + s.name + (s.count === 1 ? '' : 's');
+            });
+            lines.push(entry[0] + ' \u2014 ' + parts.join(', '));
+        }
+    });
+    return lines;
+}
 
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());
