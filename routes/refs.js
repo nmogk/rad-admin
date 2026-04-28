@@ -38,6 +38,7 @@ function buildDoc(body) {
     if (body.title) { doc.title = sanitize(body.title); }
     if (body.reference) { doc.reference = sanitize(body.reference); }
     if (body.source) { doc.source = sanitize(body.source); }
+    if (body.publisher) { doc.publisher = sanitize(body.publisher); }
     if (body.page) { doc.page = sanitize(body.page); }
     if (body.abst) { doc.abstract = sanitize(body.abst); }
     return doc;
@@ -60,7 +61,7 @@ router.get('/', async function (req, res, next) {
  */
 router.post('/new', async function (req, res, next) {
     if (!req.body.author && !req.body.title && !req.body.date
-        && !req.body.reference && !req.body.source
+        && !req.body.reference && !req.body.source && !req.body.publisher
         && !req.body.page && !req.body.abst) {
         res.status(400).json({ error: 'No data input. Reference not created.' });
         return;
@@ -87,6 +88,17 @@ router.post('/new', async function (req, res, next) {
             }
         } catch (err) {
             // Allow save if source index is unreachable
+            console.log(err);
+        }
+    }
+
+    if (doc.publisher) {
+        try {
+            if (!(await sourceExists(doc.publisher))) {
+                res.status(400).json({ error: 'Publisher "' + doc.publisher + '" not found. Please enter an existing source.' });
+                return;
+            }
+        } catch (err) {
             console.log(err);
         }
     }
@@ -123,6 +135,17 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         try {
             if (!(await sourceExists(doc.source))) {
                 res.status(400).json({ error: 'Source "' + doc.source + '" not found. Please enter an existing source.' });
+                return;
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    if (doc.publisher) {
+        try {
+            if (!(await sourceExists(doc.publisher))) {
+                res.status(400).json({ error: 'Publisher "' + doc.publisher + '" not found. Please enter an existing source.' });
                 return;
             }
         } catch (err) {

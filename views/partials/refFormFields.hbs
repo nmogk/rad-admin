@@ -15,6 +15,26 @@
     <input class="form-control" type="text" name="referenceField" id="referenceField" data-bind="textInput: reference">
 </div>
 <div class="form-group">
+    <label for="publisherField">Publisher</label>
+    <input class="form-control" type="text" name="publisherField" id="publisherField" data-bind="textInput: publisher" autocomplete="off">
+    <!-- ko if: publisherSuggestions().length > 0 -->
+    <ul class="list-group" style="position: absolute; z-index: 1000; width: calc(100% - 30px); max-height: 200px; overflow-y: auto; margin-top: 0;">
+        <!-- ko foreach: publisherSuggestions -->
+        <li class="list-group-item list-group-item-action" style="cursor: pointer; padding: 6px 12px;" data-bind="text: $data, click: function() { selectPublisher($data); }">
+        </li>
+        <!-- /ko -->
+    </ul>
+    <!-- /ko -->
+    <!-- ko if: publisherNotFound() -->
+    <small class="text-warning publisher-create-hint">No matching source found. <a href="#" data-bind="click: function() { createPublisherFromRef(); }">Create this publisher</a></small>
+    <!-- /ko -->
+</div>
+<div class="form-group">
+    <div class="checkbox">
+        <label><input type="checkbox" data-bind="checked: hasSeparateSource"> Add separate source</label>
+    </div>
+</div>
+<div class="form-group" data-bind="visible: hasSeparateSource">
     <label for="sourceField">Source</label>
     <input class="form-control" type="text" name="sourceField" id="sourceField" data-bind="textInput: source" autocomplete="off">
     <!-- ko if: sourceSuggestions().length > 0 -->
@@ -26,7 +46,7 @@
     </ul>
     <!-- /ko -->
     <!-- ko if: sourceNotFound() -->
-    <small class="text-warning">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
+    <small class="text-warning source-create-hint">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
     <!-- /ko -->
 </div>
 <div class="form-group">

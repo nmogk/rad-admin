@@ -7,6 +7,8 @@ function RefViewModel(data) {
     self.date = ko.observable();
     self.reference = ko.observable();
     self.source = ko.observable();
+    self.publisher = ko.observable();
+    self.hasSeparateSource = ko.observable(false);
     self.page = ko.observable();
     self.abst = ko.observable();
     self.id = ko.observable();
@@ -28,6 +30,12 @@ function RefViewModel(data) {
         ko.applyBindings(new SourceViewModel(self.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
         $("#sourceModal").modal("show");
     };
+
+    self.publisherModal = function () {
+        ko.cleanNode($("#sourceModal")[0])
+        ko.applyBindings(new SourceViewModel(self.publisher()), $("#sourceModal")[0]);
+        $("#sourceModal").modal("show");
+    };
 }
 
 // See www.knockmeout.net/2013/01/simple-editor-pattern-knockout-js.html for pattern implementation
@@ -39,6 +47,8 @@ ko.utils.extend(RefViewModel.prototype, {
         this.date(htmlDecode(data.dt));
         this.reference(htmlDecode(data.reference));
         this.source(htmlDecode(data.source));
+        this.publisher(htmlDecode(data.publisher));
+        this.hasSeparateSource(!!(data.source && data.source !== data.publisher));
         this.page(htmlDecode(data.page));
         this.abst(htmlDecode(data.abstract));
         this.id(htmlDecode(data.id));
@@ -66,6 +76,8 @@ ko.utils.extend(RefViewModel.prototype, {
         this.date(null);
         this.reference(null);
         this.source(null);
+        this.publisher(null);
+        this.hasSeparateSource(false);
         this.year(null);
     }
 });

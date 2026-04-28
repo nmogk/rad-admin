@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 function unpackRef(ref) {
     "use strict";
-    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), date: ref.date(), "abstract": ref.abst(), year: ref.year()};
+    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year()};
 }
 
 
@@ -95,8 +95,15 @@ RefViewModel.prototype.goSource = function () {
         data: $.param({"q": this.source()}),
         success: function (data) {
             var src = data.response.docs[0]; // first result only
-            if (src.website !== undefined) {
-                window.open("http://" + src.website[0]);
+            if (!src) {
+                alert("Source not found!");
+                return;
+            }
+            // `website` is single-valued in the source schema, so it's a string;
+            // an older multi-valued schema would hand back an array, hence the guard.
+            var site = Array.isArray(src.website) ? src.website[0] : src.website;
+            if (site) {
+                window.open("http://" + site);
             } else {
                 alert("Source does not have a website to go to!");
             }

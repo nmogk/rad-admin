@@ -116,7 +116,10 @@
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: editRef"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
                       <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: "}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewPublisherForEditing"><span class="glyphicon glyphicon-eye-open"></span> View publisher for editing</a></li>
+                      <!-- ko if: source() && source() !== publisher() -->
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewSourceForEditing"><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
+                      <!-- /ko -->
                       {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteRef"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
@@ -126,7 +129,12 @@
                 <div class="panel-body">
                   <div class="row">
                     <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
-                    <div class="col-sm-5"><h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: sourceModal"><span class="glyphicon glyphicon-expand"></span></button></div>
+                    <div class="col-sm-5">
+                      <h4>Publisher</h4><span data-bind="textPretty: publisher"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: publisherModal"><span class="glyphicon glyphicon-expand"></span></button>
+                      <!-- ko if: source() && source() !== publisher() -->
+                      <h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: sourceModal"><span class="glyphicon glyphicon-expand"></span></button>
+                      <!-- /ko -->
+                    </div>
                     <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="textPretty: page"></span></div>
                     <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
                   </div>
