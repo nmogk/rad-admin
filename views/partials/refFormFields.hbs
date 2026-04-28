@@ -34,8 +34,7 @@
         <label><input type="checkbox" data-bind="checked: hasSeparateSource"> Add separate source</label>
     </div>
 </div>
-<!-- ko if: hasSeparateSource -->
-<div class="form-group">
+<div class="form-group" data-bind="visible: hasSeparateSource">
     <label for="sourceField">Source</label>
     <input class="form-control" type="text" name="sourceField" id="sourceField" data-bind="textInput: source" autocomplete="off">
     <!-- ko if: sourceSuggestions().length > 0 -->
@@ -50,7 +49,6 @@
     <small class="text-warning">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
     <!-- /ko -->
 </div>
-<!-- /ko -->
 <div class="form-group">
     <label for="pageField">Page</label>
     <input class="form-control" type="text" name="pageField" id="pageField" data-bind="textInput: page">
