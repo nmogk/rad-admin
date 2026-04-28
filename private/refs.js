@@ -314,17 +314,21 @@ function syncSourceFromPublisher(vm) {
     }
 }
 
-// Dismiss source/publisher suggestions when clicking outside their field areas
+// Dismiss source/publisher suggestions when clicking outside their field areas.
+// `mousedown` (rather than `click`) gives a snappier dismissal, but it fires
+// before `click` does — which means we must exclude the "create this …" hint
+// from the dismissal check, or else clearing the *NotFound observable would
+// detach the link from the DOM before its click handler ever ran.
 $(document).on('mousedown', function (e) {
     var $target = $(e.target);
     if (sourceSuggestions().length > 0 || sourceNotFound()) {
-        if (!$target.closest('#sourceField, .list-group').length) {
+        if (!$target.closest('#sourceField, .list-group, .source-create-hint').length) {
             sourceSuggestions([]);
             sourceNotFound(false);
         }
     }
     if (publisherSuggestions().length > 0 || publisherNotFound()) {
-        if (!$target.closest('#publisherField, .list-group').length) {
+        if (!$target.closest('#publisherField, .list-group, .publisher-create-hint').length) {
             publisherSuggestions([]);
             publisherNotFound(false);
         }

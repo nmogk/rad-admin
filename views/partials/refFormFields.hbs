@@ -26,7 +26,7 @@
     </ul>
     <!-- /ko -->
     <!-- ko if: publisherNotFound() -->
-    <small class="text-warning">No matching source found. <a href="#" data-bind="click: function() { createPublisherFromRef(); }">Create this publisher</a></small>
+    <small class="text-warning publisher-create-hint">No matching source found. <a href="#" data-bind="click: function() { createPublisherFromRef(); }">Create this publisher</a></small>
     <!-- /ko -->
 </div>
 <div class="form-group">
@@ -46,7 +46,7 @@
     </ul>
     <!-- /ko -->
     <!-- ko if: sourceNotFound() -->
-    <small class="text-warning">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
+    <small class="text-warning source-create-hint">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
     <!-- /ko -->
 </div>
 <div class="form-group">

@@ -95,8 +95,15 @@ RefViewModel.prototype.goSource = function () {
         data: $.param({"q": this.source()}),
         success: function (data) {
             var src = data.response.docs[0]; // first result only
-            if (src.website !== undefined) {
-                window.open("http://" + src.website[0]);
+            if (!src) {
+                alert("Source not found!");
+                return;
+            }
+            // `website` is single-valued in the source schema, so it's a string;
+            // an older multi-valued schema would hand back an array, hence the guard.
+            var site = Array.isArray(src.website) ? src.website[0] : src.website;
+            if (site) {
+                window.open("http://" + site);
             } else {
                 alert("Source does not have a website to go to!");
             }
