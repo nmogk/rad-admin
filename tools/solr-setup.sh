@@ -123,6 +123,7 @@ curl -sf -X POST -H 'Content-type:application/json' \
     { "source": "title",     "dest": "_text_" },
     { "source": "reference", "dest": "_text_" },
     { "source": "source",    "dest": "_text_" },
+    { "source": "publisher", "dest": "_text_" },
     { "source": "abstract",  "dest": "_text_" },
     { "source": "page",      "dest": "_text_" }
   ]

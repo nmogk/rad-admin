@@ -134,12 +134,15 @@ function searchUnusedSources() {
             $.ajax({
                 url: '/solr/rad/refs?',
                 dataType: 'json',
-                data: $.param({ q: 'source:[* TO *]', rows: pageSize, start: start, fl: 'source' }),
+                data: $.param({ q: 'source:[* TO *] OR publisher:[* TO *]', rows: pageSize, start: start, fl: 'source,publisher' }),
                 success: function (data) {
                     (data.response.docs || []).forEach(function (d) {
                         var s = d.source;
                         if (Array.isArray(s)) { s = s[0]; }
                         if (s) { used[s] = true; }
+                        var p = d.publisher;
+                        if (Array.isArray(p)) { p = p[0]; }
+                        if (p) { used[p] = true; }
                     });
                     scanned += (data.response.docs || []).length;
                     progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;

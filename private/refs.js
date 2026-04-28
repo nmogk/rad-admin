@@ -30,6 +30,16 @@ RefViewModel.prototype.viewSourceForEditing = function () {
     window.open('/sources?rows=1&q=name:' + encodedName, '_blank');
 };
 
+RefViewModel.prototype.viewPublisherForEditing = function () {
+    var publisherName = this.publisher();
+    if (!publisherName) {
+        alert("This reference does not have a publisher.");
+        return;
+    }
+    var encodedName = encodeURIComponent('"' + publisherName + '"');
+    window.open('/sources?rows=1&q=name:' + encodedName, '_blank');
+};
+
 /**
  * Provides functionality for populating the edit dialog with the correct
  * ref item.
@@ -38,8 +48,11 @@ RefViewModel.prototype.editRef = function () {
     formError('');
     sourceSuggestions([]);
     sourceNotFound(false);
+    publisherSuggestions([]);
+    publisherNotFound(false);
     ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
     this.source.subscribe(lookupSources);
+    this.publisher.subscribe(lookupPublishers);
     // Live computed of problematic chars currently in the form. Note: chars
     // that htmlDecode silently drops on the way from Solr to the observable
     // (NBSP, zero-width, etc.) won't appear here — the search button is the
@@ -54,6 +67,9 @@ RefViewModel.prototype.submitEdits = function () {
     formError('');
     sourceSuggestions([]);
     sourceNotFound(false);
+    publisherSuggestions([]);
+    publisherNotFound(false);
+    syncSourceFromPublisher(self);
     self.commit();
     $.ajax({ // Makes an AJAX query to the server for the source
         url: "/refs/" + self.id() + window.location.search,
@@ -80,6 +96,9 @@ RefViewModel.prototype.newRefHandler = function () {
     formSuccess('');
     sourceSuggestions([]);
     sourceNotFound(false);
+    publisherSuggestions([]);
+    publisherNotFound(false);
+    syncSourceFromPublisher(self);
     self.commit();
     $.ajax({
         url: "/refs/new",
@@ -113,6 +132,9 @@ RefViewModel.prototype.saveAndAddAnother = function () {
     formSuccess('');
     sourceSuggestions([]);
     sourceNotFound(false);
+    publisherSuggestions([]);
+    publisherNotFound(false);
+    syncSourceFromPublisher(self);
     self.commit();
     $.ajax({
         url: "/refs/new",
@@ -151,8 +173,9 @@ function searchInit() {
     if (localStorage['refsEditor']) {
         blankRefViewModel.update(localStorage['refsEditor']);
     }
-    // Subscribe to source field changes for autocomplete
+    // Subscribe to source/publisher field changes for autocomplete
     blankRefViewModel.source.subscribe(lookupSources);
+    blankRefViewModel.publisher.subscribe(lookupPublishers);
     attachOddCharReport(blankRefViewModel);
     ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
 
@@ -189,6 +212,11 @@ var sourceSuggestions = ko.observableArray([]);
 var sourceNotFound = ko.observable(false);
 var _sourceTimer = null;
 
+// Publisher autocomplete (publishers and sources share the sources core)
+var publisherSuggestions = ko.observableArray([]);
+var publisherNotFound = ko.observable(false);
+var _publisherTimer = null;
+
 function lookupSources(value) {
     if (!value || value.length < 2) {
         sourceSuggestions([]);
@@ -219,6 +247,36 @@ function lookupSources(value) {
     }, 300);
 }
 
+function lookupPublishers(value) {
+    if (!value || value.length < 2) {
+        publisherSuggestions([]);
+        publisherNotFound(false);
+        return;
+    }
+    if (_publisherTimer) { clearTimeout(_publisherTimer); }
+    _publisherTimer = setTimeout(function () {
+        $.ajax({
+            url: "/solr/source/select?",
+            dataType: "json",
+            data: $.param({ q: 'name:' + value + '*', rows: 8, fl: 'name' }),
+            success: function (data) {
+                var names = [];
+                data.response.docs.forEach(function (doc) {
+                    var n = doc.name;
+                    if (Array.isArray(n)) { n = n[0]; }
+                    if (n) { names.push(n); }
+                });
+                publisherSuggestions(names);
+                publisherNotFound(data.response.numFound === 0);
+            },
+            error: function () {
+                publisherSuggestions([]);
+                publisherNotFound(false);
+            }
+        });
+    }, 300);
+}
+
 function selectSource(name) {
     // Find the active ref view model by checking which modal is visible
     var modal = $('.modal.in');
@@ -234,35 +292,71 @@ function selectSource(name) {
     sourceNotFound(false);
 }
 
-// Dismiss source suggestions when clicking outside the source field area
+function selectPublisher(name) {
+    var modal = $('.modal.in');
+    if (modal.length) {
+        var ctx = ko.dataFor(modal.find('form')[0]);
+        if (ctx && ctx.publisher) {
+            ctx.publisher(name);
+        }
+    }
+    if (_publisherTimer) { clearTimeout(_publisherTimer); _publisherTimer = null; }
+    publisherSuggestions([]);
+    publisherNotFound(false);
+}
+
+// If the user didn't tick "Add separate source", source mirrors publisher.
+// Done at submit time so toggling the checkbox off and on while editing
+// doesn't blow away a manually-entered source value.
+function syncSourceFromPublisher(vm) {
+    if (vm && vm.hasSeparateSource && !vm.hasSeparateSource()) {
+        vm.source(vm.publisher() || null);
+    }
+}
+
+// Dismiss source/publisher suggestions when clicking outside their field areas
 $(document).on('mousedown', function (e) {
-    if (sourceSuggestions().length === 0 && !sourceNotFound()) { return; }
     var $target = $(e.target);
-    if (!$target.closest('#sourceField, .list-group').length) {
-        sourceSuggestions([]);
-        sourceNotFound(false);
+    if (sourceSuggestions().length > 0 || sourceNotFound()) {
+        if (!$target.closest('#sourceField, .list-group').length) {
+            sourceSuggestions([]);
+            sourceNotFound(false);
+        }
+    }
+    if (publisherSuggestions().length > 0 || publisherNotFound()) {
+        if (!$target.closest('#publisherField, .list-group').length) {
+            publisherSuggestions([]);
+            publisherNotFound(false);
+        }
     }
 });
 
 function createSourceFromRef() {
-    // Find the active ref modal's source value
+    openSourceCreatorFromField('source');
+}
+
+function createPublisherFromRef() {
+    openSourceCreatorFromField('publisher');
+}
+
+// Pre-fills the new-source modal with the value from the ref modal's `source`
+// or `publisher` field, then hides the ref modal until the source is saved.
+// Publishers and sources share the sources core, so creating either is the
+// same action — only the source of the pre-filled name changes.
+function openSourceCreatorFromField(fieldName) {
     var modal = $('.modal.in');
-    var sourceName = '';
+    var name = '';
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);
-        if (ctx && ctx.source) {
-            sourceName = ctx.source() || '';
+        if (ctx && ctx[fieldName]) {
+            name = ctx[fieldName]() || '';
         }
     }
-    // Hide the ref modal temporarily
     modal.modal('hide');
 
-    // Create a blank source view model with the name pre-filled
-    var blankSource = new SrcViewModel({ name: sourceName });
+    var blankSource = new SrcViewModel({ name: name });
     ko.cleanNode($("#newSourceModal")[0]);
 
-    // Override the new source handler to return to the ref modal after save
-    var originalHandler = SrcViewModel.prototype.newSourceHandler;
     blankSource.newSourceHandler = function () {
         var self = this;
         formError('');
@@ -277,7 +371,8 @@ function createSourceFromRef() {
                 $("#newSourceModal").modal("hide");
                 sourceNotFound(false);
                 sourceSuggestions([]);
-                // Re-show the ref modal
+                publisherNotFound(false);
+                publisherSuggestions([]);
                 modal.modal({ backdrop: 'static' });
             },
             error: function (jqXHR) {
@@ -295,7 +390,7 @@ function createSourceFromRef() {
     $("#newSourceModal").modal({ backdrop: 'static' });
 }
 
-var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'page', 'abstract', 'dt'];
+var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'publisher', 'page', 'abstract', 'dt'];
 
 function buildBlankFieldQuery(field) {
     if (!field) {
@@ -323,7 +418,7 @@ $(document).on('click', '[data-blank-field]', function (e) {
     searchBlankField(this.getAttribute('data-blank-field'));
 });
 
-var ODD_CHAR_SEARCH_FIELDS = ['title', 'author', 'abstract', 'reference', 'source', 'page'];
+var ODD_CHAR_SEARCH_FIELDS = ['title', 'author', 'abstract', 'reference', 'source', 'publisher', 'page'];
 
 // Lucene RegExp character-class bodies. NUL is omitted because it does not
 // survive HTTP transport reliably. Tab/LF/CR are omitted from "control"
@@ -414,12 +509,16 @@ function searchOrphanSources() {
             $.ajax({
                 url: '/solr/rad/refs?',
                 dataType: 'json',
-                data: $.param({ q: 'source:[* TO *]', rows: pageSize, start: start, fl: 'id,source' }),
+                data: $.param({ q: 'source:[* TO *] OR publisher:[* TO *]', rows: pageSize, start: start, fl: 'id,source,publisher' }),
                 success: function (data) {
                     (data.response.docs || []).forEach(function (d) {
                         var s = d.source;
                         if (Array.isArray(s)) { s = s[0]; }
-                        if (s && !sourceSet[s] && d.id !== undefined) { orphanIds.push(d.id); }
+                        var p = d.publisher;
+                        if (Array.isArray(p)) { p = p[0]; }
+                        var sourceOrphan = s && !sourceSet[s];
+                        var publisherOrphan = p && !sourceSet[p];
+                        if ((sourceOrphan || publisherOrphan) && d.id !== undefined) { orphanIds.push(d.id); }
                     });
                     scanned += (data.response.docs || []).length;
                     progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
@@ -490,6 +589,7 @@ function buildOddCharReport(values) {
     var fields = [
         ['title', values.title], ['author', values.author],
         ['reference', values.reference], ['source', values.source],
+        ['publisher', values.publisher],
         ['page', values.page], ['abstract', values.abst]
     ];
     var lines = [];
@@ -511,6 +611,7 @@ function attachOddCharReport(vm) {
         return buildOddCharReport({
             title: vm.title(), author: vm.author(),
             reference: vm.reference(), source: vm.source(),
+            publisher: vm.publisher(),
             page: vm.page(), abst: vm.abst()
         });
     });

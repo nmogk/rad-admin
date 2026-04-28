@@ -253,6 +253,112 @@ describe('Refs Routes', function () {
             expect(res._json.redirect).to.include('/refs');
         });
 
+        it('should reject unknown publisher with JSON error', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', publisher: 'Nonexistent Publisher' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('Publisher');
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should accept known publisher', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', publisher: 'Known Publisher' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [{ name: 'Known Publisher' }] } });
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.publisher).to.equal('Known Publisher');
+            expect(res._json.redirect).to.include('/refs');
+        });
+
+        it('should allow save when source index is unreachable for publisher', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', publisher: 'Some Publisher' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.rejects(new Error('Connection refused'));
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(res._json.redirect).to.include('/refs');
+        });
+
+        it('should validate both source and publisher when both are provided', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Test', source: 'Lib A', publisher: 'Pub B' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [{ name: 'whatever' }] } });
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(sourceClientStub.get.callCount).to.equal(2);
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.source).to.equal('Lib A');
+            expect(doc.publisher).to.equal('Pub B');
+        });
+
+        it('should treat publisher-only submission as non-empty', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { publisher: 'Pub Only' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [] } });
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+        });
+
         it('should write audit log on success', async function () {
             var req = mockReq({
                 method: 'POST',
@@ -316,6 +422,53 @@ describe('Refs Routes', function () {
             expect(res.status.calledWith(400)).to.be.true;
             expect(res._json.error).to.include('not found');
             expect(solrClientStub.get.called).to.be.false;
+        });
+
+        it('should reject unknown publisher on edit', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test', publisher: 'Bad Publisher' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('Publisher');
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.get.called).to.be.false;
+        });
+
+        it('should accept known publisher on edit', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test', publisher: 'Pub' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 1, docs: [{ name: 'Pub' }] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.publisher).to.equal('Pub');
         });
 
         it('should return JSON error on Solr get failure', async function () {
