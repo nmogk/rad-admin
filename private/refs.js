@@ -757,23 +757,30 @@ RefViewModel.prototype.addToCampaign = function () {
 RefViewModel.prototype.removeFromActiveCampaign = function () {
     var self = this;
     if (!_activeCampaignId) { return; }
-    if (!window.confirm('Remove this reference from the active campaign?')) { return; }
-    $.ajax({
-        url: '/campaigns/' + _activeCampaignId + '/refs/' + self.id(),
-        type: 'DELETE',
-        success: function () {
-            // Locate the grid and drop this ref from the observable array.
-            var grid = document.getElementById('mainDisplay');
-            var ctx = grid && ko.dataFor(grid);
-            if (ctx && typeof ctx.refs === 'function') {
-                ctx.refs.remove(function (r) { return r.id() === self.id(); });
+
+    confirmDialog({
+        title: 'Remove from campaign',
+        body: 'Remove this reference from the active campaign?',
+        confirmText: 'Remove',
+        confirmClass: 'btn-warning'
+    }, function () {
+        $.ajax({
+            url: '/campaigns/' + _activeCampaignId + '/refs/' + self.id(),
+            type: 'DELETE',
+            success: function () {
+                // Locate the grid and drop this ref from the observable array.
+                var grid = document.getElementById('mainDisplay');
+                var ctx = grid && ko.dataFor(grid);
+                if (ctx && typeof ctx.refs === 'function') {
+                    ctx.refs.remove(function (r) { return r.id() === self.id(); });
+                }
+            },
+            error: function (jqXHR) {
+                var msg = 'Error removing reference from campaign.';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+                alert(msg);
             }
-        },
-        error: function (jqXHR) {
-            var msg = 'Error removing reference from campaign.';
-            if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
-            alert(msg);
-        }
+        });
     });
 };
 

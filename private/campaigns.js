@@ -60,33 +60,32 @@ CampaignViewModel.prototype.newCampaignHandler = function () {
 CampaignViewModel.prototype.deleteCampaign = function () {
     var self = this;
     var refCount = self.refCount();
-    var firstPrompt = refCount > 0
+    var body = refCount > 0
         ? 'Delete campaign "' + self.name() + '"? It still has ' + refCount + ' reference' + (refCount === 1 ? '' : 's') + ' attached.'
         : 'Delete campaign "' + self.name() + '"?';
-    if (!window.confirm(firstPrompt)) { return; }
 
-    function send(force) {
+    confirmDialog({
+        title: 'Delete campaign',
+        body: body,
+        confirmText: 'Delete',
+        confirmClass: 'btn-danger'
+    }, function () {
+        // The client already knows refCount, so send force=1 up front when
+        // refs are attached. That avoids the server's 409 round-trip and the
+        // second confirmation that produced.
         $.ajax({
-            url: "/campaigns/" + self.id() + (force ? '?force=1' : ''),
+            url: "/campaigns/" + self.id() + (refCount > 0 ? '?force=1' : ''),
             type: "DELETE",
             success: function (data) {
                 window.location.href = data.redirect || '/campaigns';
             },
             error: function (jqXHR) {
-                if (jqXHR.status === 409 && jqXHR.responseJSON && jqXHR.responseJSON.refCount !== undefined) {
-                    if (window.confirm('Server reports ' + jqXHR.responseJSON.refCount + ' refs still attached. Delete anyway?')) {
-                        send(true);
-                    }
-                    return;
-                }
                 var msg = 'Error deleting campaign';
                 if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
                 alert(msg);
             }
         });
-    }
-
-    send(false);
+    });
 };
 
 // Build a /refs?q=id:(...) URL from the campaign's refs and navigate. The cap
