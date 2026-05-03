@@ -9,6 +9,7 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
+        <p>Add or edit references. Search behaves the same as on the main page, or use one of the power search options below. </p>
         <form role="search" class="form-horizontal">
           <div class="form-group">
             <label for="searchInput" class="control-label col-sm-2">Query:</label>
@@ -56,7 +57,7 @@
                   <li role="presentation"><a role="menuitem" href="#" data-odd-chars="smart">Smart punctuation</a></li>
                 </ul>
               </div>
-              <button id="orphanSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find refs whose source is not in the source list"><span class="glyphicon glyphicon-warning-sign"></span></button>
+              <button id="orphanSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find refs whose source is not in the source list"><span class="glyphicon glyphicon-remove-sign"></span></button>
               <span id="orphanSourceProgress" class="text-muted small" style="display:none; margin-left:8px" aria-live="polite"></span>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
