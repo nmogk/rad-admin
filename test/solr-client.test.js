@@ -38,13 +38,13 @@ var auditLoggerStub = { debug: sinon.stub(), warn: sinon.stub() };
 var log4jsStub = { getLogger: sinon.stub().returns(auditLoggerStub) };
 
 function load(httpStub) {
-    return proxyquire('../config/solr-client', {
+    return proxyquire('../server/solr-client', {
         'http': httpStub,
         'log4js': log4jsStub
     });
 }
 
-describe('config/solr-client', function () {
+describe('server/solr-client', function () {
 
     var httpStub, solr, client;
 

@@ -4,7 +4,7 @@ var path = require('path');
 var fs = require('fs');
 var log4js = require('log4js');
 var auditLogger = log4js.getLogger('audit');
-var backup = require('../config/solr-backup');
+var backup = require('../server/solr-backup');
 
 var BACKUP_DIR = path.join(__dirname, '..', 'backups');
 var VALID_CORES = ['rad', 'source'];

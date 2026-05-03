@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var { mockReq, mockRes, mockUser } = require('./helpers');
-var { isLoggedIn, flashMessageCenter, forceSsl, superuser } = require('../config/middleware');
+var { isLoggedIn, flashMessageCenter, forceSsl, superuser } = require('../server/middleware');
 
 describe('Middleware', function () {
 

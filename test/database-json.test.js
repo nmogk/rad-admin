@@ -8,9 +8,9 @@ var fsPromisesStub = {
 };
 var fsStub = { promises: fsPromisesStub };
 
-var db = proxyquire('../config/database-json', { 'fs': fsStub });
+var db = proxyquire('../server/database-json', { 'fs': fsStub });
 
-describe('config/database-json', function () {
+describe('server/database-json', function () {
 
     var clock;
 

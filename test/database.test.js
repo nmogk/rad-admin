@@ -19,7 +19,7 @@ var log4jsStub = { getLogger: sinon.stub().returns(auditLoggerStub) };
 
 var dbRouter = proxyquire('../routes/database', {
     'fs': fsStub,
-    '../config/solr-backup': backupStub,
+    '../server/solr-backup': backupStub,
     'log4js': log4jsStub
 });
 
