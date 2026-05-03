@@ -56,6 +56,9 @@ function RefsGridViewModel(qString) {
             if (data.response.numFound === 0) {
                 document.getElementById("noResultsAlert").setAttribute("aria-hidden", "false");
             }
+            if (self.spellings().length > 0) {
+                document.getElementById("spellingSuggestions").setAttribute("aria-hidden", "false");
+            }
 
             // Generate summary of search (number of results)
             self.numResults(data.response.numFound);
