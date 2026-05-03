@@ -71,7 +71,7 @@ Routes in `routes/` are mounted in `app.js`. Key pattern: `req.replacements` is 
 
 ### Solr Integration
 
-`config/solr-proxy.js` validates and proxies requests to the local Solr instance. Only GET requests to whitelisted paths (`/solr/rad/refs`, `/solr/rad/refs/csv`, `/solr/source/select`) are allowed; `qt` and `stream.*` params are blocked, and the `rows` param is clamped to `proxyOptions.maxRows` (1000) to bound page size for public callers. Reference CRUD in `routes/refs.js` uses `solr-client` to add/update/delete documents, then updates `database.json` (tracks numRecords, highestId, latest date).
+`config/solr-proxy.js` validates and proxies requests to the local Solr instance. Only GET requests to whitelisted paths (`/solr/rad/refs`, `/solr/rad/refs/csv`, `/solr/source/select`) are allowed; `qt` and `stream.*` params are blocked (403), and any request whose `rows` exceeds `proxyOptions.maxRows` (1000) is rejected with 400. The proxy refuses rather than silently clamps so client-side pagination stays consistent with what was returned. Reference CRUD in `routes/refs.js` uses `solr-client` to add/update/delete documents, then updates `database.json` (tracks numRecords, highestId, latest date).
 
 ### Frontend Pattern
 
