@@ -56,14 +56,6 @@
             </div>
             <hr>
             <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any references. Make sure all words are spelled correctly. Try a less complex search or alternate search terms.</div>
-            <div id="spellingSuggestions" class="alert alert-info" aria-hidden="true" aria-live="polite"><strong>Did you mean:</strong>
-              <dl data-bind="foreach: spellings">
-                <dt data-bind="text: term"></dt>
-                <dd data-bind="foreach: suggestions">
-                  <span data-bind="text: $data"></span><span data-bind="ifnot: $index">, </span>
-                </dd>
-              </dl>
-            </div>
           </div>
 
           {{! Results group }}
@@ -112,6 +104,12 @@
               <a href='#' class='close' data-dismiss='alert' aria-label='close' tabindex=0>&times;</a>
               <strong>Warning!</strong> A 'start' value which is not evenly divisible by 'rows' or a very large 'rows' value will cause pagination to behave non-intuitively.
             </div>
+          </div>
+          <div id="spellingSuggestions" aria-hidden="true" aria-live="polite" class="text-center small text-muted">
+            <span>Did you mean: </span>
+            <span data-bind="foreach: spellings">
+              <span data-bind="foreach: suggestions"><span data-bind="if: $index">, </span><span data-bind="text: $data"></span></span>
+            </span>
           </div>
           <div id="pages" class="text-center" role="navigation" aria-live="polite">
             <p id="pageSummary" data-bind="text: summary"></p>
