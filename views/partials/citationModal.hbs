@@ -8,6 +8,10 @@
       {{!-- Six rows (one per citation style) generated from RAD.citations.styles
             in public/javascripts/citations.js. Edit formats there, not here. --}}
       <div class="modal-body"><table>
+        {{!-- The <tbody> wrapper is required: HTML5 parsers foster-parent stray
+              comments out of <table>, which breaks KO's containerless ko/`/ko`
+              comment pairing. Inside <tbody>, the comments are preserved. --}}
+        <tbody>
         <!-- ko foreach: window.RAD.citations.styles -->
         <tr><td colspan="2"><h5 data-bind="text: label + ' Style'"></h5></td></tr>
         <tr data-bind="style: { borderBottom: $index() < window.RAD.citations.styles.length - 1 ? '1px solid gray' : '' }">
@@ -17,6 +21,7 @@
           </button></td>
         </tr>
         <!-- /ko -->
+        </tbody>
         </table>
       </div>
       <div class="modal-footer">
