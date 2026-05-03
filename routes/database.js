@@ -62,6 +62,7 @@ async function listBackups() {
 
 router.get('/', async function (req, res, next) {
     try {
+        Object.assign(req.replacements, await db.read());
         req.replacements.dbActive = 1;
         req.replacements.backups = await listBackups();
         res.render('database', req.replacements);
@@ -114,7 +115,8 @@ router.post('/recompute', async function (req, res, next) {
             current: {
                 numRecords: result.after.numRecords,
                 highestId: result.after.highestId,
-                latest: result.after.latest
+                latest: result.after.latest,
+                latestId: scanned.latestId
             }
         });
     } catch (err) {

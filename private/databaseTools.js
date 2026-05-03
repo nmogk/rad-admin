@@ -78,7 +78,9 @@ $(function () {
         var $summary = $('#recomputeSummary');
         var $table = $('#recomputeChangesTable');
         var $body = $('#recomputeChangesBody');
+        var $latestRef = $('#recomputeLatestRef');
         $body.empty();
+        $latestRef.empty();
 
         if (!data.changed) {
             $summary.text('Stats already match the index — no changes made. Current values: numRecords=' +
@@ -95,6 +97,15 @@ $(function () {
             });
             $table.show();
         }
+
+        if (data.current.latestId !== undefined && data.current.latestId !== null) {
+            var href = '/refs?rows=1&q=' + encodeURIComponent('id:' + data.current.latestId);
+            $latestRef.html('Latest reference: <a href="' + href + '">id ' + data.current.latestId + '</a>' +
+                ' (dt ' + (data.current.latest || '(none)') + ').');
+        } else {
+            $latestRef.text('No reference in the index has a parseable date.');
+        }
+
         $('#recomputeResult').modal('show');
     }
 });

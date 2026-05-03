@@ -32,13 +32,13 @@ describe('server/solr-stats', function () {
             });
         });
 
-        it('returns zeros and null latest on an empty core', async function () {
+        it('returns zeros and null latest/latestId on an empty core', async function () {
             clientStub.get.resolves({ response: { docs: [] }, nextCursorMark: '*' });
             var result = await stats.scanCore('rad');
-            expect(result).to.deep.equal({ numRecords: 0, highestId: 0, latest: null });
+            expect(result).to.deep.equal({ numRecords: 0, highestId: 0, latest: null, latestId: null });
         });
 
-        it('counts docs, picks max numeric id, and picks max dt date', async function () {
+        it('counts docs, picks max numeric id, picks max dt date, and reports the latest doc id', async function () {
             clientStub.get.resolves({
                 response: {
                     docs: [
@@ -53,6 +53,7 @@ describe('server/solr-stats', function () {
             expect(result.numRecords).to.equal(3);
             expect(result.highestId).to.equal(100);
             expect(result.latest).to.equal('2024-07-15');
+            expect(result.latestId).to.equal('100');
         });
 
         it('uses numeric (not lexicographic) comparison for id', async function () {
@@ -185,7 +186,34 @@ describe('server/solr-stats', function () {
             });
             var result = await stats.scanCore('rad');
             expect(clientStub.get.callCount).to.equal(3);
-            expect(result).to.deep.equal({ numRecords: 3, highestId: 500, latest: '2024-12-31' });
+            expect(result).to.deep.equal({ numRecords: 3, highestId: 500, latest: '2024-12-31', latestId: '500' });
+        });
+
+        it('reports null latestId when no doc has a parseable date', async function () {
+            clientStub.get.resolves({
+                response: { docs: [{ id: '1' }, { id: '2', dt: 'garbage' }] },
+                nextCursorMark: '*'
+            });
+            var result = await stats.scanCore('rad');
+            expect(result.latest).to.be.null;
+            expect(result.latestId).to.be.null;
+        });
+
+        it('does not credit a malformed date with the latestId', async function () {
+            // Doc 99 has a bogus dt that the strict parser rejects; doc 7 is the
+            // real latest. latestId must point at 7, not 99.
+            clientStub.get.resolves({
+                response: {
+                    docs: [
+                        { id: '99', dt: '+020120-01-15' },
+                        { id: '7',  dt: '2024-06-15' }
+                    ]
+                },
+                nextCursorMark: '*'
+            });
+            var result = await stats.scanCore('rad');
+            expect(result.latest).to.equal('2024-06-15');
+            expect(result.latestId).to.equal('7');
         });
 
         it('terminates when nextCursorMark equals the previous mark', async function () {

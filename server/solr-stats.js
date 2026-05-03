@@ -41,6 +41,7 @@ async function scanCore(coreName) {
     var numRecords = 0;
     var highestId = 0;
     var latestDate = null;
+    var latestId = null;
     var cursorMark = '*';
 
     while (true) {
@@ -62,6 +63,7 @@ async function scanCore(coreName) {
             var dtDate = parseStrictIsoDate(dt);
             if (dtDate && (!latestDate || dtDate > latestDate)) {
                 latestDate = dtDate;
+                latestId = d.id;
             }
         }
         var next = obj && obj.nextCursorMark;
@@ -72,7 +74,8 @@ async function scanCore(coreName) {
     return {
         numRecords: numRecords,
         highestId: highestId,
-        latest: latestDate ? latestDate.toISOString().slice(0, 10) : null
+        latest: latestDate ? latestDate.toISOString().slice(0, 10) : null,
+        latestId: latestId
     };
 }
 
