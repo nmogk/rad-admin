@@ -134,4 +134,44 @@ describe('server/database-json', function () {
             expect(written.highestId).to.equal(500);
         });
     });
+
+    describe('replaceStats(stats)', function () {
+        it('overwrites all three stat fields with scanned values and returns the change set', async function () {
+            setDb({ numRecords: 10, highestId: 500, latest: '2024-01-01', updated: '2024-01-02' });
+            var result = await db.replaceStats({ numRecords: 8, highestId: 450, latest: '2023-12-15' });
+            var written = JSON.parse(fsPromisesStub.writeFile.firstCall.args[1]);
+            expect(written.numRecords).to.equal(8);
+            expect(written.highestId).to.equal(450);
+            expect(written.latest).to.equal('2023-12-15');
+            expect(written.updated).to.equal('2025-06-15');
+            expect(result.changes).to.deep.equal({
+                numRecords: { from: 10, to: 8 },
+                highestId: { from: 500, to: 450 },
+                latest: { from: '2024-01-01', to: '2023-12-15' }
+            });
+        });
+
+        it('returns an empty change set when scanned values match', async function () {
+            setDb({ numRecords: 10, highestId: 500, latest: '2024-01-01', updated: '2024-01-02' });
+            var result = await db.replaceStats({ numRecords: 10, highestId: 500, latest: '2024-01-01' });
+            expect(result.changes).to.deep.equal({});
+        });
+
+        it('preserves existing latest when scan produced no date', async function () {
+            setDb({ numRecords: 10, highestId: 500, latest: '2024-01-01', updated: '2024-01-02' });
+            var result = await db.replaceStats({ numRecords: 0, highestId: 0, latest: null });
+            var written = JSON.parse(fsPromisesStub.writeFile.firstCall.args[1]);
+            expect(written.latest).to.equal('2024-01-01');
+            expect(result.changes.latest).to.be.undefined;
+            expect(result.changes.numRecords).to.deep.equal({ from: 10, to: 0 });
+            expect(result.changes.highestId).to.deep.equal({ from: 500, to: 0 });
+        });
+
+        it('always bumps updated, even when stats are unchanged', async function () {
+            setDb({ numRecords: 10, highestId: 500, latest: '2024-01-01', updated: '2024-01-02' });
+            await db.replaceStats({ numRecords: 10, highestId: 500, latest: '2024-01-01' });
+            var written = JSON.parse(fsPromisesStub.writeFile.firstCall.args[1]);
+            expect(written.updated).to.equal('2025-06-15');
+        });
+    });
 });

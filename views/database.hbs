@@ -28,6 +28,14 @@
     </button>
     <span id="backupStatus" class="text-muted" style="margin-left: 1em;"></span>
 </form>
+
+<form class="form inline" id="recomputeStatsForm" style="margin-top: 1em;">
+    <button type="submit" class="btn btn-warning" id="recomputeStatsButton" data-toggle="tooltip"
+        title="Scan the rad core and rebuild the latest reference, total record count, and highest id in database.json">
+        <span class="glyphicon glyphicon-refresh"></span> Recompute Stats
+    </button>
+    <span id="recomputeStatus" class="text-muted" style="margin-left: 1em;" aria-live="polite"></span>
+</form>
 {{/inline}}
 
 {{#*inline "results-area"}}
@@ -82,6 +90,29 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" data-dismiss="modal" id="confirm-delete-backup-button">Delete</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="recomputeResult" role="dialog" tabindex=0>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <h4 class="modal-title">Recompute complete</h4>
+            </div>
+            <div class="modal-body">
+                <p id="recomputeSummary"></p>
+                <table class="table table-sm" id="recomputeChangesTable" style="display:none;">
+                    <thead>
+                        <tr><th>Field</th><th>Before</th><th>After</th></tr>
+                    </thead>
+                    <tbody id="recomputeChangesBody"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

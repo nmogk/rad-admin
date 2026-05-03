@@ -5,6 +5,8 @@ var fs = require('fs');
 var log4js = require('log4js');
 var auditLogger = log4js.getLogger('audit');
 var backup = require('../server/solr-backup');
+var stats = require('../server/solr-stats');
+var db = require('../server/database-json');
 
 var BACKUP_DIR = path.join(__dirname, '..', 'backups');
 var VALID_CORES = ['rad', 'source'];
@@ -97,6 +99,28 @@ router.post('/backup', async function (req, res, next) {
     auditLogger.info(req.user.get('email') + ' created backup(s): ' + written.join(', '));
     req.flash('yay', 'Backup created: ' + written.join(', '));
     res.json({ redirect: '/database' });
+});
+
+router.post('/recompute', async function (req, res, next) {
+    try {
+        var scanned = await stats.scanCore('rad');
+        var result = await db.replaceStats(scanned);
+        if (Object.keys(result.changes).length > 0) {
+            auditLogger.info(req.user.get('email') + ' rebuilt database stats: ' + JSON.stringify(result.changes));
+        }
+        res.json({
+            changed: Object.keys(result.changes).length > 0,
+            changes: result.changes,
+            current: {
+                numRecords: result.after.numRecords,
+                highestId: result.after.highestId,
+                latest: result.after.latest
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Recompute failed.' });
+    }
 });
 
 router.delete('/backup/:filename', async function (req, res, next) {
