@@ -194,6 +194,25 @@ function searchInit() {
         } catch (e) {}
     }
 
+    // Banner shown when /campaigns -> "Open in references" capped the id list.
+    var batchNotice = null;
+    try { batchNotice = sessionStorage.getItem('campaignBatchNotice'); } catch (e) {}
+    if (batchNotice) {
+        try { sessionStorage.removeItem('campaignBatchNotice'); } catch (e) {}
+        try {
+            var b = JSON.parse(batchNotice);
+            var batchEl = document.getElementById('campaignBatchAlert');
+            if (batchEl) {
+                document.getElementById('campaignBatchShown').textContent = b.shown;
+                document.getElementById('campaignBatchTotal').textContent = b.total;
+                document.getElementById('campaignBatchName').textContent = b.campaignName || '';
+                batchEl.style.display = '';
+            }
+        } catch (e) {}
+    }
+
+    initCampaignPicker();
+
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body
@@ -627,6 +646,133 @@ $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
     $('[data-toggle="popover"]').popover();
 });
+
+// ===== Campaign integration =====
+
+// Set by initCampaignPicker; the active campaign id (number) or null.
+var _activeCampaignId = null;
+
+// Picker observables — bound to #campaignPickerModal in initCampaignPicker.
+var pickerCampaigns = ko.observableArray([]);
+var pickerSelected = ko.observable(null);
+var pickerRefIds = ko.observableArray([]);
+var pickerError = ko.observable('');
+var pickerBusy = ko.observable(false);
+
+function initCampaignPicker() {
+    // Read active campaign id from the JSON island the server embeds.
+    var data = document.getElementById('activeCampaignData');
+    if (data) {
+        try {
+            var ac = JSON.parse(data.textContent);
+            if (ac && ac.id) { _activeCampaignId = ac.id; }
+        } catch (e) {}
+    }
+
+    var modalEl = document.getElementById('campaignPickerModal');
+    if (modalEl) {
+        ko.applyBindings({
+            pickerCampaigns: pickerCampaigns,
+            pickerSelected: pickerSelected,
+            pickerRefIds: pickerRefIds,
+            pickerError: pickerError,
+            pickerBusy: pickerBusy,
+            pickerSubmit: pickerSubmit
+        }, modalEl);
+    }
+
+    $(document).on('click', '#addResultsToCampaignBtn', function (e) {
+        e.preventDefault();
+        var grid = document.getElementById('mainDisplay');
+        var ctx = grid && ko.dataFor(grid);
+        if (!ctx || typeof ctx.refs !== 'function') {
+            alert('No search results to add. Run a search first.');
+            return;
+        }
+        var ids = ctx.refs().map(function (r) { return r.id(); }).filter(function (n) { return n !== undefined && n !== null; });
+        if (!ids.length) {
+            alert('No references on this page to add.');
+            return;
+        }
+        openCampaignPicker(ids);
+    });
+}
+
+function openCampaignPicker(refIds) {
+    pickerError('');
+    pickerRefIds(refIds);
+    pickerBusy(false);
+    $.ajax({
+        url: '/campaigns/list.json',
+        dataType: 'json',
+        success: function (list) {
+            var opts = (list || []).map(function (c) {
+                return { id: c.id, label: c.name + ' (' + c.refCount + ')' };
+            });
+            pickerCampaigns(opts);
+            pickerSelected(opts.length ? opts[0].id : null);
+            $('#campaignPickerModal').modal({ backdrop: 'static' });
+        },
+        error: function () {
+            pickerError('Could not load campaign list.');
+            $('#campaignPickerModal').modal({ backdrop: 'static' });
+        }
+    });
+}
+
+function pickerSubmit() {
+    var campaignId = pickerSelected();
+    var ids = pickerRefIds();
+    if (!campaignId || !ids.length) { return; }
+    pickerBusy(true);
+    pickerError('');
+    $.ajax({
+        url: '/campaigns/' + campaignId + '/refs',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ ids: ids }),
+        success: function (data) {
+            pickerBusy(false);
+            $('#campaignPickerModal').modal('hide');
+            // Lightweight feedback — full flash would need a page refresh.
+            alert('Added ' + (data.added || 0) + ' new reference' + ((data.added === 1) ? '' : 's') +
+                ' (campaign now has ' + (data.refCount || 0) + ').');
+        },
+        error: function (jqXHR) {
+            pickerBusy(false);
+            var msg = 'Could not add references to campaign.';
+            if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+            pickerError(msg);
+        }
+    });
+}
+
+RefViewModel.prototype.addToCampaign = function () {
+    openCampaignPicker([this.id()]);
+};
+
+RefViewModel.prototype.removeFromActiveCampaign = function () {
+    var self = this;
+    if (!_activeCampaignId) { return; }
+    if (!window.confirm('Remove this reference from the active campaign?')) { return; }
+    $.ajax({
+        url: '/campaigns/' + _activeCampaignId + '/refs/' + self.id(),
+        type: 'DELETE',
+        success: function () {
+            // Locate the grid and drop this ref from the observable array.
+            var grid = document.getElementById('mainDisplay');
+            var ctx = grid && ko.dataFor(grid);
+            if (ctx && typeof ctx.refs === 'function') {
+                ctx.refs.remove(function (r) { return r.id() === self.id(); });
+            }
+        },
+        error: function (jqXHR) {
+            var msg = 'Error removing reference from campaign.';
+            if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+            alert(msg);
+        }
+    });
+};
 
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());

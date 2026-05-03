@@ -6,6 +6,7 @@ var proxyOpts = require('../config/solr-proxy');
 var solr = require('../config/solr-client');
 var db = require('../config/database-json');
 var fieldDescriptions = require('../config/fieldDescriptions');
+var Campaign = require('../models/campaign');
 var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "rad" });
 var sourceClient = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source" });
 const url = require('url');
@@ -47,7 +48,22 @@ function buildDoc(body) {
 
 router.get('/', async function (req, res, next) {
     try {
-        res.render('refs', Object.assign(req.replacements, await db.read(), { fieldDocs: fieldDescriptions.refs }));
+        var extras = { fieldDocs: fieldDescriptions.refs };
+        // Best-effort active-campaign banner. A bad/missing id just means no
+        // banner — don't block the page from rendering.
+        if (req.query.campaign && /^\d+$/.test(req.query.campaign)) {
+            try {
+                var campaign = await new Campaign({ id: req.query.campaign }).fetch();
+                extras.activeCampaign = {
+                    id: campaign.get('id'),
+                    name: campaign.get('name'),
+                    refCount: (campaign.get('refs') || []).length
+                };
+            } catch (err) {
+                console.log('Active campaign lookup failed:', err && err.message);
+            }
+        }
+        res.render('refs', Object.assign(req.replacements, await db.read(), extras));
     } catch (err) {
         next(err);
     }

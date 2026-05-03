@@ -22,5 +22,9 @@ module.exports = {
         fax: "Fax number, if the source still maintains one.",
         email: "Public contact email for general inquiries.",
         website: "The source's primary website. The \"Go to source\" action on a reference opens this URL — don't include the protocol prefix; \"http://\" is added automatically."
+    },
+    campaigns: {
+        name: "Short label for this campaign (under 150 chars). Shown in the campaigns list and in the picker when adding refs from the references page.",
+        description: "What needs to be done to refs in this campaign. Be specific enough that any editor picking this up later can finish the work without asking — e.g. \"Replace en/em dashes in titles with hyphens; verify against printed copy.\""
     }
 };
