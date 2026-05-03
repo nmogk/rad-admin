@@ -125,4 +125,10 @@ function searchInit() {
     ko.applyBindings(blank, $("#newCampaignModal")[0]);
 }
 
+// Bootstrap popovers must be opt-in.
+$(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
+$(function () {
+    $('[data-toggle="popover"]').popover();
+});
+
 $(document).ready(searchInit());
