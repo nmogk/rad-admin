@@ -71,6 +71,8 @@ Routes in `routes/` are mounted in `app.js`. Key pattern: `req.replacements` is 
 
 ### Solr Integration
 
+The four full-text fields on the rad core (`author`, `title`, `reference`, `abstract`) use a custom field type `text_html_safe` defined in `tools/solr-setup.sh`. It's a clone of `text_general` with `solr.HTMLStripCharFilterFactory` prepended to the analyzer chain so docs imported with literal entities (`mendel&apos;s`) tokenize the same way as a user query (`mendel's`). `_text_` (the catch-all copyField destination) still uses stock `text_general` — see issue #118 follow-up notes.
+
 `config/solr-proxy.js` validates and proxies requests to the local Solr instance. Only GET requests to whitelisted paths (`/solr/rad/refs`, `/solr/rad/refs/csv`, `/solr/source/select`) are allowed; `qt` and `stream.*` params are blocked (403), and any request whose `rows` exceeds `proxyOptions.maxRows` (1000) is rejected with 400. The proxy refuses rather than silently clamps so client-side pagination stays consistent with what was returned. Reference CRUD in `routes/refs.js` uses `solr-client` to add/update/delete documents, then updates `database.json` (tracks numRecords, highestId, latest date).
 
 `server/solr-stats.js` cursor-marks the rad core to recompute these three stats from the index, used by `POST /database/recompute` (admin-only) when deletes/edits leave database.json out of sync — e.g. removing the doc that contributed `latest`. The route compares scanned values to the current file via `database-json.replaceStats` and returns the diff; the diff renders in a modal on the database page.

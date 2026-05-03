@@ -104,19 +104,44 @@ curl -s -X POST -H 'Content-type:application/json' \
 }' > /dev/null
 echo "  OK"
 
+# Custom analyzer that prepends HTMLStripCharFilter to text_general's chain.
+# Strips HTML tags and decodes entities (&apos;, &amp;, &quot;, &#39;, …)
+# at both index and query time, so a doc imported as "mendel&apos;s" tokenizes
+# the same way as a user typing "mendel's". See issue #118 (#14 root cause).
+# Cloned rather than modifying text_general so other fields are unaffected.
+echo "Adding text_html_safe field type..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/rad/schema" -d '{
+  "add-field-type": {
+    "name": "text_html_safe",
+    "class": "solr.TextField",
+    "positionIncrementGap": "100",
+    "analyzer": {
+      "charFilters": [
+        { "class": "solr.HTMLStripCharFilterFactory" }
+      ],
+      "tokenizer": { "class": "solr.StandardTokenizerFactory" },
+      "filters": [
+        { "class": "solr.LowerCaseFilterFactory" }
+      ]
+    }
+  }
+}' > /dev/null
+echo "  OK"
+
 echo "Adding reference fields and copy fields..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/schema" -d '{
   "add-field": [
-    { "name": "author",    "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "title",     "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "dt",        "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "year",      "type": "pint",         "stored": true, "indexed": true, "multiValued": false },
-    { "name": "reference", "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "source",    "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "publisher", "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "page",      "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "abstract",  "type": "text_general", "stored": true, "indexed": true, "multiValued": false }
+    { "name": "author",    "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "title",     "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "dt",        "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "year",      "type": "pint",           "stored": true, "indexed": true, "multiValued": false },
+    { "name": "reference", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "source",    "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "publisher", "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "page",      "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "abstract",  "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false }
   ],
   "add-copy-field": [
     { "source": "author",    "dest": "_text_" },
