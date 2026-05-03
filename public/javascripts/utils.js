@@ -33,6 +33,35 @@ function escapeSolrPhrase(value) {
 }
 
 /**
+ * Shows the shared #confirmModal partial with custom title/body/button label
+ * and invokes onConfirm only when the user clicks the confirm button. Falls
+ * back to the native window.confirm if the partial isn't on the page.
+ *
+ *   confirmDialog({title, body, confirmText, confirmClass}, function () { ... });
+ */
+function confirmDialog(opts, onConfirm) {
+    "use strict";
+    opts = opts || {};
+    var $modal = $('#confirmModal');
+    if (!$modal.length || typeof $.fn.modal !== 'function') {
+        if (window.confirm(opts.body || 'Are you sure?')) { onConfirm(); }
+        return;
+    }
+    $('#confirmModalTitle').text(opts.title || 'Confirm');
+    $('#confirmModalBody').text(opts.body || '');
+    var $btn = $('#confirmModalConfirm');
+    $btn.text(opts.confirmText || 'Confirm');
+    // The class lives on the button so callers can swap btn-info for btn-danger
+    // on destructive actions; keep btn so Bootstrap's base styles apply.
+    $btn.attr('class', 'btn ' + (opts.confirmClass || 'btn-info'));
+    $btn.off('click.confirmDialog').on('click.confirmDialog', function () {
+        $modal.modal('hide');
+        onConfirm();
+    });
+    $modal.modal('show');
+}
+
+/**
  * Custom binding which supplies a default value (em dash) for observables with undefined values
  */
 ko.bindingHandlers.textPretty = {

@@ -59,6 +59,9 @@ RefViewModel.prototype.editRef = function () {
     // canonical source for "this record contains invisibles."
     attachOddCharReport(this);
     ko.applyBindings(this, $("#editRefModal")[0]);
+    // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
+    // state. Re-init so the info icons keep working after edit-open.
+    $('#editRefModal [data-toggle="popover"]').popover();
     $("#editRefModal").modal({ backdrop: 'static' });
 }
 
@@ -734,6 +737,9 @@ function pickerSubmit() {
         success: function (data) {
             pickerBusy(false);
             $('#campaignPickerModal').modal('hide');
+            if (campaignId === _activeCampaignId) {
+                updateActiveCampaignCount(data && data.refCount);
+            }
             // Lightweight feedback — full flash would need a page refresh.
             alert('Added ' + (data.added || 0) + ' new reference' + ((data.added === 1) ? '' : 's') +
                 ' (campaign now has ' + (data.refCount || 0) + ').');
@@ -754,25 +760,41 @@ RefViewModel.prototype.addToCampaign = function () {
 RefViewModel.prototype.removeFromActiveCampaign = function () {
     var self = this;
     if (!_activeCampaignId) { return; }
-    if (!window.confirm('Remove this reference from the active campaign?')) { return; }
-    $.ajax({
-        url: '/campaigns/' + _activeCampaignId + '/refs/' + self.id(),
-        type: 'DELETE',
-        success: function () {
-            // Locate the grid and drop this ref from the observable array.
-            var grid = document.getElementById('mainDisplay');
-            var ctx = grid && ko.dataFor(grid);
-            if (ctx && typeof ctx.refs === 'function') {
-                ctx.refs.remove(function (r) { return r.id() === self.id(); });
+
+    confirmDialog({
+        title: 'Remove from campaign',
+        body: 'Remove this reference from the active campaign?',
+        confirmText: 'Remove',
+        confirmClass: 'btn-warning'
+    }, function () {
+        $.ajax({
+            url: '/campaigns/' + _activeCampaignId + '/refs/' + self.id(),
+            type: 'DELETE',
+            success: function (data) {
+                // Locate the grid and drop this ref from the observable array.
+                var grid = document.getElementById('mainDisplay');
+                var ctx = grid && ko.dataFor(grid);
+                if (ctx && typeof ctx.refs === 'function') {
+                    ctx.refs.remove(function (r) { return r.id() === self.id(); });
+                }
+                updateActiveCampaignCount(data && data.refCount);
+            },
+            error: function (jqXHR) {
+                var msg = 'Error removing reference from campaign.';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+                alert(msg);
             }
-        },
-        error: function (jqXHR) {
-            var msg = 'Error removing reference from campaign.';
-            if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
-            alert(msg);
-        }
+        });
     });
 };
+
+// Updates the "(N refs)" count in the campaign banner. Called after add or
+// remove operations that change the active campaign's ref list.
+function updateActiveCampaignCount(refCount) {
+    if (refCount === undefined || refCount === null) { return; }
+    var el = document.getElementById('activeCampaignRefCount');
+    if (el) { el.textContent = refCount; }
+}
 
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());

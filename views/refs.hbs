@@ -72,7 +72,7 @@
 
         {{#if activeCampaign}}
         <div class="alert alert-info" role="status">
-          Working on campaign: <strong>{{activeCampaign.name}}</strong> ({{activeCampaign.refCount}} refs).
+          Working on campaign: <strong>{{activeCampaign.name}}</strong> (<span id="activeCampaignRefCount">{{activeCampaign.refCount}}</span> refs).
           <a href="/campaigns" class="alert-link" style="margin-left: 8px;">Back to campaigns</a>
         </div>
         {{/if}}
@@ -180,6 +180,8 @@
         {{> newSourceModal}}
 
         {{> campaignPickerModal}}
+
+        {{> confirmModal}}
 
         {{> adminHelp}}
 
