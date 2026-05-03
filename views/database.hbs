@@ -30,7 +30,7 @@
 </form>
 
 <form class="form inline" id="recomputeStatsForm" style="margin-top: 1em;">
-    <button type="submit" class="btn btn-warning" id="recomputeStatsButton" data-toggle="tooltip"
+    <button type="submit" class="btn btn-info" id="recomputeStatsButton" data-toggle="tooltip"
         title="Scan the rad core and rebuild the latest reference, total record count, and highest id in database.json">
         <span class="glyphicon glyphicon-refresh"></span> Recompute Stats
     </button>
@@ -117,6 +117,12 @@
         </div>
     </div>
 </div>
+{{/inline}}
+
+{{#*inline "footer-block"}}
+    {{#if updated}}<p>Database updated: {{updated}} | Records: {{numRecords}} | Latest: {{latest}}.</p>{{/if}}
+  
+    {{> footerAdmin}}
 {{/inline}}
 
 {{#*inline "scripts-block"}}

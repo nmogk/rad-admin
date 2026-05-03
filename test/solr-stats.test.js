@@ -107,6 +107,69 @@ describe('server/solr-stats', function () {
             expect(result.latest).to.equal('2024-05-05');
         });
 
+        it('rejects extended-year ISO and slash/word formats that JS Date would parse leniently', async function () {
+            // Without strict validation, "+020120-01-15" yields year 20120
+            // and "01/15/2024" / "January 15, 2024" parse via Date's fallbacks
+            // — none of these are the format we promise to store.
+            clientStub.get.resolves({
+                response: {
+                    docs: [
+                        { id: '1', dt: '+020120-01-15' },
+                        { id: '2', dt: '01/15/2024' },
+                        { id: '3', dt: 'January 15, 2024' },
+                        { id: '4', dt: '20120-01-15' },
+                        { id: '5', dt: '2024-06-15' }
+                    ]
+                },
+                nextCursorMark: '*'
+            });
+            var result = await stats.scanCore('rad');
+            expect(result.numRecords).to.equal(5);
+            expect(result.latest).to.equal('2024-06-15');
+            // Critical: the bad inputs must NOT produce an expanded-year output.
+            expect(result.latest).to.not.contain('+');
+            expect(result.latest).to.not.match(/^\d{5,}/);
+        });
+
+        it('rejects unpadded month/day even though Date would accept them', async function () {
+            clientStub.get.resolves({
+                response: {
+                    docs: [
+                        { id: '1', dt: '2024-1-5' },
+                        { id: '2', dt: '2024-01-05' }
+                    ]
+                },
+                nextCursorMark: '*'
+            });
+            var result = await stats.scanCore('rad');
+            expect(result.latest).to.equal('2024-01-05');
+        });
+
+        it('rejects out-of-range months/days and Feb-30 style rollovers', async function () {
+            clientStub.get.resolves({
+                response: {
+                    docs: [
+                        { id: '1', dt: '2024-13-01' },
+                        { id: '2', dt: '2024-02-30' },
+                        { id: '3', dt: '2024-06-15' }
+                    ]
+                },
+                nextCursorMark: '*'
+            });
+            var result = await stats.scanCore('rad');
+            expect(result.latest).to.equal('2024-06-15');
+        });
+
+        it('always emits a 4-digit YYYY-MM-DD output', async function () {
+            clientStub.get.resolves({
+                response: { docs: [{ id: '1', dt: '2024' }] },
+                nextCursorMark: '*'
+            });
+            var result = await stats.scanCore('rad');
+            expect(result.latest).to.equal('2024-01-01');
+            expect(result.latest).to.match(/^\d{4}-\d{2}-\d{2}$/);
+        });
+
         it('aggregates across multiple cursor pages', async function () {
             clientStub.get.onCall(0).resolves({
                 response: { docs: [{ id: '1', dt: '2020-01-01' }, { id: '2', dt: '2021-01-01' }] },
