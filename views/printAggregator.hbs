@@ -15,12 +15,12 @@
                     left: 0;
                     top: 0;
                 }
-                a {
+                a, .copy-citation, #citationStylePicker {
                     display: none;
                 }
             }
         </style>
-    {{/inline}} 
+    {{/inline}}
 
     {{#*inline "custom-title"}}
         <h1>Research Assistance Database</h1>
@@ -30,37 +30,53 @@
     {{#*inline "search-area"}}
         <p>Use this page to collect references to print. Each reference you select on the main search results page with the &quot;<span class="glyphicon glyphicon-bookmark"></span> Save reference&quot; menu option will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
         <a href="#" class="btn btn-primary" id="printListButton"><span class="glyphicon glyphicon-print"></span> Print</a><a href="#" class="btn btn-default" id="clearListButton"><span class="glyphicon glyphicon-trash"></span> Clear</a>
-    {{/inline}}  
+    {{/inline}}
 
     {{#*inline "results-area"}}
-        <div class="panel-group" id="printSet" role="tablist">
-            <!-- ko foreach: refs -->
-            <div class="panel panel-default">
-                <div class="panel-heading" role="tab">
-                    <a href="#" class="close" data-bind="click: $parent.removeOne" aria-label="close" tabindex=0>&times;</a>
-                    <div class="row">
-                        <div class="col-sm-4"><h5><span data-bind="text: author">Author</span></h5></div>
-                        <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
-                        <div class="col-sm-1"><h5><span data-bind="text: date">Date</span></h5></div>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-sm-4"><h4>Reference</h4><span data-bind="text: reference"></span></div>
-                        <div class="col-sm-6"><h4>Source</h4><span data-bind="text: source"></span></div>
-                        <div class="col-sm-2"><h4>Page</h4><span data-bind="text: page"></span></div>
-                    </div>
-                    <h4>Abstract</h4>
-                    <p data-bind="text: abstract"></p>
-                </div>
+        <div id="aggregatorRoot">
+            <div id="citationStylePicker" class="form-inline" style="margin-bottom: 12px;">
+                <label for="citationStyle" style="margin-right: 6px;">Citation style:</label>
+                <select id="citationStyle" class="form-control" style="display: inline-block; width: auto;"
+                        data-bind="options: styles, optionsText: 'label', optionsValue: 'id', value: selectedStyle"></select>
             </div>
-            <!-- /ko -->
+            <div class="panel-group" id="printSet" role="tablist">
+                <!-- ko foreach: refs -->
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab">
+                        <a href="#" class="close" data-bind="click: $parent.removeOne" aria-label="close" tabindex=0>&times;</a>
+                        <div class="row">
+                            <div class="col-sm-4"><h5><span data-bind="text: author">Author</span></h5></div>
+                            <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
+                            <div class="col-sm-1"><h5><span data-bind="text: date">Date</span></h5></div>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-4"><h4>Reference</h4><span data-bind="text: reference"></span></div>
+                            <div class="col-sm-6"><h4>Source</h4><span data-bind="text: source"></span></div>
+                            <div class="col-sm-2"><h4>Page</h4><span data-bind="text: page"></span></div>
+                        </div>
+                        <h4>Abstract</h4>
+                        <p data-bind="text: abstract"></p>
+                        <h4>Citation</h4>
+                        <p data-bind="html: $parent.formatCitation($data), attr: { id: 'citation-' + $index() }" style="display: inline-block; margin-right: 8px;"></p>
+                        <button type="button" class="btn btn-default btn-sm copy copy-citation"
+                                data-bind="attr: { 'data-clipboard-target': '#citation-' + $index() }"
+                                aria-label="Copy citation to clipboard">
+                            <span class="glyphicon glyphicon-copy"></span>
+                        </button>
+                    </div>
+                </div>
+                <!-- /ko -->
+            </div>
         </div>
-    {{/inline}} 
+    {{/inline}}
 
     {{#*inline "scripts-block"}}
+        <script nonce="{{nonce}}" src="javascripts/citations.js"></script>
         <script nonce="{{nonce}}">
             var store = 'printRefs';
+            var styleStore = 'printRefsCitationStyle';
 
             document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('printListButton')
@@ -79,11 +95,16 @@
             });
 
 
-            // Very simple (static) view model to display references
+            // View model for the saved-references list and the citation-style
+            // picker that drives per-ref inline citations (#93).
             function PrinterViewModel(){
                 var self = this;
 
                 self.refs = ko.observableArray();
+                self.styles = window.RAD.citations.styles;
+                self.selectedStyle = ko.observable(localStorage[styleStore] || self.styles[0].id);
+                // Persist the picker choice across reloads, same way refs persist.
+                self.selectedStyle.subscribe(function (v) { localStorage[styleStore] = v; });
 
                 if(localStorage[store]){
                     var refsArray = JSON.parse(localStorage[store]);
@@ -91,6 +112,12 @@
                         self.refs.push(refsArray[i]);
                     }
                 }
+
+                // Called from the per-ref binding; reads selectedStyle so the
+                // computed re-runs when the picker changes.
+                self.formatCitation = function (ref) {
+                    return window.RAD.citations.format(self.selectedStyle(), ref);
+                };
 
                 // Remove an individual entry from the print list by ID.
                 // Updates the localStorage list
@@ -101,7 +128,8 @@
             }
 
             if(typeof(Storage) !== "undefined" ){
-                ko.applyBindings(new PrinterViewModel(), $('#printSet')[0]);
+                ko.applyBindings(new PrinterViewModel(), $('#aggregatorRoot')[0]);
+                new ClipboardJS('.copy-citation');
             } else {
                 alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
             }
