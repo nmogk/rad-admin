@@ -116,10 +116,26 @@ RefViewModel.prototype.goSource = function () {
 };
 
 
-// Initializes a view model for the formatted citation
+// Initializes a view model for the formatted citation.
+//
+// The modal uses a `foreach` over the citation styles list. ko.cleanNode
+// clears binding handlers but does NOT remove the <tr>s the foreach
+// rendered last time — so on the second open KO would append six fresh
+// rows next to the stale ones (each style appearing twice, then three
+// times, etc.). We stash the un-rendered template on the first call and
+// reset innerHTML before every subsequent applyBindings so the foreach
+// starts from a clean slate.
+var citationModalTemplate = null;
+
 RefViewModel.prototype.generateCitation = function () {
-    ko.cleanNode($("#citationModal")[0]) // Must clear bindings in newer version of KO
-    ko.applyBindings(this, $("#citationModal")[0]);
+    var modal = $("#citationModal")[0];
+    if (citationModalTemplate === null) {
+        citationModalTemplate = modal.innerHTML;
+    } else {
+        ko.cleanNode(modal);
+        modal.innerHTML = citationModalTemplate;
+    }
+    ko.applyBindings(this, modal);
     new ClipboardJS('.copy', {
         container: document.getElementById('#citationModal')
     });
