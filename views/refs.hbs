@@ -8,6 +8,12 @@
         {{!--<h2>{{title}}</h2>--}}
     {{/inline}}
 
+    {{#*inline "header-block"}}
+        {{!-- Force long unbreakable strings (e.g. URLs in author) to wrap inside
+              their column instead of overflowing into the next cell. Issue #13. --}}
+        <style>#mainDisplay [class*="col-sm-"] { overflow-wrap: anywhere; word-wrap: break-word; }</style>
+    {{/inline}}
+
     {{#*inline "search-area"}}
         <p>Add or edit references. Search behaves the same as on the main page, or use one of the power search options below. </p>
         <form role="search" class="form-horizontal">
