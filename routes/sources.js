@@ -4,6 +4,7 @@ var log4js = require('log4js');
 var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('../config/solr-client');
+var fieldDescriptions = require('../config/fieldDescriptions');
 var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source" });
 const url = require('url');
 const { randomUUID } = require('crypto');
@@ -24,7 +25,7 @@ function buildDoc(body) {
 
 /* GET sources page. */
 router.get('/', function (req, res, next) {
-    res.render('sources', req.replacements);
+    res.render('sources', Object.assign({}, req.replacements, { fieldDocs: fieldDescriptions.sources }));
 });
 
 /* Create a new source */

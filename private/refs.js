@@ -621,5 +621,12 @@ function attachOddCharReport(vm) {
     });
 }
 
+// Bootstrap popovers must be opt-in. data-container="body" lifts them out of
+// the modal's overflow stack so they aren't clipped.
+$(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
+$(function () {
+    $('[data-toggle="popover"]').popover();
+});
+
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());

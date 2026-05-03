@@ -5,6 +5,7 @@ var auditLogger = log4js.getLogger("audit");
 var proxyOpts = require('../config/solr-proxy');
 var solr = require('../config/solr-client');
 var db = require('../config/database-json');
+var fieldDescriptions = require('../config/fieldDescriptions');
 var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "rad" });
 var sourceClient = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source" });
 const url = require('url');
@@ -46,7 +47,7 @@ function buildDoc(body) {
 
 router.get('/', async function (req, res, next) {
     try {
-        res.render('refs', Object.assign(req.replacements, await db.read()));
+        res.render('refs', Object.assign(req.replacements, await db.read(), { fieldDocs: fieldDescriptions.refs }));
     } catch (err) {
         next(err);
     }

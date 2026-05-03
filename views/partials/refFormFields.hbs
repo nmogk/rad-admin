@@ -1,21 +1,21 @@
 <div class="form-group">
-    <label for="authorField">Author</label>
+    <label for="authorField">Author{{#if fieldDocs.author}} {{> infoIcon fieldDocs.author}}{{/if}}</label>
     <input class="form-control" type="text" name="authorField" id="authorField" data-bind="textInput: author">
 </div>
 <div class="form-group">
-    <label for="titleField">Title</label>
+    <label for="titleField">Title{{#if fieldDocs.title}} {{> infoIcon fieldDocs.title}}{{/if}}</label>
     <input class="form-control" type="text" name="titleField" id="titleField" data-bind="textInput: title">
 </div>
 <div class="form-group">
-    <label>Date</label>
+    <label>Date{{#if fieldDocs.date}} {{> infoIcon fieldDocs.date}}{{/if}}</label>
     <div data-bind="datePicker: date"></div>
 </div>
 <div class="form-group">
-    <label for="referenceField">Reference</label>
+    <label for="referenceField">Reference{{#if fieldDocs.reference}} {{> infoIcon fieldDocs.reference}}{{/if}}</label>
     <input class="form-control" type="text" name="referenceField" id="referenceField" data-bind="textInput: reference">
 </div>
 <div class="form-group">
-    <label for="publisherField">Publisher</label>
+    <label for="publisherField">Publisher{{#if fieldDocs.publisher}} {{> infoIcon fieldDocs.publisher}}{{/if}}</label>
     <input class="form-control" type="text" name="publisherField" id="publisherField" data-bind="textInput: publisher" autocomplete="off">
     <!-- ko if: publisherSuggestions().length > 0 -->
     <ul class="list-group" style="position: absolute; z-index: 1000; width: calc(100% - 30px); max-height: 200px; overflow-y: auto; margin-top: 0;">
@@ -35,7 +35,7 @@
     </div>
 </div>
 <div class="form-group" data-bind="visible: hasSeparateSource">
-    <label for="sourceField">Source</label>
+    <label for="sourceField">Source{{#if fieldDocs.source}} {{> infoIcon fieldDocs.source}}{{/if}}</label>
     <input class="form-control" type="text" name="sourceField" id="sourceField" data-bind="textInput: source" autocomplete="off">
     <!-- ko if: sourceSuggestions().length > 0 -->
     <ul class="list-group" style="position: absolute; z-index: 1000; width: calc(100% - 30px); max-height: 200px; overflow-y: auto; margin-top: 0;">
@@ -50,11 +50,11 @@
     <!-- /ko -->
 </div>
 <div class="form-group">
-    <label for="pageField">Page</label>
+    <label for="pageField">Page{{#if fieldDocs.page}} {{> infoIcon fieldDocs.page}}{{/if}}</label>
     <input class="form-control" type="text" name="pageField" id="pageField" data-bind="textInput: page">
     <small id="runtimeHelp" class="form-text text-muted">When "Reference" is "DVD"|"CD"|"cassette", this field represents run time.</small>
 </div>
 <div class="form-group">
-    <label for="abstField">Abstract</label>
+    <label for="abstField">Abstract{{#if fieldDocs.abstract}} {{> infoIcon fieldDocs.abstract}}{{/if}}</label>
     <textarea class="form-control" rows="8" name="abstField" id="abstField" data-bind="textInput: abst"></textarea>
 </div>

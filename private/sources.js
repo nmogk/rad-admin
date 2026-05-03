@@ -199,5 +199,11 @@ $(document).on('click', '#unusedSourceBtn', function () {
     searchUnusedSources();
 });
 
+// Bootstrap popovers must be opt-in.
+$(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
+$(function () {
+    $('[data-toggle="popover"]').popover();
+});
+
 // Make sure the whole page is loaded before manipulating it
 $(document).ready(searchInit());

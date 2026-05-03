@@ -1,36 +1,36 @@
 <div class="form-group">
-    <label for="nameField">Name</label>
+    <label for="nameField">Name{{#if fieldDocs.name}} {{> infoIcon fieldDocs.name}}{{/if}}</label>
     <input class="form-control" type="text" name="nameField" id="nameField" data-bind="textInput: name">
 </div>
 <div class="form-group">
-    <label for="addressField">Address</label>
+    <label for="addressField">Address{{#if fieldDocs.address}} {{> infoIcon fieldDocs.address}}{{/if}}</label>
     <input class="form-control" type="text" name="addressField" id="addressField" data-bind="textInput: address">
 </div>
 <div class="form-group">
-    <label for="cityField">City</label>
+    <label for="cityField">City{{#if fieldDocs.city}} {{> infoIcon fieldDocs.city}}{{/if}}</label>
     <input class="form-control" type="text" name="cityField" id="cityField" data-bind="textInput: city">
 </div>
 <div class="form-group">
-    <label for="stateField">State</label>
+    <label for="stateField">State{{#if fieldDocs.state}} {{> infoIcon fieldDocs.state}}{{/if}}</label>
     <input class="form-control" type="text" name="stateField" id="stateField" data-bind="textInput: state">
 </div>
 <div class="form-group">
-    <label for="zipField">Zip</label>
+    <label for="zipField">Zip{{#if fieldDocs.zip}} {{> infoIcon fieldDocs.zip}}{{/if}}</label>
     <input class="form-control" type="text" name="zipField" id="zipField" data-bind="textInput: zip">
 </div>
 <div class="form-group">
-    <label for="telephoneField">Telephone</label>
+    <label for="telephoneField">Telephone{{#if fieldDocs.telephone}} {{> infoIcon fieldDocs.telephone}}{{/if}}</label>
     <input class="form-control" type="text" name="telephoneField" id="telephoneField" data-bind="textInput: telephone">
 </div>
 <div class="form-group">
-    <label for="faxField">Fax</label>
+    <label for="faxField">Fax{{#if fieldDocs.fax}} {{> infoIcon fieldDocs.fax}}{{/if}}</label>
     <input class="form-control" type="text" name="faxField" id="faxField" data-bind="textInput: fax">
 </div>
 <div class="form-group">
-    <label for="emailField">Email</label>
+    <label for="emailField">Email{{#if fieldDocs.email}} {{> infoIcon fieldDocs.email}}{{/if}}</label>
     <input class="form-control" type="text" name="emailField" id="emailField" data-bind="textInput: email">
 </div>
 <div class="form-group">
-    <label for="websiteField">Website</label>
+    <label for="websiteField">Website{{#if fieldDocs.website}} {{> infoIcon fieldDocs.website}}{{/if}}</label>
     <input class="form-control" type="text" name="websiteField" id="websiteField" data-bind="textInput: website">
 </div>
