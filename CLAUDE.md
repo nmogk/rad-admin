@@ -19,7 +19,7 @@ npx mocha test/refs.test.js   # Run a single test file
 
 Tests use **Mocha** + **Chai** (expect) + **Sinon** (stubs/spies) + **proxyquire** (dependency injection). Route tests use `proxyquire` to swap out external dependencies (Solr, filesystem, database, email) so tests run without any backend services. Shared mock factories for Express req/res/user objects are in `test/helpers.js`.
 
-Middleware functions are in `config/middleware.js` (extracted from `app.js` for testability).
+Middleware functions are in `server/middleware.js` (extracted from `app.js` for testability).
 
 Utility scripts:
 ```bash
@@ -51,7 +51,7 @@ Node.js/Express app that manages a Solr search database (references/sources) wit
 
 ### Auth Middleware Chain
 
-Four middleware functions defined in `config/middleware.js` and imported by `app.js`:
+Four middleware functions defined in `server/middleware.js` and imported by `app.js`:
 - **`isLoggedIn`** — checks `req.isAuthenticated()`, populates `req.replacements` with user context (email, name, permission flags). Redirects to `/login` if not authenticated.
 - **`superuser`** — requires `permission >= 2`, redirects to `/profile` otherwise.
 - **`flashMessageCenter`** — collects flash messages into `req.replacements` for templates.
@@ -71,7 +71,11 @@ Routes in `routes/` are mounted in `app.js`. Key pattern: `req.replacements` is 
 
 ### Solr Integration
 
-`config/solr-proxy.js` validates and proxies requests to the local Solr instance. Only GET requests to whitelisted paths (`/solr/rad/refs`, `/solr/rad/refs/csv`, `/solr/source/select`) are allowed; `qt` and `stream.*` params are blocked. Reference CRUD in `routes/refs.js` uses `solr-client` to add/update/delete documents, then updates `database.json` (tracks numRecords, highestId, latest date).
+The four full-text fields on the rad core (`author`, `title`, `reference`, `abstract`) use a custom field type `text_html_safe` defined in `tools/solr-setup.sh`. It's a clone of `text_general` with `solr.HTMLStripCharFilterFactory` prepended to the analyzer chain so docs imported with literal entities (`mendel&apos;s`) tokenize the same way as a user query (`mendel's`). `_text_` (the catch-all copyField destination) still uses stock `text_general` — see issue #118 follow-up notes.
+
+`config/solr-proxy.js` validates and proxies requests to the local Solr instance. Only GET requests to whitelisted paths (`/solr/rad/refs`, `/solr/rad/refs/csv`, `/solr/source/select`) are allowed; `qt` and `stream.*` params are blocked (403), and any request whose `rows` exceeds `proxyOptions.maxRows` (1000) is rejected with 400. The proxy refuses rather than silently clamps so client-side pagination stays consistent with what was returned. Reference CRUD in `routes/refs.js` uses `solr-client` to add/update/delete documents, then updates `database.json` (tracks numRecords, highestId, latest date).
+
+`server/solr-stats.js` cursor-marks the rad core to recompute these three stats from the index, used by `POST /database/recompute` (admin-only) when deletes/edits leave database.json out of sync — e.g. removing the doc that contributed `latest`. The route compares scanned values to the current file via `database-json.replaceStats` and returns the diff; the diff renders in a modal on the database page.
 
 ### Frontend Pattern
 

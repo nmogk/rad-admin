@@ -6,8 +6,9 @@ var { mockReq, mockRes } = require('./helpers');
 // Use proxyquire to stub http-proxy so no real server is created.
 var proxyquire = require('proxyquire').noCallThru();
 
+var webStub = sinon.stub();
 var fakeProxy = {
-    createProxyServer: sinon.stub().returns({ web: sinon.stub() })
+    createProxyServer: sinon.stub().returns({ web: webStub })
 };
 
 var log4jsStub = {
@@ -20,6 +21,7 @@ var solrProxy = proxyquire('../config/solr-proxy', {
 });
 
 var validateRequest = solrProxy.validateRequest;
+var maxRequestedRows = solrProxy.maxRequestedRows;
 var proxyOptions = solrProxy.proxyOptions;
 
 describe('Solr Proxy', function () {
@@ -153,7 +155,30 @@ describe('Solr Proxy', function () {
         });
     });
 
+    describe('maxRequestedRows', function () {
+
+        it('returns 0 when rows is missing', function () {
+            expect(maxRequestedRows('/solr/rad/refs?q=*:*')).to.equal(0);
+        });
+
+        it('returns the rows value when present', function () {
+            expect(maxRequestedRows('/solr/rad/refs?q=foo&rows=500')).to.equal(500);
+        });
+
+        it('returns 0 for a non-numeric rows', function () {
+            expect(maxRequestedRows('/solr/rad/refs?rows=abc')).to.equal(0);
+        });
+
+        it('returns the largest value when rows appears more than once', function () {
+            expect(maxRequestedRows('/solr/rad/refs?rows=10&rows=99999')).to.equal(99999);
+        });
+    });
+
     describe('proxyLogic', function () {
+
+        beforeEach(function () {
+            webStub.resetHistory();
+        });
 
         it('should return 403 for invalid requests', function () {
             var req = mockReq({
@@ -169,6 +194,100 @@ describe('Solr Proxy', function () {
             expect(res.writeHead.calledOnce).to.be.true;
             expect(res.writeHead.firstCall.args[0]).to.equal(403);
             expect(res.end.calledOnce).to.be.true;
+            expect(webStub.called).to.be.false;
+        });
+
+        it('rejects with 400 when rows exceeds maxRows', function () {
+            var req = mockReq({
+                method: 'GET',
+                baseUrl: '/solr/rad/refs',
+                originalUrl: '/solr/rad/refs?q=foo&rows=9999',
+                query: { q: 'foo', rows: '9999' }
+            });
+            var res = mockRes();
+
+            solrProxy(req, res);
+
+            expect(res.writeHead.calledOnce).to.be.true;
+            expect(res.writeHead.firstCall.args[0]).to.equal(400);
+            expect(res.write.firstCall.args[0]).to.contain(String(proxyOptions.maxRows));
+            expect(res.end.calledOnce).to.be.true;
+            expect(webStub.called).to.be.false;
+        });
+
+        it('rejects when one of multiple rows values exceeds maxRows', function () {
+            var req = mockReq({
+                method: 'GET',
+                baseUrl: '/solr/rad/refs',
+                originalUrl: '/solr/rad/refs?rows=10&rows=99999',
+                query: { rows: ['10', '99999'] }
+            });
+            var res = mockRes();
+
+            solrProxy(req, res);
+
+            expect(res.writeHead.firstCall.args[0]).to.equal(400);
+            expect(webStub.called).to.be.false;
+        });
+
+        it('rejects when CSV endpoint exceeds maxRows', function () {
+            var req = mockReq({
+                method: 'GET',
+                baseUrl: '/solr/rad/refs/csv',
+                originalUrl: '/solr/rad/refs/csv?q=foo&rows=50000',
+                query: { q: 'foo', rows: '50000' }
+            });
+            var res = mockRes();
+
+            solrProxy(req, res);
+
+            expect(res.writeHead.firstCall.args[0]).to.equal(400);
+            expect(webStub.called).to.be.false;
+        });
+
+        it('forwards a valid request unchanged when rows is under the limit', function () {
+            var req = mockReq({
+                method: 'GET',
+                baseUrl: '/solr/rad/refs',
+                originalUrl: '/solr/rad/refs?q=foo&rows=10',
+                query: { q: 'foo', rows: '10' }
+            });
+            var res = mockRes();
+
+            solrProxy(req, res);
+
+            expect(webStub.calledOnce).to.be.true;
+            expect(req.url).to.equal('/solr/rad/refs?q=foo&rows=10');
+        });
+
+        it('forwards a valid request unchanged when rows equals the limit', function () {
+            var req = mockReq({
+                method: 'GET',
+                baseUrl: '/solr/rad/refs',
+                originalUrl: '/solr/rad/refs?q=foo&rows=1000',
+                query: { q: 'foo', rows: '1000' }
+            });
+            var res = mockRes();
+
+            solrProxy(req, res);
+
+            expect(webStub.calledOnce).to.be.true;
+            expect(req.url).to.equal('/solr/rad/refs?q=foo&rows=1000');
+        });
+
+        it('forwards a valid request when rows is missing', function () {
+            var req = mockReq({
+                method: 'GET',
+                baseUrl: '/solr/rad/refs',
+                originalUrl: '/solr/rad/refs?q=foo',
+                query: { q: 'foo' }
+            });
+            var res = mockRes();
+
+            solrProxy(req, res);
+
+            expect(webStub.calledOnce).to.be.true;
+            expect(req.url).to.equal('/solr/rad/refs?q=foo');
         });
     });
 });

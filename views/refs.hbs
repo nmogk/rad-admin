@@ -8,6 +8,12 @@
         {{!--<h2>{{title}}</h2>--}}
     {{/inline}}
 
+    {{#*inline "header-block"}}
+        {{!-- Force long unbreakable strings (e.g. URLs in author) to wrap inside
+              their column instead of overflowing into the next cell. Issue #13. --}}
+        <style>#mainDisplay [class*="col-sm-"] { overflow-wrap: anywhere; word-wrap: break-word; }</style>
+    {{/inline}}
+
     {{#*inline "search-area"}}
         <p>Add or edit references. Search behaves the same as on the main page, or use one of the power search options below. </p>
         <form role="search" class="form-horizontal">
@@ -100,14 +106,7 @@
               </h4>
             </div>
             <hr>
-            <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any references. Make sure all words are spelled correctly. Try a less complex search or alternate search terms. Suggestions:
-              <dl data-bind="foreach: spellings">
-                <dt data-bind="text: term"></dt>
-                <dd data-bind="foreach: suggestions">
-                  <span data-bind="text: $data"></span><span data-bind="ifnot: $index">, </span>
-                </dd>
-              </dl>
-            </div>
+            <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any references. Make sure all words are spelled correctly. Try a less complex search or alternate search terms.</div>
           </div>
 
           {{! Results group }}
@@ -163,6 +162,12 @@
               <a href='#' class='close' data-dismiss='alert' aria-label='close' tabindex=0>&times;</a>
               <strong>Warning!</strong> A 'start' value which is not evenly divisible by 'rows' or a very large 'rows' value will cause pagination to behave non-intuitively.
             </div>
+          </div>
+          <div id="spellingSuggestions" aria-hidden="true" aria-live="polite" class="text-center small text-muted">
+            <span>Try similar terms: </span>
+            <span data-bind="foreach: spellings">
+              <span data-bind="foreach: suggestions"><span data-bind="if: $index">, </span><span data-bind="text: $data"></span></span>
+            </span>
           </div>
           <div id="pages" class="text-center" role="navigation" aria-live="polite">
             <p id="pageSummary" data-bind="text: summary"></p>

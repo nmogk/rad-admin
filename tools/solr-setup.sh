@@ -104,19 +104,44 @@ curl -s -X POST -H 'Content-type:application/json' \
 }' > /dev/null
 echo "  OK"
 
+# Custom analyzer that prepends HTMLStripCharFilter to text_general's chain.
+# Strips HTML tags and decodes entities (&apos;, &amp;, &quot;, &#39;, …)
+# at both index and query time, so a doc imported as "mendel&apos;s" tokenizes
+# the same way as a user typing "mendel's". See issue #118 (#14 root cause).
+# Cloned rather than modifying text_general so other fields are unaffected.
+echo "Adding text_html_safe field type..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/rad/schema" -d '{
+  "add-field-type": {
+    "name": "text_html_safe",
+    "class": "solr.TextField",
+    "positionIncrementGap": "100",
+    "analyzer": {
+      "charFilters": [
+        { "class": "solr.HTMLStripCharFilterFactory" }
+      ],
+      "tokenizer": { "class": "solr.StandardTokenizerFactory" },
+      "filters": [
+        { "class": "solr.LowerCaseFilterFactory" }
+      ]
+    }
+  }
+}' > /dev/null
+echo "  OK"
+
 echo "Adding reference fields and copy fields..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/schema" -d '{
   "add-field": [
-    { "name": "author",    "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "title",     "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "dt",        "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "year",      "type": "pint",         "stored": true, "indexed": true, "multiValued": false },
-    { "name": "reference", "type": "text_general", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "source",    "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "publisher", "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "page",      "type": "string",       "stored": true, "indexed": true, "multiValued": false },
-    { "name": "abstract",  "type": "text_general", "stored": true, "indexed": true, "multiValued": false }
+    { "name": "author",    "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "title",     "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "dt",        "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "year",      "type": "pint",           "stored": true, "indexed": true, "multiValued": false },
+    { "name": "reference", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "source",    "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "publisher", "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "page",      "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "abstract",  "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false }
   ],
   "add-copy-field": [
     { "source": "author",    "dest": "_text_" },
@@ -140,8 +165,35 @@ echo "  OK"
 # ============================================================
 
 # The _default configset already includes a `spellcheck` SearchComponent
-# bound to field `_text_` via DirectSolrSpellChecker — that's all we need,
-# so we just register the /refs request handler that references it.
+# bound to field `_text_` via DirectSolrSpellChecker, but it ships with
+# thresholdTokenFrequency=0.01 — a candidate term must appear in >=1% of
+# docs to be suggested. For a small reference DB that filters out exactly
+# the long-tail suggestions we want (e.g. "trilobite" with 31 docs in a
+# multi-thousand-doc corpus is well under 1%), so we override the
+# component to set it to 0. See issue #35.
+echo "Overriding spellcheck thresholdTokenFrequency..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/rad/config" -d '{
+  "update-searchcomponent": {
+    "name": "spellcheck",
+    "class": "solr.SpellCheckComponent",
+    "spellchecker": {
+      "name": "default",
+      "field": "_text_",
+      "classname": "solr.DirectSolrSpellChecker",
+      "distanceMeasure": "internal",
+      "accuracy": 0.5,
+      "maxEdits": 2,
+      "minPrefix": 1,
+      "maxInspections": 5,
+      "minQueryLength": 4,
+      "maxQueryFrequency": 0.01,
+      "thresholdTokenFrequency": 0
+    }
+  }
+}' > /dev/null
+echo "  OK"
+
 echo "Adding /refs request handler with spellcheck..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/config" -d '{

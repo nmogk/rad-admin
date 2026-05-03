@@ -4,7 +4,7 @@
 // use; the Python script is kept for ad-hoc CLI exports.
 
 var solr = require('./solr-client');
-var proxyOpts = require('./solr-proxy');
+var proxyOpts = require('../config/solr-proxy');
 
 var ROWS_PER_REQUEST = 1000;
 

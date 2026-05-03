@@ -50,4 +50,62 @@ $(function () {
             }
         });
     });
+
+    $('#recomputeStatsForm').on('submit', function (e) {
+        e.preventDefault();
+        var $btn = $('#recomputeStatsButton');
+        var $status = $('#recomputeStatus');
+        $btn.prop('disabled', true);
+        $status.text('Scanning the rad core… this may take a while.');
+
+        $.ajax({
+            url: base + '/database/recompute',
+            method: 'POST',
+            success: function (data) {
+                $btn.prop('disabled', false);
+                $status.text('');
+                showRecomputeResult(data);
+            },
+            error: function (jqXHR) {
+                $btn.prop('disabled', false);
+                var msg = (jqXHR.responseJSON && jqXHR.responseJSON.error) || 'Recompute failed.';
+                $status.text(msg);
+            }
+        });
+    });
+
+    function showRecomputeResult(data) {
+        var $summary = $('#recomputeSummary');
+        var $table = $('#recomputeChangesTable');
+        var $body = $('#recomputeChangesBody');
+        var $latestRef = $('#recomputeLatestRef');
+        $body.empty();
+        $latestRef.empty();
+
+        if (!data.changed) {
+            $summary.text('Stats already match the index — no changes made. Current values: numRecords=' +
+                data.current.numRecords + ', highestId=' + data.current.highestId +
+                ', latest=' + (data.current.latest || '(none)') + '.');
+            $table.hide();
+        } else {
+            $summary.text('database.json updated. Changed fields:');
+            Object.keys(data.changes).forEach(function (k) {
+                var c = data.changes[k];
+                var fromVal = c.from === undefined || c.from === null ? '(none)' : c.from;
+                var toVal = c.to === undefined || c.to === null ? '(none)' : c.to;
+                $body.append('<tr><td>' + k + '</td><td>' + fromVal + '</td><td>' + toVal + '</td></tr>');
+            });
+            $table.show();
+        }
+
+        if (data.current.latestId !== undefined && data.current.latestId !== null) {
+            var href = '/refs?rows=1&q=' + encodeURIComponent('id:' + data.current.latestId);
+            $latestRef.html('Latest reference: <a href="' + href + '">id ' + data.current.latestId + '</a>' +
+                ' (dt ' + (data.current.latest || '(none)') + ').');
+        } else {
+            $latestRef.text('No reference in the index has a parseable date.');
+        }
+
+        $('#recomputeResult').modal('show');
+    }
 });

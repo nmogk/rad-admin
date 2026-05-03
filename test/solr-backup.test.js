@@ -5,13 +5,13 @@ var proxyquire = require('proxyquire').noCallThru();
 var solrClientStub, solrProxyStub, backup;
 
 function load() {
-    return proxyquire('../config/solr-backup', {
+    return proxyquire('../server/solr-backup', {
         './solr-client': solrClientStub,
-        './solr-proxy': solrProxyStub
+        '../config/solr-proxy': solrProxyStub
     });
 }
 
-describe('config/solr-backup', function () {
+describe('server/solr-backup', function () {
 
     var clientStub;
 

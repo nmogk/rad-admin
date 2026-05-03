@@ -8,7 +8,7 @@
 function RefsGridViewModel(qString) {
     "use strict";
     // Set a reminder for updating the hard coded constants in the search configuration.
-    if (new Date().getFullYear() >= 2020) {
+    if (new Date().getFullYear() >= 2028) {
         console.log("Warning: automatic date prioritization of documents is hard coded for a certain time in the future. Update or search functionality may break soon.");
     }
 
@@ -26,8 +26,6 @@ function RefsGridViewModel(qString) {
 
    
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
-    // HTML-encode characters that may be stored as entities in the Solr index
-    qString.q = qString.q.replace(/&/g, "&amp;").replace(/'/g, "&apos;");
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
     $.ajax({
@@ -57,6 +55,9 @@ function RefsGridViewModel(qString) {
 
             if (data.response.numFound === 0) {
                 document.getElementById("noResultsAlert").setAttribute("aria-hidden", "false");
+            }
+            if (self.spellings().length > 0) {
+                document.getElementById("spellingSuggestions").setAttribute("aria-hidden", "false");
             }
 
             // Generate summary of search (number of results)

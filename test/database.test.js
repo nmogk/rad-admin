@@ -13,13 +13,17 @@ var fsPromisesStub = {
 var fsStub = { promises: fsPromisesStub };
 
 var backupStub = { exportCore: sinon.stub() };
+var statsStub = { scanCore: sinon.stub() };
+var dbStub = { replaceStats: sinon.stub(), read: sinon.stub() };
 
 var auditLoggerStub = { info: sinon.stub() };
 var log4jsStub = { getLogger: sinon.stub().returns(auditLoggerStub) };
 
 var dbRouter = proxyquire('../routes/database', {
     'fs': fsStub,
-    '../config/solr-backup': backupStub,
+    '../server/solr-backup': backupStub,
+    '../server/solr-stats': statsStub,
+    '../server/database-json': dbStub,
     'log4js': log4jsStub
 });
 
@@ -40,6 +44,10 @@ describe('Database Routes', function () {
         fsPromisesStub.writeFile.reset();
         fsPromisesStub.unlink.reset();
         backupStub.exportCore.reset();
+        statsStub.scanCore.reset();
+        dbStub.replaceStats.reset();
+        dbStub.read.reset();
+        dbStub.read.resolves({ numRecords: 0, highestId: 0, latest: '', updated: '' });
         auditLoggerStub.info.reset();
         fsPromisesStub.mkdir.resolves();
         fsPromisesStub.writeFile.resolves();
@@ -76,6 +84,25 @@ describe('Database Routes', function () {
             expect(rows[1].name).to.equal('rad-20260101-120000.json');
             expect(rows[1].core).to.equal('rad');
             expect(rows[1].sizeFormatted).to.equal('2.0 KB');
+        });
+
+        it('merges database.json stats into the template context for the footer', async function () {
+            fsPromisesStub.readdir.resolves([]);
+            dbStub.read.resolves({ numRecords: 32055, highestId: 34372, latest: '2024-07-01', updated: '2025-02-28' });
+
+            var req = mockReq({ replacements: {}, user: mockUser({ permission: 2 }) });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            await findHandler(dbRouter, 'get', '/')(req, res, next);
+
+            expect(req.replacements.numRecords).to.equal(32055);
+            expect(req.replacements.highestId).to.equal(34372);
+            expect(req.replacements.latest).to.equal('2024-07-01');
+            expect(req.replacements.updated).to.equal('2025-02-28');
+            // Existing flags must not be clobbered by the merge.
+            expect(req.replacements.dbActive).to.equal(1);
+            expect(req.replacements.backups).to.deep.equal([]);
         });
 
         it('renders an empty list when the backup dir does not exist', async function () {
@@ -203,6 +230,101 @@ describe('Database Routes', function () {
 
             expect(fsPromisesStub.mkdir.calledOnce).to.be.true;
             expect(fsPromisesStub.mkdir.firstCall.args[1]).to.deep.equal({ recursive: true });
+        });
+    });
+
+    describe('POST /recompute', function () {
+        it('scans rad, persists scanned values, and returns the change set with the latest doc id', async function () {
+            statsStub.scanCore.resolves({ numRecords: 100, highestId: 200, latest: '2025-01-01', latestId: '42' });
+            dbStub.replaceStats.resolves({
+                before: { numRecords: 95, highestId: 200, latest: '2024-12-31' },
+                after: { numRecords: 100, highestId: 200, latest: '2025-01-01', updated: '2026-05-03' },
+                changes: {
+                    numRecords: { from: 95, to: 100 },
+                    latest: { from: '2024-12-31', to: '2025-01-01' }
+                }
+            });
+
+            var req = mockReq({
+                method: 'POST',
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            await findHandler(dbRouter, 'post', '/recompute')(req, res, next);
+
+            expect(statsStub.scanCore.calledOnceWith('rad')).to.be.true;
+            expect(dbStub.replaceStats.calledOnce).to.be.true;
+            // latestId is a diagnostic — it must NOT be persisted via replaceStats.
+            expect(dbStub.replaceStats.firstCall.args[0]).to.deep.equal({
+                numRecords: 100, highestId: 200, latest: '2025-01-01', latestId: '42'
+            });
+            expect(res._json.changed).to.be.true;
+            expect(res._json.changes.numRecords).to.deep.equal({ from: 95, to: 100 });
+            expect(res._json.current).to.deep.equal({ numRecords: 100, highestId: 200, latest: '2025-01-01', latestId: '42' });
+            expect(auditLoggerStub.info.calledOnce).to.be.true;
+        });
+
+        it('reports changed=false and includes latestId even when nothing changed', async function () {
+            statsStub.scanCore.resolves({ numRecords: 100, highestId: 200, latest: '2025-01-01', latestId: '42' });
+            dbStub.replaceStats.resolves({
+                before: { numRecords: 100, highestId: 200, latest: '2025-01-01' },
+                after: { numRecords: 100, highestId: 200, latest: '2025-01-01', updated: '2026-05-03' },
+                changes: {}
+            });
+
+            var req = mockReq({
+                method: 'POST',
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            await findHandler(dbRouter, 'post', '/recompute')(req, res, next);
+
+            expect(res._json.changed).to.be.false;
+            expect(res._json.changes).to.deep.equal({});
+            expect(res._json.current.latestId).to.equal('42');
+            expect(auditLoggerStub.info.called).to.be.false;
+        });
+
+        it('returns 500 with no audit log when scan fails', async function () {
+            statsStub.scanCore.rejects(new Error('Solr down'));
+
+            var req = mockReq({
+                method: 'POST',
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            await findHandler(dbRouter, 'post', '/recompute')(req, res, next);
+
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(dbStub.replaceStats.called).to.be.false;
+            expect(auditLoggerStub.info.called).to.be.false;
+        });
+
+        it('returns 500 with no audit log when replaceStats fails', async function () {
+            statsStub.scanCore.resolves({ numRecords: 1, highestId: 1, latest: null, latestId: null });
+            dbStub.replaceStats.rejects(new Error('disk full'));
+
+            var req = mockReq({
+                method: 'POST',
+                user: mockUser({ permission: 2 }),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            await findHandler(dbRouter, 'post', '/recompute')(req, res, next);
+
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(auditLoggerStub.info.called).to.be.false;
         });
     });
 

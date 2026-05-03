@@ -42,8 +42,8 @@ var fakeProxy = {
 };
 
 var refsRouter = proxyquire('../routes/refs', {
-    '../config/solr-client': solrStub,
-    '../config/database-json': dbStub,
+    '../server/solr-client': solrStub,
+    '../server/database-json': dbStub,
     'log4js': log4jsStub,
     '../config/solr-proxy': proxyquire('../config/solr-proxy', {
         'http-proxy': fakeProxy

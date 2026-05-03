@@ -82,7 +82,7 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 
 
 // custom middleware =============================================================
-var { isLoggedIn, flashMessageCenter, forceSsl, superuser } = require('./config/middleware');
+var { isLoggedIn, flashMessageCenter, forceSsl, superuser } = require('./server/middleware');
 
 
 // app.use(function (req, res, next) {
