@@ -59,6 +59,9 @@ RefViewModel.prototype.editRef = function () {
     // canonical source for "this record contains invisibles."
     attachOddCharReport(this);
     ko.applyBindings(this, $("#editRefModal")[0]);
+    // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
+    // state. Re-init so the info icons keep working after edit-open.
+    $('#editRefModal [data-toggle="popover"]').popover();
     $("#editRefModal").modal({ backdrop: 'static' });
 }
 

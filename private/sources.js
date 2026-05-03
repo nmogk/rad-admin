@@ -25,6 +25,9 @@ SrcViewModel.prototype.editSource = function () {
     formError('');
     ko.cleanNode($("#editSourceModal")[0]);
     ko.applyBindings(this, $("#editSourceModal")[0]);
+    // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
+    // state. Re-init so the info icons keep working after edit-open.
+    $('#editSourceModal [data-toggle="popover"]').popover();
     $("#editSourceModal").modal({ backdrop: 'static' });
 }
 

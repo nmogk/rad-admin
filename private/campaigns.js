@@ -6,6 +6,9 @@ CampaignViewModel.prototype.editCampaign = function () {
     formError('');
     ko.cleanNode($("#editCampaignModal")[0]);
     ko.applyBindings(this, $("#editCampaignModal")[0]);
+    // ko.cleanNode invokes jQuery.cleanData, which wipes Bootstrap's popover
+    // state along with KO bindings. Re-init so the info icons work again.
+    $('#editCampaignModal [data-toggle="popover"]').popover();
     $("#editCampaignModal").modal({ backdrop: 'static' });
 };
 
