@@ -140,8 +140,35 @@ echo "  OK"
 # ============================================================
 
 # The _default configset already includes a `spellcheck` SearchComponent
-# bound to field `_text_` via DirectSolrSpellChecker — that's all we need,
-# so we just register the /refs request handler that references it.
+# bound to field `_text_` via DirectSolrSpellChecker, but it ships with
+# thresholdTokenFrequency=0.01 — a candidate term must appear in >=1% of
+# docs to be suggested. For a small reference DB that filters out exactly
+# the long-tail suggestions we want (e.g. "trilobite" with 31 docs in a
+# multi-thousand-doc corpus is well under 1%), so we override the
+# component to set it to 0. See issue #35.
+echo "Overriding spellcheck thresholdTokenFrequency..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/rad/config" -d '{
+  "update-searchcomponent": {
+    "name": "spellcheck",
+    "class": "solr.SpellCheckComponent",
+    "spellchecker": {
+      "name": "default",
+      "field": "_text_",
+      "classname": "solr.DirectSolrSpellChecker",
+      "distanceMeasure": "internal",
+      "accuracy": 0.5,
+      "maxEdits": 2,
+      "minPrefix": 1,
+      "maxInspections": 5,
+      "minQueryLength": 4,
+      "maxQueryFrequency": 0.01,
+      "thresholdTokenFrequency": 0
+    }
+  }
+}' > /dev/null
+echo "  OK"
+
 echo "Adding /refs request handler with spellcheck..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/config" -d '{
