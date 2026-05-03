@@ -1,0 +1,26 @@
+<div class="modal fade" id="campaignPickerModal" role="dialog" tabindex=0>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <h4 class="modal-title">Add to Campaign</h4>
+            </div>
+            <div class="modal-body">
+                <p>Adding <strong data-bind="text: pickerRefIds().length"></strong> reference<span data-bind="visible: pickerRefIds().length !== 1">s</span> to:</p>
+                <div class="alert alert-danger" style="display:none" data-bind="visible: pickerError, text: pickerError"></div>
+                <!-- ko if: pickerCampaigns().length === 0 -->
+                <p class="text-muted">No campaigns yet. Create one on the <a href="/campaigns">Campaigns</a> page first.</p>
+                <!-- /ko -->
+                <!-- ko if: pickerCampaigns().length > 0 -->
+                <div class="form-group">
+                    <select id="campaignPickerSelect" class="form-control" data-bind="options: pickerCampaigns, optionsText: 'label', optionsValue: 'id', value: pickerSelected"></select>
+                </div>
+                <!-- /ko -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" data-bind="click: pickerSubmit, enable: pickerCampaigns().length > 0 && !pickerBusy()">Add</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

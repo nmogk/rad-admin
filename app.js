@@ -94,7 +94,7 @@ app.use(expressCspHeader({
     directives: {
         'default-src': [SELF], 
         'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:', INLINE], 
-        'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', 'https://fonts.googleapis.com/css'],
+        'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/', 'https://fonts.googleapis.com/css'],
         'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://fonts.gstatic.com/'],
         'img-src': [SELF, 'data:'],
         'frame-ancestors': [NONE]
@@ -107,6 +107,13 @@ app.use(function (request, response, next){
     });
     next();
 })
+
+// Serialise a value for embedding in a <script type="application/json"> tag.
+// Escapes `</` so a literal `</script>` in the data can't break out.
+hbs.registerHelper('json', function (value) {
+    var s = JSON.stringify(value === undefined ? null : value);
+    return new hbs.SafeString(s.replace(/</g, '\\u003c'));
+});
 
 // routes ======================================================================
 

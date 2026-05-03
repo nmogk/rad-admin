@@ -69,9 +69,20 @@
     {{/inline}}
     
     {{#*inline "results-area"}}
-        
+
+        {{#if activeCampaign}}
+        <div class="alert alert-info" role="status">
+          Working on campaign: <strong>{{activeCampaign.name}}</strong> ({{activeCampaign.refCount}} refs).
+          <a href="/campaigns" class="alert-link" style="margin-left: 8px;">Back to campaigns</a>
+        </div>
+        {{/if}}
+
         {{! Results header }}
         <div id="mainDisplay" aria-hidden="true" role="main">
+          <div id="campaignBatchAlert" class="alert alert-warning" style="display:none" aria-live="polite">
+            <strong>Showing <span id="campaignBatchShown"></span> of <span id="campaignBatchTotal"></span> refs in <span id="campaignBatchName"></span>.</strong>
+            Work through these and re-open the campaign to see the next batch.
+          </div>
           <div id="orphanCapAlert" class="alert alert-warning" style="display:none" aria-live="polite">
             <strong>Showing <span id="orphanCapShown"></span> of <span id="orphanCapTotal"></span> orphan refs.</strong>
             Fix these and re-run the orphan search to see the next batch.
@@ -85,7 +96,7 @@
                 <span class="col-sm-3">Author</span>
                 <span class="col-sm-6">Title</span>
                 <span class="col-sm-2">Date</span>
-                <span class="col-sm-1"><a href="#" {{! TODO data-bind="click: downloadList"}} data-toggle="tooltip" title="Add current references to campaign" style="color: #000000;"><span class="glyphicon glyphicon-list-alt"></span></a></span>
+                <span class="col-sm-1"><a href="#" id="addResultsToCampaignBtn" data-toggle="tooltip" title="Add current references to campaign" style="color: #000000;"><span class="glyphicon glyphicon-list-alt"></span></a></span>
               </h4>
             </div>
             <hr>
@@ -116,7 +127,10 @@
                     <span class="glyphicon glyphicon-option-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: editRef"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" {{! TODO data-bind="click: "}}><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: addToCampaign"><span class="glyphicon glyphicon-flag"></span> Add to campaign</a></li>
+                      {{#if activeCampaign}}
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: removeFromActiveCampaign"><span class="glyphicon glyphicon-remove-circle"></span> Remove from this campaign</a></li>
+                      {{/if}}
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewPublisherForEditing"><span class="glyphicon glyphicon-eye-open"></span> View publisher for editing</a></li>
                       <!-- ko if: source() && source() !== publisher() -->
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewSourceForEditing"><span class="glyphicon glyphicon-eye-open"></span> View source for editing</a></li>
@@ -165,7 +179,11 @@
 
         {{> newSourceModal}}
 
+        {{> campaignPickerModal}}
+
         {{> adminHelp}}
+
+        <script nonce="{{nonce}}" type="application/json" id="activeCampaignData">{{json activeCampaign}}</script>
 
     {{/inline}}
 
