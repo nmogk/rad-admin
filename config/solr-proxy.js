@@ -6,6 +6,7 @@ var proxyOptions = {
     validHttpMethods: ['GET'],
     validPaths: ['/solr/rad/refs', '/solr/rad/refs/csv', '/solr/source/select'],
     invalidParams: ['qt', 'stream'],
+    maxRows: 1000,
     backend: {
         host: 'localhost',
         port: process.env.SOLRPORT
@@ -29,10 +30,25 @@ var validateRequest = function(request, options) {
       });
 };
 
+// Clamps the Solr `rows` param so a public caller can't request an arbitrarily
+// large page. The admin UI input cap doesn't bind URL/REST callers (issue #16).
+var clampRows = function (originalUrl, maxRows) {
+  var u = new URL(originalUrl, 'http://placeholder');
+  var maxRequested = u.searchParams.getAll('rows').reduce(function (max, v) {
+      var n = parseInt(v, 10);
+      return !isNaN(n) && n > max ? n : max;
+  }, 0);
+  if (maxRequested > maxRows) {
+      u.searchParams.set('rows', String(maxRows));
+      return u.pathname + u.search;
+  }
+  return originalUrl;
+};
+
 var proxyLogic = function (request, response){
 
   if (validateRequest(request, proxyOptions)) {
-      request.url = request.originalUrl;
+      request.url = clampRows(request.originalUrl, proxyOptions.maxRows);
       proxyServer.web(request, response);
   } else {
       appLog.info(`Illegal Solr request received: ${request.originalUrl}`)
@@ -44,6 +60,7 @@ var proxyLogic = function (request, response){
 
 proxyLogic.backend = proxyOptions.backend;
 proxyLogic.validateRequest = validateRequest;
+proxyLogic.clampRows = clampRows;
 proxyLogic.proxyOptions = proxyOptions;
 
 module.exports = proxyLogic;
