@@ -161,10 +161,12 @@
                   <p><strong>Type:</strong> <span class="text-capitalize" data-bind="text: type"></span></p>
                   <!-- /ko -->
                   <!-- ko if: rev_author() || rev_title() || rev_source() || rev_date() -->
-                  <!-- ko if: rev_author --><p><strong>Reviewed Author:</strong> <span data-bind="textPretty: rev_author"></span></p><!-- /ko -->
-                  <!-- ko if: rev_title --><p><strong>Reviewed Title:</strong> <span data-bind="textPretty: rev_title"></span></p><!-- /ko -->
-                  <!-- ko if: rev_date --><p><strong>Reviewed Date:</strong> <span data-bind="textPretty: rev_date"></span></p><!-- /ko -->
-                  <!-- ko if: rev_source --><p><strong>Reviewed Source:</strong> <span data-bind="textPretty: rev_source"></span></p><!-- /ko -->
+                  <div class="row">
+                    <div class="col-sm-3"><!-- ko if: rev_author --><h4>Reviewed Author</h4><span data-bind="textPretty: rev_author"></span><!-- /ko --></div>
+                    <div class="col-sm-3"><!-- ko if: rev_title --><h4>Reviewed Title</h4><span data-bind="textPretty: rev_title"></span><!-- /ko --></div>
+                    <div class="col-sm-2"><!-- ko if: rev_date --><h4>Reviewed Date</h4><span data-bind="textPretty: rev_date"></span><!-- /ko --></div>
+                    <div class="col-sm-4"><!-- ko if: rev_source --><h4>Reviewed Source</h4><span data-bind="textPretty: rev_source"></span><!-- /ko --></div>
+                  </div>
                   <!-- /ko -->
                   <h4>Abstract</h4>
                   <p data-bind="textPretty: abst" style="white-space:pre-wrap"></p>
