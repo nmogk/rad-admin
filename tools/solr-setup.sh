@@ -141,17 +141,23 @@ curl -sf -X POST -H 'Content-type:application/json' \
     { "name": "source",    "type": "string",         "stored": true, "indexed": true, "multiValued": false },
     { "name": "publisher", "type": "string",         "stored": true, "indexed": true, "multiValued": false },
     { "name": "page",      "type": "string",         "stored": true, "indexed": true, "multiValued": false },
-    { "name": "type",      "type": "string",         "stored": true, "indexed": true, "multiValued": false },
-    { "name": "abstract",  "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false }
+    { "name": "type",       "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "abstract",   "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "rev_author", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "rev_title",  "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "rev_source", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false }
   ],
   "add-copy-field": [
-    { "source": "author",    "dest": "_text_" },
-    { "source": "title",     "dest": "_text_" },
-    { "source": "reference", "dest": "_text_" },
-    { "source": "source",    "dest": "_text_" },
-    { "source": "publisher", "dest": "_text_" },
-    { "source": "abstract",  "dest": "_text_" },
-    { "source": "page",      "dest": "_text_" }
+    { "source": "author",     "dest": "_text_" },
+    { "source": "title",      "dest": "_text_" },
+    { "source": "reference",  "dest": "_text_" },
+    { "source": "source",     "dest": "_text_" },
+    { "source": "publisher",  "dest": "_text_" },
+    { "source": "abstract",   "dest": "_text_" },
+    { "source": "page",       "dest": "_text_" },
+    { "source": "rev_author", "dest": "_text_" },
+    { "source": "rev_title",  "dest": "_text_" },
+    { "source": "rev_source", "dest": "_text_" }
   ]
 }' > /dev/null
 echo "  OK"

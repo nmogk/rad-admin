@@ -456,6 +456,73 @@ describe('Refs Routes', function () {
             expect(res.status.calledWith(400)).to.be.false;
             expect(solrClientStub.add.calledOnce).to.be.true;
         });
+
+        it('should forward rev_author/rev_title/rev_source to the Solr doc', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: {
+                    title: 'Review of Foo',
+                    type: 'reviews',
+                    rev_author: 'Reviewed Person',
+                    rev_title: 'The Reviewed Work',
+                    rev_source: 'https://example.com/foo'
+                },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.rev_author).to.equal('Reviewed Person');
+            expect(doc.rev_title).to.equal('The Reviewed Work');
+            expect(doc.rev_source).to.equal('https://example.com/foo');
+        });
+
+        it('should sanitize smart punctuation in rev_* fields', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { rev_title: 'Mendel’s Laws' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(solrClientStub.add.firstCall.args[0].rev_title).to.equal("Mendel's Laws");
+        });
+
+        it('should accept a submission whose only fields are rev_*', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { rev_author: 'Someone' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+        });
     });
 
     describe('POST /:id (edit)', function () {

@@ -103,6 +103,13 @@
                     <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="textPretty: page"></span></div>
                     <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
                   </div>
+                  <!-- ko if: rev_author() || rev_title() || rev_source() -->
+                  <div class="row">
+                    <div class="col-sm-4"><!-- ko if: rev_author --><h4>Reviewed Author</h4><span data-bind="textPretty: rev_author"></span><!-- /ko --></div>
+                    <div class="col-sm-4"><!-- ko if: rev_title --><h4>Reviewed Title</h4><span data-bind="textPretty: rev_title"></span><!-- /ko --></div>
+                    <div class="col-sm-4"><!-- ko if: rev_source --><h4>Reviewed Source</h4><span data-bind="textPretty: rev_source"></span><!-- /ko --></div>
+                  </div>
+                  <!-- /ko -->
                   <h4>Abstract</h4>
                   <p data-bind="textPretty: abst" style="white-space:pre-wrap"></p>
                 </div>

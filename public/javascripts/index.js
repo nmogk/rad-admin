@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 function unpackRef(ref) {
     "use strict";
-    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year()};
+    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year(), rev_author: ref.rev_author() || '', rev_title: ref.rev_title() || '', rev_source: ref.rev_source() || ''};
 }
 
 

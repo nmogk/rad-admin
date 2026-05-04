@@ -47,6 +47,9 @@ function buildDoc(body) {
     if (body.page) { doc.page = sanitize(body.page); }
     if (body.type) { doc.type = body.type; }
     if (body.abst) { doc.abstract = sanitize(body.abst); }
+    if (body.rev_author) { doc.rev_author = sanitize(body.rev_author); }
+    if (body.rev_title) { doc.rev_title = sanitize(body.rev_title); }
+    if (body.rev_source) { doc.rev_source = sanitize(body.rev_source); }
     return doc;
 }
 
@@ -83,7 +86,8 @@ router.get('/', async function (req, res, next) {
 router.post('/new', async function (req, res, next) {
     if (!req.body.author && !req.body.title && !req.body.date
         && !req.body.reference && !req.body.source && !req.body.publisher
-        && !req.body.page && !req.body.type && !req.body.abst) {
+        && !req.body.page && !req.body.type && !req.body.abst
+        && !req.body.rev_author && !req.body.rev_title && !req.body.rev_source) {
         res.status(400).json({ error: 'No data input. Reference not created.' });
         return;
     }
