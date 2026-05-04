@@ -457,7 +457,7 @@ describe('Refs Routes', function () {
             expect(solrClientStub.add.calledOnce).to.be.true;
         });
 
-        it('should forward rev_author/rev_title/rev_source to the Solr doc', async function () {
+        it('should forward rev_author/rev_title/rev_source/rev_date to the Solr doc', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: {
@@ -465,7 +465,8 @@ describe('Refs Routes', function () {
                     type: 'reviews',
                     rev_author: 'Reviewed Person',
                     rev_title: 'The Reviewed Work',
-                    rev_source: 'https://example.com/foo'
+                    rev_source: 'https://example.com/foo',
+                    rev_date: '2019-04'
                 },
                 user: mockUser(),
                 flash: sinon.stub()
@@ -484,6 +485,25 @@ describe('Refs Routes', function () {
             expect(doc.rev_author).to.equal('Reviewed Person');
             expect(doc.rev_title).to.equal('The Reviewed Work');
             expect(doc.rev_source).to.equal('https://example.com/foo');
+            expect(doc.rev_date).to.equal('2019-04');
+        });
+
+        it('should reject an invalid rev_date with 400 and not call Solr', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Review', rev_date: 'not-a-date' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('reviewed-work date');
+            expect(solrClientStub.add.called).to.be.false;
         });
 
         it('should sanitize smart punctuation in rev_* fields', async function () {

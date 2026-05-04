@@ -87,7 +87,8 @@ router.post('/new', async function (req, res, next) {
     if (!req.body.author && !req.body.title && !req.body.date
         && !req.body.reference && !req.body.source && !req.body.publisher
         && !req.body.page && !req.body.type && !req.body.abst
-        && !req.body.rev_author && !req.body.rev_title && !req.body.rev_source) {
+        && !req.body.rev_author && !req.body.rev_title && !req.body.rev_source
+        && !req.body.rev_date) {
         res.status(400).json({ error: 'No data input. Reference not created.' });
         return;
     }
@@ -103,6 +104,14 @@ router.post('/new', async function (req, res, next) {
         var inputDate = new Date(req.body.date);
         doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
+    }
+
+    if (req.body.rev_date) {
+        if (!DATE_RGX.test(req.body.rev_date)) {
+            res.status(400).json({ error: 'Incorrect reviewed-work date format. Please use ISO 8601.' });
+            return;
+        }
+        doc.rev_date = req.body.rev_date;
     }
 
     if (doc.type && validTypes.indexOf(doc.type) === -1) {
@@ -159,6 +168,14 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         var inputDate = new Date(req.body.date);
         doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
+    }
+
+    if (req.body.rev_date) {
+        if (!DATE_RGX.test(req.body.rev_date)) {
+            res.status(400).json({ error: 'Incorrect reviewed-work date format. Please use ISO 8601.' });
+            return;
+        }
+        doc.rev_date = req.body.rev_date;
     }
 
     if (doc.type && validTypes.indexOf(doc.type) === -1) {

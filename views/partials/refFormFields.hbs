@@ -74,6 +74,10 @@
         <input class="form-control" type="text" name="rev_titleField" id="rev_titleField" data-bind="textInput: rev_title">
     </div>
     <div class="form-group">
+        <label>Reviewed Date{{#if fieldDocs.rev_date}} {{> infoIcon fieldDocs.rev_date}}{{/if}}</label>
+        <div data-bind="datePicker: rev_date"></div>
+    </div>
+    <div class="form-group">
         <label for="rev_sourceField">Reviewed Source{{#if fieldDocs.rev_source}} {{> infoIcon fieldDocs.rev_source}}{{/if}}</label>
         <input class="form-control" type="text" name="rev_sourceField" id="rev_sourceField" data-bind="textInput: rev_source">
     </div>

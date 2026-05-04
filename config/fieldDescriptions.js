@@ -14,6 +14,7 @@ module.exports = {
         abstract: "Short summary of the work's content. Tabs and line breaks are preserved; smart quotes and other typographic punctuation are normalised on save.",
         rev_author: "When this reference is itself a review of another work, the author(s) of that reviewed work. Same formatting rules as the Author field.",
         rev_title: "Title of the work being reviewed.",
+        rev_date: "Publication date of the reviewed work, in ISO 8601 format (YYYY, YYYY-MM, or YYYY-MM-DD). Reduced precision is allowed.",
         rev_source: "Where the reviewed work can be found — often a URL. Free text; does not need to match an entry in the sources directory."
     },
     sources: {

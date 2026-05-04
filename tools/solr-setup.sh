@@ -145,7 +145,8 @@ curl -sf -X POST -H 'Content-type:application/json' \
     { "name": "abstract",   "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
     { "name": "rev_author", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
     { "name": "rev_title",  "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
-    { "name": "rev_source", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false }
+    { "name": "rev_source", "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false },
+    { "name": "rev_date",   "type": "string",         "stored": true, "indexed": true, "multiValued": false }
   ],
   "add-copy-field": [
     { "source": "author",     "dest": "_text_" },

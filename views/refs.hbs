@@ -50,6 +50,7 @@
                   <li role="presentation"><a role="menuitem" href="#" data-blank-field="dt">Date</a></li>
                   <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_author">Reviewed Author</a></li>
                   <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_title">Reviewed Title</a></li>
+                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_date">Reviewed Date</a></li>
                   <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_source">Reviewed Source</a></li>
                 </ul>
               </div>
@@ -159,9 +160,10 @@
                   <!-- ko if: type -->
                   <p><strong>Type:</strong> <span class="text-capitalize" data-bind="text: type"></span></p>
                   <!-- /ko -->
-                  <!-- ko if: rev_author() || rev_title() || rev_source() -->
+                  <!-- ko if: rev_author() || rev_title() || rev_source() || rev_date() -->
                   <!-- ko if: rev_author --><p><strong>Reviewed Author:</strong> <span data-bind="textPretty: rev_author"></span></p><!-- /ko -->
                   <!-- ko if: rev_title --><p><strong>Reviewed Title:</strong> <span data-bind="textPretty: rev_title"></span></p><!-- /ko -->
+                  <!-- ko if: rev_date --><p><strong>Reviewed Date:</strong> <span data-bind="textPretty: rev_date"></span></p><!-- /ko -->
                   <!-- ko if: rev_source --><p><strong>Reviewed Source:</strong> <span data-bind="textPretty: rev_source"></span></p><!-- /ko -->
                   <!-- /ko -->
                   <h4>Abstract</h4>
