@@ -6,7 +6,10 @@ var proxyOpts = require('../config/solr-proxy');
 var solr = require('../server/solr-client');
 var db = require('../server/database-json');
 var fieldDescriptions = require('../config/fieldDescriptions');
+var refTypes = require('../config/refTypes');
 var Campaign = require('../models/campaign');
+
+var validTypes = refTypes.map(function (t) { return t.value; });
 var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "rad" });
 var sourceClient = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source" });
 const url = require('url');
@@ -42,13 +45,14 @@ function buildDoc(body) {
     if (body.source) { doc.source = sanitize(body.source); }
     if (body.publisher) { doc.publisher = sanitize(body.publisher); }
     if (body.page) { doc.page = sanitize(body.page); }
+    if (body.type) { doc.type = body.type; }
     if (body.abst) { doc.abstract = sanitize(body.abst); }
     return doc;
 }
 
 router.get('/', async function (req, res, next) {
     try {
-        var extras = { fieldDocs: fieldDescriptions.refs };
+        var extras = { fieldDocs: fieldDescriptions.refs, refTypes: refTypes };
         // Best-effort active-campaign banner. A bad/missing id just means no
         // banner — don't block the page from rendering.
         if (req.query.campaign && /^\d+$/.test(req.query.campaign)) {
@@ -79,7 +83,7 @@ router.get('/', async function (req, res, next) {
 router.post('/new', async function (req, res, next) {
     if (!req.body.author && !req.body.title && !req.body.date
         && !req.body.reference && !req.body.source && !req.body.publisher
-        && !req.body.page && !req.body.abst) {
+        && !req.body.page && !req.body.type && !req.body.abst) {
         res.status(400).json({ error: 'No data input. Reference not created.' });
         return;
     }
@@ -95,6 +99,11 @@ router.post('/new', async function (req, res, next) {
         var inputDate = new Date(req.body.date);
         doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
+    }
+
+    if (doc.type && validTypes.indexOf(doc.type) === -1) {
+        res.status(400).json({ error: 'Invalid type "' + doc.type + '". Allowed: ' + validTypes.join(', ') + '.' });
+        return;
     }
 
     if (doc.source) {
@@ -146,6 +155,11 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         var inputDate = new Date(req.body.date);
         doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
+    }
+
+    if (doc.type && validTypes.indexOf(doc.type) === -1) {
+        res.status(400).json({ error: 'Invalid type "' + doc.type + '". Allowed: ' + validTypes.join(', ') + '.' });
+        return;
     }
 
     if (doc.source) {

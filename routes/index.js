@@ -2,11 +2,13 @@ var express = require('express');
 var router = express.Router();
 var fs = require("fs");
 var SiteContent = require('../models/site-content');
+var refTypes = require('../config/refTypes');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   var contents = fs.readFileSync("database.json");
   var dbMeta = JSON.parse(contents);
+  dbMeta.refTypes = refTypes;
 
   SiteContent.fetchAll()
   .then(function (sections) {

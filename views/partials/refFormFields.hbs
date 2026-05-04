@@ -55,6 +55,15 @@
     <small id="runtimeHelp" class="form-text text-muted">When "Reference" is "DVD"|"CD"|"cassette", this field represents run time.</small>
 </div>
 <div class="form-group">
+    <label for="typeField">Type{{#if fieldDocs.type}} {{> infoIcon fieldDocs.type}}{{/if}}</label>
+    <select class="form-control" name="typeField" id="typeField" data-bind="value: type">
+        <option value="">(none)</option>
+        {{#each refTypes}}
+        <option value="{{value}}">{{label}}</option>
+        {{/each}}
+    </select>
+</div>
+<div class="form-group">
     <label for="abstField">Abstract{{#if fieldDocs.abstract}} {{> infoIcon fieldDocs.abstract}}{{/if}}</label>
     <textarea class="form-control" rows="8" name="abstField" id="abstField" data-bind="textInput: abst"></textarea>
 </div>

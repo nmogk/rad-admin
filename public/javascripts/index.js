@@ -199,7 +199,11 @@ function searchInit() {
     if (queryString.boost !== undefined) {
         document.getElementById("boostCheck").checked = true;
     }
-    
+
+    if (queryString.type !== undefined) {
+        document.getElementById("typeInput").value = decodeURIComponent(queryString.type.replace(/[+]/g, "%20"));
+    }
+
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body

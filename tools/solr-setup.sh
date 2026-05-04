@@ -141,6 +141,7 @@ curl -sf -X POST -H 'Content-type:application/json' \
     { "name": "source",    "type": "string",         "stored": true, "indexed": true, "multiValued": false },
     { "name": "publisher", "type": "string",         "stored": true, "indexed": true, "multiValued": false },
     { "name": "page",      "type": "string",         "stored": true, "indexed": true, "multiValued": false },
+    { "name": "type",      "type": "string",         "stored": true, "indexed": true, "multiValued": false },
     { "name": "abstract",  "type": "text_html_safe", "stored": true, "indexed": true, "multiValued": false }
   ],
   "add-copy-field": [

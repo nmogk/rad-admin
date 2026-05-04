@@ -28,10 +28,19 @@ function RefsGridViewModel(qString) {
     qString.q = decodeURIComponent(qString.q.replace(/[+]/g, " "));
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
+    // Translate the user-facing `type=…` URL param into a Solr fq filter so it
+    // narrows results without affecting the relevance score (#19). Strip it
+    // from qString so the Solr request doesn't see a stray top-level `type`.
+    var solrParams = $.extend({}, qString);
+    if (solrParams.type) {
+        solrParams.fq = 'type:"' + decodeURIComponent(String(solrParams.type).replace(/[+]/g, " ")).replace(/"/g, '\\"') + '"';
+    }
+    delete solrParams.type;
+
     $.ajax({
         url: self.refsURI,
         dataType: "json",
-        data: $.param(qString), // Pass along user's input directly as query string. Server handles escaping of searches.
+        data: $.param(solrParams), // Pass along user's input directly as query string. Server handles escaping of searches.
         success: function (data) {
             data.response.docs.forEach( function (refi) {
                 self.refs.push(new RefViewModel(refi));
