@@ -6,7 +6,10 @@ var proxyOpts = require('../config/solr-proxy');
 var solr = require('../server/solr-client');
 var db = require('../server/database-json');
 var fieldDescriptions = require('../config/fieldDescriptions');
+var refTypes = require('../config/refTypes');
 var Campaign = require('../models/campaign');
+
+var validTypes = refTypes.map(function (t) { return t.value; });
 var client = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "rad" });
 var sourceClient = solr.createClient({ host: proxyOpts.backend.host, port: proxyOpts.backend.port, core: "source" });
 const url = require('url');
@@ -42,13 +45,17 @@ function buildDoc(body) {
     if (body.source) { doc.source = sanitize(body.source); }
     if (body.publisher) { doc.publisher = sanitize(body.publisher); }
     if (body.page) { doc.page = sanitize(body.page); }
+    if (body.type) { doc.type = body.type; }
     if (body.abst) { doc.abstract = sanitize(body.abst); }
+    if (body.rev_author) { doc.rev_author = sanitize(body.rev_author); }
+    if (body.rev_title) { doc.rev_title = sanitize(body.rev_title); }
+    if (body.rev_source) { doc.rev_source = sanitize(body.rev_source); }
     return doc;
 }
 
 router.get('/', async function (req, res, next) {
     try {
-        var extras = { fieldDocs: fieldDescriptions.refs };
+        var extras = { fieldDocs: fieldDescriptions.refs, refTypes: refTypes };
         // Best-effort active-campaign banner. A bad/missing id just means no
         // banner — don't block the page from rendering.
         if (req.query.campaign && /^\d+$/.test(req.query.campaign)) {
@@ -79,7 +86,9 @@ router.get('/', async function (req, res, next) {
 router.post('/new', async function (req, res, next) {
     if (!req.body.author && !req.body.title && !req.body.date
         && !req.body.reference && !req.body.source && !req.body.publisher
-        && !req.body.page && !req.body.abst) {
+        && !req.body.page && !req.body.type && !req.body.abst
+        && !req.body.rev_author && !req.body.rev_title && !req.body.rev_source
+        && !req.body.rev_date) {
         res.status(400).json({ error: 'No data input. Reference not created.' });
         return;
     }
@@ -95,6 +104,19 @@ router.post('/new', async function (req, res, next) {
         var inputDate = new Date(req.body.date);
         doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
+    }
+
+    if (req.body.rev_date) {
+        if (!DATE_RGX.test(req.body.rev_date)) {
+            res.status(400).json({ error: 'Incorrect reviewed-work date format. Please use ISO 8601.' });
+            return;
+        }
+        doc.rev_date = req.body.rev_date;
+    }
+
+    if (doc.type && validTypes.indexOf(doc.type) === -1) {
+        res.status(400).json({ error: 'Invalid type "' + doc.type + '". Allowed: ' + validTypes.join(', ') + '.' });
+        return;
     }
 
     if (doc.source) {
@@ -146,6 +168,19 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         var inputDate = new Date(req.body.date);
         doc.dt = req.body.date;
         doc.year = inputDate.getUTCFullYear();
+    }
+
+    if (req.body.rev_date) {
+        if (!DATE_RGX.test(req.body.rev_date)) {
+            res.status(400).json({ error: 'Incorrect reviewed-work date format. Please use ISO 8601.' });
+            return;
+        }
+        doc.rev_date = req.body.rev_date;
+    }
+
+    if (doc.type && validTypes.indexOf(doc.type) === -1) {
+        res.status(400).json({ error: 'Invalid type "' + doc.type + '". Allowed: ' + validTypes.join(', ') + '.' });
+        return;
     }
 
     if (doc.source) {

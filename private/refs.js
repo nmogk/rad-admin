@@ -444,7 +444,7 @@ $(document).on('click', '[data-blank-field]', function (e) {
     searchBlankField(this.getAttribute('data-blank-field'));
 });
 
-var ODD_CHAR_SEARCH_FIELDS = ['title', 'author', 'abstract', 'reference', 'source', 'publisher', 'page'];
+var ODD_CHAR_SEARCH_FIELDS = ['title', 'author', 'abstract', 'reference', 'source', 'publisher', 'page', 'rev_author', 'rev_title', 'rev_source'];
 
 // Lucene RegExp character-class bodies. NUL is omitted because it does not
 // survive HTTP transport reliably. Tab/LF/CR are omitted from "control"
@@ -616,7 +616,8 @@ function buildOddCharReport(values) {
         ['title', values.title], ['author', values.author],
         ['reference', values.reference], ['source', values.source],
         ['publisher', values.publisher],
-        ['page', values.page], ['abstract', values.abst]
+        ['page', values.page], ['abstract', values.abst],
+        ['rev_author', values.rev_author], ['rev_title', values.rev_title], ['rev_source', values.rev_source]
     ];
     var lines = [];
     fields.forEach(function (entry) {
@@ -638,7 +639,8 @@ function attachOddCharReport(vm) {
             title: vm.title(), author: vm.author(),
             reference: vm.reference(), source: vm.source(),
             publisher: vm.publisher(),
-            page: vm.page(), abst: vm.abst()
+            page: vm.page(), abst: vm.abst(),
+            rev_author: vm.rev_author(), rev_title: vm.rev_title(), rev_source: vm.rev_source()
         });
     });
 }

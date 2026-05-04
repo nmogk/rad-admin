@@ -379,6 +379,170 @@ describe('Refs Routes', function () {
             expect(logMsg).to.include('editor@test.com');
             expect(logMsg).to.include('added a new reference');
         });
+
+        it('should accept a known type and forward it on the doc', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Typed', type: 'technical articles' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(solrClientStub.add.firstCall.args[0].type).to.equal('technical articles');
+        });
+
+        it('should reject an unknown type with 400 and not call Solr', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Typed', type: 'monograph' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('Invalid type');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should accept a submission with no type set (field is optional)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Untyped' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(solrClientStub.add.firstCall.args[0].type).to.be.undefined;
+        });
+
+        it('should treat type-only submission as non-empty', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { type: 'media' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+        });
+
+        it('should forward rev_author/rev_title/rev_source/rev_date to the Solr doc', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: {
+                    title: 'Review of Foo',
+                    type: 'reviews',
+                    rev_author: 'Reviewed Person',
+                    rev_title: 'The Reviewed Work',
+                    rev_source: 'https://example.com/foo',
+                    rev_date: '2019-04'
+                },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.rev_author).to.equal('Reviewed Person');
+            expect(doc.rev_title).to.equal('The Reviewed Work');
+            expect(doc.rev_source).to.equal('https://example.com/foo');
+            expect(doc.rev_date).to.equal('2019-04');
+        });
+
+        it('should reject an invalid rev_date with 400 and not call Solr', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { title: 'Review', rev_date: 'not-a-date' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('reviewed-work date');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should sanitize smart punctuation in rev_* fields', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { rev_title: 'Mendel’s Laws' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(solrClientStub.add.firstCall.args[0].rev_title).to.equal("Mendel's Laws");
+        });
+
+        it('should accept a submission whose only fields are rev_*', async function () {
+            var req = mockReq({
+                method: 'POST',
+                body: { rev_author: 'Someone' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.add.resolves({});
+
+            var handler = findHandler(refsRouter, 'post', '/new');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+        });
     });
 
     describe('POST /:id (edit)', function () {
@@ -400,6 +564,26 @@ describe('Refs Routes', function () {
 
             expect(res.status.calledWith(400)).to.be.true;
             expect(res._json.error).to.include('ISO 8601');
+        });
+
+        it('should reject an unknown type on edit with 400 and not call Solr', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Test', type: 'pamphlet' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('Invalid type');
+            expect(solrClientStub.add.called).to.be.false;
         });
 
         it('should reject unknown source on edit', async function () {

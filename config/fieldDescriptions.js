@@ -10,7 +10,12 @@ module.exports = {
         publisher: "The original publishing organization. Must match an existing entry in the sources directory; use the autocomplete suggestions or click \"Create this publisher\" to add one.",
         source: "Where a copy of this work can be obtained today. Only set when it differs from the publisher (e.g. when the original publisher is defunct). Must match an existing entry in the sources directory.",
         page: "Page number(s) for printed works, or run time for DVD/CD/cassette references.",
-        abstract: "Short summary of the work's content. Tabs and line breaks are preserved; smart quotes and other typographic punctuation are normalised on save."
+        type: "Optional category for the work (e.g. technical article, media, review). Lets users on the public site filter results to only the kinds of sources they want.",
+        abstract: "Short summary of the work's content. Tabs and line breaks are preserved; smart quotes and other typographic punctuation are normalised on save.",
+        rev_author: "When this reference is itself a review of another work, the author(s) of that reviewed work. Same formatting rules as the Author field.",
+        rev_title: "Title of the work being reviewed.",
+        rev_date: "Publication date of the reviewed work, in ISO 8601 format (YYYY, YYYY-MM, or YYYY-MM-DD). Reduced precision is allowed.",
+        rev_source: "Where the reviewed work can be found — often a URL. Free text; does not need to match an entry in the sources directory."
     },
     sources: {
         name: "The display name of the publisher or source. This is what references point to via their Publisher and Source fields, so changes here may affect every ref that references this source.",

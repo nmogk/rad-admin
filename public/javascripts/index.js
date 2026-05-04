@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 function unpackRef(ref) {
     "use strict";
-    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year()};
+    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year(), rev_author: ref.rev_author() || '', rev_title: ref.rev_title() || '', rev_date: ref.rev_date() || '', rev_source: ref.rev_source() || ''};
 }
 
 
@@ -199,7 +199,11 @@ function searchInit() {
     if (queryString.boost !== undefined) {
         document.getElementById("boostCheck").checked = true;
     }
-    
+
+    if (queryString.type !== undefined) {
+        document.getElementById("typeInput").value = decodeURIComponent(queryString.type.replace(/[+]/g, "%20"));
+    }
+
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":"); // Unescape : in query string
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false"); // Show main body

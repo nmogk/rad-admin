@@ -55,6 +55,34 @@
     <small id="runtimeHelp" class="form-text text-muted">When "Reference" is "DVD"|"CD"|"cassette", this field represents run time.</small>
 </div>
 <div class="form-group">
+    <label for="typeField">Type{{#if fieldDocs.type}} {{> infoIcon fieldDocs.type}}{{/if}}</label>
+    <select class="form-control" name="typeField" id="typeField" data-bind="value: type">
+        <option value="">(none)</option>
+        {{#each refTypes}}
+        <option value="{{value}}">{{label}}</option>
+        {{/each}}
+    </select>
+</div>
+<div data-bind="visible: isReview">
+    <h5>Reviewed work</h5>
+    <div class="form-group">
+        <label for="rev_authorField">Reviewed Author{{#if fieldDocs.rev_author}} {{> infoIcon fieldDocs.rev_author}}{{/if}}</label>
+        <input class="form-control" type="text" name="rev_authorField" id="rev_authorField" data-bind="textInput: rev_author">
+    </div>
+    <div class="form-group">
+        <label for="rev_titleField">Reviewed Title{{#if fieldDocs.rev_title}} {{> infoIcon fieldDocs.rev_title}}{{/if}}</label>
+        <input class="form-control" type="text" name="rev_titleField" id="rev_titleField" data-bind="textInput: rev_title">
+    </div>
+    <div class="form-group">
+        <label>Reviewed Date{{#if fieldDocs.rev_date}} {{> infoIcon fieldDocs.rev_date}}{{/if}}</label>
+        <div data-bind="datePicker: rev_date"></div>
+    </div>
+    <div class="form-group">
+        <label for="rev_sourceField">Reviewed Source{{#if fieldDocs.rev_source}} {{> infoIcon fieldDocs.rev_source}}{{/if}}</label>
+        <input class="form-control" type="text" name="rev_sourceField" id="rev_sourceField" data-bind="textInput: rev_source">
+    </div>
+</div>
+<div class="form-group">
     <label for="abstField">Abstract{{#if fieldDocs.abstract}} {{> infoIcon fieldDocs.abstract}}{{/if}}</label>
     <textarea class="form-control" rows="8" name="abstField" id="abstField" data-bind="textInput: abst"></textarea>
 </div>

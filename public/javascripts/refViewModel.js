@@ -10,7 +10,12 @@ function RefViewModel(data) {
     self.publisher = ko.observable();
     self.hasSeparateSource = ko.observable(false);
     self.page = ko.observable();
+    self.type = ko.observable();
     self.abst = ko.observable();
+    self.rev_author = ko.observable();
+    self.rev_title = ko.observable();
+    self.rev_source = ko.observable();
+    self.rev_date = ko.observable();
     self.id = ko.observable();
     self.year = ko.observable();
     self.colId = undefined;
@@ -18,6 +23,10 @@ function RefViewModel(data) {
 
     self.pageTitle = ko.pureComputed(function () {
         return (/(DVD|CD|cassette)/i.test(this.reference()||"") ? "Run Time" : "Page")
+    }, self);
+
+    self.isReview = ko.pureComputed(function () {
+        return this.type() === 'reviews';
     }, self);
 
     this.cache = function() {};
@@ -50,7 +59,12 @@ ko.utils.extend(RefViewModel.prototype, {
         this.publisher(htmlDecode(data.publisher));
         this.hasSeparateSource(!!(data.source && data.source !== data.publisher));
         this.page(htmlDecode(data.page));
+        this.type(htmlDecode(data.type) || '');
         this.abst(htmlDecode(data.abstract));
+        this.rev_author(htmlDecode(data.rev_author));
+        this.rev_title(htmlDecode(data.rev_title));
+        this.rev_source(htmlDecode(data.rev_source));
+        this.rev_date(htmlDecode(data.rev_date));
         this.id(htmlDecode(data.id));
         this.year(htmlDecode(data.year));
         this.colId = data.colId || "collapse" + Math.random().toString(36).substring(2, 8); // Needed to associate header and collapse
@@ -68,8 +82,12 @@ ko.utils.extend(RefViewModel.prototype, {
         this.author(null);
         this.title(null);
         this.page(null);
-        this.abst(null);        
-        this.id(null);    
+        this.abst(null);
+        this.rev_author(null);
+        this.rev_title(null);
+        this.rev_source(null);
+        this.rev_date(null);
+        this.id(null);
     },
     blank: function () {
         this.holdOver();
@@ -78,6 +96,11 @@ ko.utils.extend(RefViewModel.prototype, {
         this.source(null);
         this.publisher(null);
         this.hasSeparateSource(false);
+        this.type('');
+        this.rev_author(null);
+        this.rev_title(null);
+        this.rev_source(null);
+        this.rev_date(null);
         this.year(null);
     }
 });

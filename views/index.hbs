@@ -21,7 +21,16 @@
           <div class="form-group">
             <label for="rowsInput" class="control-label col-sm-2">Results per page:</label>
             <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
-            <div class="col-sm-6 checkbox">
+            <label for="typeInput" class="control-label col-sm-1">Reference Type (experimental):</label>
+            <div class="col-sm-2">
+              <select id="typeInput" class="form-control" name="type">
+                <option value="">Any type</option>
+                {{#each refTypes}}
+                <option value="{{value}}">{{label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="col-sm-3 checkbox">
               <label><input id="boostCheck" type="checkbox" name="boost" value="1"> Disable date boost</label>
             </div>
           </div> {{!TODO: ensure max is consistent with server max }}
@@ -94,6 +103,14 @@
                     <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="textPretty: page"></span></div>
                     <div class="col-sm-1"><span class="small text-muted">id:</span><span class="small text-muted" data-bind="text: id"></span></div>
                   </div>
+                  <!-- ko if: rev_author() || rev_title() || rev_source() || rev_date() -->
+                  <div class="row">
+                    <div class="col-sm-3"><!-- ko if: rev_author --><h4>Reviewed Author</h4><span data-bind="textPretty: rev_author"></span><!-- /ko --></div>
+                    <div class="col-sm-3"><!-- ko if: rev_title --><h4>Reviewed Title</h4><span data-bind="textPretty: rev_title"></span><!-- /ko --></div>
+                    <div class="col-sm-2"><!-- ko if: rev_date --><h4>Reviewed Date</h4><span data-bind="textPretty: rev_date"></span><!-- /ko --></div>
+                    <div class="col-sm-4"><!-- ko if: rev_source --><h4>Reviewed Source</h4><span data-bind="textPretty: rev_source"></span><!-- /ko --></div>
+                  </div>
+                  <!-- /ko -->
                   <h4>Abstract</h4>
                   <p data-bind="textPretty: abst" style="white-space:pre-wrap"></p>
                 </div>
