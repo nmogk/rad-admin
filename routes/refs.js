@@ -156,26 +156,67 @@ router.post('/new', async function (req, res, next) {
     res.json({ redirect: '/refs?rows=1&q=id%3A' + doc.id });
 });
 
+// Fields that the edit endpoint will preserve from the existing Solr doc when
+// a body field is missing or null. Empty string in body still means "clear",
+// so editors retain the ability to blank a field via the textbox. Date fields
+// are handled separately above (they have their own skip-validation-when-
+// unchanged path). (#112)
+var PRESERVABLE_FIELDS = ['author', 'title', 'reference', 'source', 'publisher',
+                          'page', 'type', 'abstract',
+                          'rev_author', 'rev_title', 'rev_source'];
+
+// Map Solr field name -> request body key (mirrors buildDoc's mapping).
+function bodyKeyFor(solrField) {
+    return solrField === 'abstract' ? 'abst' : solrField;
+}
+
 router.post("/:id(\\d+)", async function (req, res, next) {
     var doc = buildDoc(req.body);
     doc.id = req.params.id;
 
-    if (req.body.date) {
-        if (!DATE_RGX.test(req.body.date)) {
-            res.status(400).json({ error: 'Incorrect date format entered. Please use ISO 8601.' });
-            return;
-        }
-        var inputDate = new Date(req.body.date);
-        doc.dt = req.body.date;
-        doc.year = inputDate.getUTCFullYear();
+    // Fetch the existing doc up front. Needed both for the audit log and so
+    // the date validation can skip when the user didn't actually change the
+    // date (legacy non-standard dates must not block edits to other fields)
+    // and so missing body fields can be preserved rather than silently
+    // erased on the full-replace add() below. (#112)
+    var oldDoc;
+    try {
+        var obj = await client.get('refs', 'q=id:' + doc.id);
+        oldDoc = (obj.response && obj.response.docs && obj.response.docs[0]) || {};
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Unable to obtain a copy of object to edit for audit log. Reference not edited.' });
+        return;
     }
 
-    if (req.body.rev_date) {
-        if (!DATE_RGX.test(req.body.rev_date)) {
-            res.status(400).json({ error: 'Incorrect reviewed-work date format. Please use ISO 8601.' });
-            return;
+    if (req.body.date !== undefined && req.body.date !== null && req.body.date !== '') {
+        if (req.body.date !== oldDoc.dt) {
+            if (!DATE_RGX.test(req.body.date)) {
+                res.status(400).json({ error: 'Incorrect date format entered. Please use ISO 8601.' });
+                return;
+            }
+            var inputDate = new Date(req.body.date);
+            doc.dt = req.body.date;
+            doc.year = inputDate.getUTCFullYear();
+        } else {
+            // Unchanged — preserve as-is (may be a legacy non-standard string
+            // that doesn't round-trip through `new Date(...)`). Copy
+            // oldDoc.year directly rather than re-deriving.
+            doc.dt = oldDoc.dt;
+            if (oldDoc.year !== undefined) doc.year = oldDoc.year;
         }
-        doc.rev_date = req.body.rev_date;
+    }
+
+    if (req.body.rev_date !== undefined && req.body.rev_date !== null && req.body.rev_date !== '') {
+        if (req.body.rev_date !== oldDoc.rev_date) {
+            if (!DATE_RGX.test(req.body.rev_date)) {
+                res.status(400).json({ error: 'Incorrect reviewed-work date format. Please use ISO 8601.' });
+                return;
+            }
+            doc.rev_date = req.body.rev_date;
+        } else {
+            doc.rev_date = oldDoc.rev_date;
+        }
     }
 
     if (doc.type && validTypes.indexOf(doc.type) === -1) {
@@ -205,15 +246,16 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         }
     }
 
-    var oldDoc;
-    try {
-        var obj = await client.get('refs', 'q=id:' + doc.id);
-        oldDoc = obj.response.docs[0];
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: 'Unable to obtain a copy of object to edit for audit log. Reference not edited.' });
-        return;
-    }
+    // Defense in depth: a missing body field means "no change", not "clear"
+    // — `client.add()` is a full document replace, so anything not in `doc`
+    // gets erased from Solr. Apply AFTER source/publisher validation so we
+    // don't re-validate orphan sources the user didn't touch. (#112)
+    PRESERVABLE_FIELDS.forEach(function (f) {
+        if (doc[f] !== undefined) return;
+        var bodyVal = req.body[bodyKeyFor(f)];
+        if (bodyVal !== undefined && bodyVal !== null) return; // empty string = explicit clear
+        if (oldDoc[f] !== undefined) doc[f] = oldDoc[f];
+    });
 
     try {
         await client.add(doc);

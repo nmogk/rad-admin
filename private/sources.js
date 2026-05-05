@@ -18,13 +18,27 @@ SrcViewModel.prototype.deleteSource = function () {
 }
 
 /**
+ * Snapshot of #editSourceModal's pristine inner HTML. ko.cleanNode unwinds
+ * KO bindings but doesn't remove DOM nodes that `<!-- ko if -->`/`foreach`
+ * cloned, so each re-applyBindings was layering fresh copies on top. Reset
+ * to the snapshot to give KO a clean slate.
+ */
+var editSourceModalSnapshot = null;
+
+/**
  * Provides functionality for populating the edit dialog with the correct
  * source item.
  */
 SrcViewModel.prototype.editSource = function () {
     formError('');
-    ko.cleanNode($("#editSourceModal")[0]);
-    ko.applyBindings(this, $("#editSourceModal")[0]);
+    var modal = $("#editSourceModal")[0];
+    if (editSourceModalSnapshot === null) {
+        editSourceModalSnapshot = modal.innerHTML;
+    } else {
+        ko.cleanNode(modal);
+        modal.innerHTML = editSourceModalSnapshot;
+    }
+    ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
     $('#editSourceModal [data-toggle="popover"]').popover();
@@ -34,13 +48,17 @@ SrcViewModel.prototype.editSource = function () {
 SrcViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    self.commit();
+    // Snapshot at submit time, commit only on success — see refs.js submitEdits
+    // for the rationale (cache must hold the last KNOWN-GOOD state so revert()
+    // after Cancel restores cleanly even if validation failed). (#112)
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/sources/" + self.id() + window.location.search,
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             $("#editSourceModal").modal("hide");
             window.location.href = data.redirect || '/sources';
         },
@@ -58,13 +76,14 @@ SrcViewModel.prototype.newSourceHandler = function () {
     var self = this;
     formError('');
     formSuccess('');
-    self.commit();
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/sources/new",
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.blank();
             localStorage['sourcesEditor'] = ko.toJSON(self);
             $("#newSourceModal").modal("hide");

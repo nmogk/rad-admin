@@ -559,6 +559,8 @@ describe('Refs Routes', function () {
             var res = mockRes();
             var next = sinon.spy();
 
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', dt: '2020-01-01' }] } });
+
             var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
             await handler(req, res, next);
 
@@ -577,6 +579,8 @@ describe('Refs Routes', function () {
             });
             var res = mockRes();
             var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42' }] } });
 
             var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
             await handler(req, res, next);
@@ -599,13 +603,14 @@ describe('Refs Routes', function () {
             var next = sinon.spy();
 
             sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42' }] } });
 
             var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
             await handler(req, res, next);
 
             expect(res.status.calledWith(400)).to.be.true;
             expect(res._json.error).to.include('not found');
-            expect(solrClientStub.get.called).to.be.false;
+            expect(solrClientStub.add.called).to.be.false;
         });
 
         it('should reject unknown publisher on edit', async function () {
@@ -621,6 +626,7 @@ describe('Refs Routes', function () {
             var next = sinon.spy();
 
             sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42' }] } });
 
             var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
             await handler(req, res, next);
@@ -628,7 +634,7 @@ describe('Refs Routes', function () {
             expect(res.status.calledWith(400)).to.be.true;
             expect(res._json.error).to.include('Publisher');
             expect(res._json.error).to.include('not found');
-            expect(solrClientStub.get.called).to.be.false;
+            expect(solrClientStub.add.called).to.be.false;
         });
 
         it('should accept known publisher on edit', async function () {
@@ -697,6 +703,187 @@ describe('Refs Routes', function () {
 
             expect(res._json.redirect).to.include('q=author');
             expect(res._json.redirect).to.include('rows=10');
+        });
+
+        it('should skip date validation when body.date matches oldDoc.dt (legacy non-standard)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { date: '1977 ca.', title: 'New Title' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', dt: '1977 ca.', year: 1977, abstract: 'orig abst' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.dt).to.equal('1977 ca.');
+            expect(doc.year).to.equal(1977);
+            expect(doc.title).to.equal('New Title');
+        });
+
+        it('should validate date when changed and reject invalid', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { date: 'garbage', title: 'X' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', dt: '1977 ca.' }] } });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('ISO 8601');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should accept and forward a changed valid date with derived year', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { date: '1980-06-15' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', dt: '1977-01-01', year: 1977 }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.dt).to.equal('1980-06-15');
+            expect(doc.year).to.equal(1980);
+        });
+
+        it('should skip rev_date validation when unchanged from oldDoc', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { rev_date: '1850 approx', title: 'Edit' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', rev_date: '1850 approx' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(solrClientStub.add.firstCall.args[0].rev_date).to.equal('1850 approx');
+        });
+
+        it('should preserve oldDoc.abstract when body omits abst (Fix E)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Edited' }, // no abst
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', abstract: 'preserved abstract', author: 'Old Author' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.abstract).to.equal('preserved abstract');
+            expect(doc.author).to.equal('Old Author');
+            expect(doc.title).to.equal('Edited');
+        });
+
+        it('should clear abstract when body has abst as empty string (Fix E asymmetry)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { title: 'Edited', abst: '' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', abstract: 'will be cleared' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            var doc = solrClientStub.add.firstCall.args[0];
+            expect(doc.abstract).to.be.undefined;
+        });
+
+        it('should preserve oldDoc.title when body omits title', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { abst: 'just an abstract edit' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', title: 'Original Title' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.firstCall.args[0].title).to.equal('Original Title');
+        });
+
+        it('should derive correct year for year-only ISO date', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { date: '2025' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', dt: '2020' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(solrClientStub.add.firstCall.args[0].year).to.equal(2025);
         });
     });
 

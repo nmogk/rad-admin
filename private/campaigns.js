@@ -2,10 +2,21 @@
 var formError = ko.observable('');
 var formSuccess = ko.observable('');
 
+// Snapshot of #editCampaignModal's pristine HTML. See editRefModalSnapshot
+// in private/refs.js for rationale: ko.cleanNode doesn't remove DOM cloned
+// by `<!-- ko if -->`/`foreach`, so repeated edits stack content.
+var editCampaignModalSnapshot = null;
+
 CampaignViewModel.prototype.editCampaign = function () {
     formError('');
-    ko.cleanNode($("#editCampaignModal")[0]);
-    ko.applyBindings(this, $("#editCampaignModal")[0]);
+    var modal = $("#editCampaignModal")[0];
+    if (editCampaignModalSnapshot === null) {
+        editCampaignModalSnapshot = modal.innerHTML;
+    } else {
+        ko.cleanNode(modal);
+        modal.innerHTML = editCampaignModalSnapshot;
+    }
+    ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which wipes Bootstrap's popover
     // state along with KO bindings. Re-init so the info icons work again.
     $('#editCampaignModal [data-toggle="popover"]').popover();
@@ -15,13 +26,16 @@ CampaignViewModel.prototype.editCampaign = function () {
 CampaignViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    self.commit();
+    // Don't commit before submit — Cancel calls revert(), so cache must hold
+    // the last KNOWN-GOOD state, not the in-flight (possibly invalid) state.
+    // See refs.js submitEdits for full rationale. (#112)
     $.ajax({
         url: "/campaigns/" + self.id(),
         contentType: "application/json",
         data: JSON.stringify({ name: self.name(), description: self.description() }),
         type: "POST",
         success: function (data) {
+            self.commit();
             $("#editCampaignModal").modal("hide");
             window.location.href = data.redirect || '/campaigns';
         },
@@ -37,13 +51,13 @@ CampaignViewModel.prototype.newCampaignHandler = function () {
     var self = this;
     formError('');
     formSuccess('');
-    self.commit();
     $.ajax({
         url: "/campaigns/new",
         contentType: "application/json",
         data: JSON.stringify({ name: self.name(), description: self.description() }),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.blank();
             $("#newCampaignModal").modal("hide");
             window.location.href = data.redirect || '/campaigns';

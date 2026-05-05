@@ -36,6 +36,29 @@
             <li>Tabs and line breaks in the abstract are preserved.</li>
           </ul>
           <p>If you need a character that would otherwise be normalised to remain in the saved record, you'll need to insert it directly in Solr; the admin form will always clean it.</p>
+        <h3>Reference Editor</h3>
+          <h4>Date Picker</h4>
+            <p>The <strong>Date</strong> field uses ISO 8601 with three precision levels picked from the dropdown:</p>
+            <ul>
+              <li><strong>Year</strong> &mdash; just <code>YYYY</code> (e.g. <code>1932</code>). Use this when only the year is known.</li>
+              <li><strong>Year-Month</strong> &mdash; <code>YYYY-MM</code> (e.g. <code>1932-04</code>). Use for monthly publications when the day isn't known or relevant.</li>
+              <li><strong>Full Date</strong> &mdash; <code>YYYY-MM-DD</code> (e.g. <code>1932-04-15</code>).</li>
+            </ul>
+            <p>The year drives the date-boost ranking on the public site, so even an approximate year helps relevance. Switching precision after typing clears the previous level's value &mdash; enter the new one in the now-visible field.</p>
+            <p>Legacy entries occasionally have non-standard date strings (e.g. <code>"1977 ca."</code>) that don't fit any precision. When you open such a record, the picker shows the raw value in a text box with a <strong>Convert to standard date</strong> button. Saving without changing the value leaves it untouched (no validation error); pressing the button switches to the picker so you can enter a clean ISO date.</p>
+          <h4>Publisher and Source</h4>
+            <p>Most references only need a <strong>Publisher</strong> &mdash; the original publishing organization, which must match an existing entry in the sources directory (use the autocomplete suggestions, or click <strong>Create this publisher</strong> when you've checked it really doesn't exist).</p>
+            <p>Tick <strong>Add separate source</strong> to reveal the <strong>Source</strong> field. Use this when a copy of the work can be obtained today from somewhere different from the original publisher &mdash; e.g. when the original publisher is defunct and an archive or reprint house now distributes the work. The Source must also match an existing sources entry. When the box is unticked, the Publisher is treated as both publisher and source.</p>
+          <h4>Reference Type and Reviews</h4>
+            <p>The <strong>Type</strong> dropdown categorises the work for the public-site filter (Technical Articles, Media, Reviews, Popular Articles). It's optional &mdash; leave it blank if no category fits.</p>
+            <p>Selecting <strong>Reviews</strong> reveals a <strong>Reviewed work</strong> section with four extra fields: <strong>Reviewed Author</strong>, <strong>Reviewed Title</strong>, <strong>Reviewed Date</strong>, and <strong>Reviewed Source</strong>. These describe the work being reviewed (not the review itself, which goes in the normal Author/Title/Date fields). The Reviewed Source is free text &mdash; typically a URL &mdash; and is not validated against the sources directory. Switching the Type away from Reviews hides the section but preserves its values, so you can toggle back without losing input.</p>
+          <h4>Save and Add Another</h4>
+            <p>The <strong>Save and add another</strong> button on the new-reference modal saves the current entry and immediately blanks the per-record fields (Author, Title, Page, Abstract, and the Reviewed-work fields) so you can start typing the next reference. Fields that are usually shared across a batch &mdash; Date, Reference, Publisher, Source, and Type &mdash; are kept populated. This is useful when entering a series of articles from the same issue of a journal, or several reviews from the same reviewer.</p>
+            <p>When you're done, dismiss the modal as normal. To force a full reset between entries, close and reopen the modal.</p>
+        <h3>Campaigns</h3>
+          <p>A campaign is a saved batch of references plus a description of what needs doing to them &mdash; e.g. "Replace en/em dashes in titles with hyphens; verify against printed copy." Use them when a clean-up task spans more references than you can finish in one session, or when work needs to be coordinated across editors.</p>
+          <p>Create and rename campaigns on the <a href="/campaigns">Campaigns</a> page. From the references results, the <span class="glyphicon glyphicon-flag"></span> <strong>Add to campaign</strong> action on each ref's overflow menu opens a picker so you can attach that ref to an existing campaign. Use the <span class="glyphicon glyphicon-list-alt"></span> button in the results header to add every ref currently shown.</p>
+          <p>Click <strong>Open in references</strong> on a campaign to load all of its refs into the search results &mdash; the URL gains a <code>?campaign=</code> parameter and a banner appears at the top of the page. While that banner is active, each ref's menu gains a <span class="glyphicon glyphicon-remove-circle"></span> <strong>Remove from this campaign</strong> action. Solr URL-length limits cap a single batch at 100 refs; if a campaign has more, finish the visible batch and reopen the campaign to see the next.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

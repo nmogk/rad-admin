@@ -41,6 +41,16 @@ RefViewModel.prototype.viewPublisherForEditing = function () {
 };
 
 /**
+ * Snapshot of #editRefModal's pristine inner HTML, captured on first edit.
+ * `ko.cleanNode` clears Knockout state but doesn't remove DOM nodes that
+ * `<!-- ko if -->` and `foreach` previously cloned, so each re-applyBindings
+ * was appending fresh copies on top of stale ones — visible as duplicated
+ * "Problematic characters" warnings (and stale autocomplete leftovers).
+ * Restoring the snapshot before re-binding gives KO a clean slate.
+ */
+var editRefModalSnapshot = null;
+
+/**
  * Provides functionality for populating the edit dialog with the correct
  * ref item.
  */
@@ -50,15 +60,32 @@ RefViewModel.prototype.editRef = function () {
     sourceNotFound(false);
     publisherSuggestions([]);
     publisherNotFound(false);
-    ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
-    this.source.subscribe(lookupSources);
-    this.publisher.subscribe(lookupPublishers);
+
+    var modal = $("#editRefModal")[0];
+    if (editRefModalSnapshot === null) {
+        editRefModalSnapshot = modal.innerHTML;
+    } else {
+        ko.cleanNode(modal);
+        modal.innerHTML = editRefModalSnapshot;
+    }
+
+    // Subscriptions on observables are NOT cleaned by ko.cleanNode (it only
+    // unwinds DOM bindings), so without explicit disposal each editRef would
+    // stack another lookup-on-keystroke handler on top of the previous ones.
+    if (this._editSubs) {
+        this._editSubs.forEach(function (s) { s.dispose(); });
+    }
+    this._editSubs = [
+        this.source.subscribe(lookupSources),
+        this.publisher.subscribe(lookupPublishers)
+    ];
+
     // Live computed of problematic chars currently in the form. Note: chars
     // that htmlDecode silently drops on the way from Solr to the observable
     // (NBSP, zero-width, etc.) won't appear here — the search button is the
     // canonical source for "this record contains invisibles."
     attachOddCharReport(this);
-    ko.applyBindings(this, $("#editRefModal")[0]);
+    ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
     $('#editRefModal [data-toggle="popover"]').popover();
@@ -73,13 +100,19 @@ RefViewModel.prototype.submitEdits = function () {
     publisherSuggestions([]);
     publisherNotFound(false);
     syncSourceFromPublisher(self);
-    self.commit();
-    $.ajax({ // Makes an AJAX query to the server for the source
+    // Snapshot the current VM state at submit time. Do NOT call commit() here:
+    // committing before we know the server accepted the edit overwrites
+    // cache.latestData with a possibly-broken state, so a subsequent Cancel
+    // (which calls revert()) would restore the broken state instead of the
+    // original load. (#112)
+    var payload = ko.toJS(self);
+    $.ajax({
         url: "/refs/" + self.id() + window.location.search,
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             $("#editRefModal").modal("hide");
             window.location.href = data.redirect || '/refs';
         },
@@ -102,13 +135,14 @@ RefViewModel.prototype.newRefHandler = function () {
     publisherSuggestions([]);
     publisherNotFound(false);
     syncSourceFromPublisher(self);
-    self.commit();
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/refs/new",
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.blank();
             localStorage['refsEditor'] = ko.toJSON(self);
             $("#newRefModal").modal("hide");
@@ -138,13 +172,14 @@ RefViewModel.prototype.saveAndAddAnother = function () {
     publisherSuggestions([]);
     publisherNotFound(false);
     syncSourceFromPublisher(self);
-    self.commit();
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/refs/new",
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.holdOver();
             localStorage['refsEditor'] = ko.toJSON(self);
             formSuccess('Reference saved. Enter the next reference below.');
