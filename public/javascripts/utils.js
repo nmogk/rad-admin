@@ -101,12 +101,15 @@ ko.bindingHandlers.datePicker = {
             precisionSelect.appendChild(opt);
         });
 
+        // type='text' (not 'number') because number inputs accept e/E and signs
+        // and don't clamp `max` until form submit. Pattern + JS guard below
+        // restrict to 4 digits. (#112)
         var yearInput = document.createElement('input');
-        yearInput.type = 'number';
+        yearInput.type = 'text';
+        yearInput.inputMode = 'numeric';
         yearInput.className = 'form-control';
         yearInput.placeholder = 'YYYY';
-        yearInput.min = '1';
-        yearInput.max = '9999';
+        yearInput.maxLength = 4;
         yearInput.style.width = '100px';
 
         var monthInput = document.createElement('input');
@@ -123,30 +126,64 @@ ko.bindingHandlers.datePicker = {
         row.appendChild(dateInput);
         element.appendChild(row);
 
+        // Non-standard mode: shown when the bound value can't be parsed as
+        // ISO 8601. Lets editors see and correct legacy values rather than
+        // silently losing them in <input type="date"> rejection. (#112)
+        var rawWrapper = document.createElement('div');
+        rawWrapper.className = 'form-inline';
+        rawWrapper.style.marginTop = '4px';
+        rawWrapper.style.display = 'none';
+
+        var rawNotice = document.createElement('span');
+        rawNotice.className = 'text-warning';
+        rawNotice.style.marginRight = '8px';
+        rawNotice.textContent = 'Non-standard date — edit as text or convert:';
+
+        var rawInput = document.createElement('input');
+        rawInput.type = 'text';
+        rawInput.className = 'form-control';
+        rawInput.style.marginRight = '8px';
+
+        var convertBtn = document.createElement('button');
+        convertBtn.type = 'button';
+        convertBtn.className = 'btn btn-default btn-sm';
+        convertBtn.textContent = 'Convert to standard date';
+
+        rawWrapper.appendChild(rawNotice);
+        rawWrapper.appendChild(rawInput);
+        rawWrapper.appendChild(convertBtn);
+        element.appendChild(rawWrapper);
+
         // --- Helpers ---
         function showForPrecision(precision) {
-            yearInput.style.display = precision === 'year' ? '' : 'none';
-            monthInput.style.display = precision === 'month' ? '' : 'none';
-            dateInput.style.display = precision === 'date' ? '' : 'none';
+            var standard = precision !== 'unknown';
+            row.style.display = standard ? '' : 'none';
+            rawWrapper.style.display = standard ? 'none' : '';
+            if (standard) {
+                yearInput.style.display = precision === 'year' ? '' : 'none';
+                monthInput.style.display = precision === 'month' ? '' : 'none';
+                dateInput.style.display = precision === 'date' ? '' : 'none';
+            }
         }
 
         function parseISO(val) {
-            if (!val) return { precision: 'date', year: '', month: '', date: '' };
+            if (!val) return { precision: 'date', year: '', month: '', date: '', raw: '' };
             val = String(val).trim();
             // Full date: 2025-06-15 or longer (with time)
             if (/^\d{4}-\d{2}-\d{2}/.test(val)) {
-                return { precision: 'date', year: '', month: val.substring(0, 7), date: val.substring(0, 10) };
+                return { precision: 'date', year: '', month: val.substring(0, 7), date: val.substring(0, 10), raw: '' };
             }
             // Year-month: 2025-06
             if (/^\d{4}-\d{2}$/.test(val)) {
-                return { precision: 'month', year: '', month: val, date: '' };
+                return { precision: 'month', year: '', month: val, date: '', raw: '' };
             }
             // Year only: 2025
             if (/^\d{1,4}$/.test(val)) {
-                return { precision: 'year', year: val, month: '', date: '' };
+                return { precision: 'year', year: val, month: '', date: '', raw: '' };
             }
-            // Fallback: treat as full date
-            return { precision: 'date', year: '', month: '', date: val };
+            // Unparseable — preserve raw so the editor can see and correct it
+            // rather than silently losing it. (#112)
+            return { precision: 'unknown', year: '', month: '', date: '', raw: val };
         }
 
         function writeValue() {
@@ -162,38 +199,78 @@ ko.bindingHandlers.datePicker = {
             observable(val || null);
         }
 
+        function writeRawValue() {
+            // In non-standard mode, observable holds the raw text verbatim so
+            // unchanged legacy values round-trip cleanly through edit + save.
+            observable(rawInput.value || null);
+        }
+
         function readValue() {
             var parsed = parseISO(ko.unwrap(observable));
-            precisionSelect.value = parsed.precision;
-            yearInput.value = parsed.year;
-            monthInput.value = parsed.month;
-            dateInput.value = parsed.date;
-            showForPrecision(parsed.precision);
+            if (parsed.precision === 'unknown') {
+                rawInput.value = parsed.raw;
+                showForPrecision('unknown');
+            } else {
+                precisionSelect.value = parsed.precision;
+                yearInput.value = parsed.year;
+                monthInput.value = parsed.month;
+                dateInput.value = parsed.date;
+                showForPrecision(parsed.precision);
+            }
         }
 
         // --- Event handlers ---
-        precisionSelect.addEventListener('change', function () {
+        var onPrecisionChange = function () {
             showForPrecision(precisionSelect.value);
             writeValue();
-        });
-        yearInput.addEventListener('input', writeValue);
+        };
+        var onYearInput = function () {
+            // Strip non-digits (covers e/E/sign/decimal that text inputs allow)
+            // and clamp to 4 digits before writing to the observable. (#112)
+            var cleaned = yearInput.value.replace(/[^0-9]/g, '').slice(0, 4);
+            if (cleaned !== yearInput.value) {
+                yearInput.value = cleaned;
+            }
+            writeValue();
+        };
+        var onConvertClick = function () {
+            // User wants to leave non-standard mode: clear the raw value and
+            // switch to picker mode, ready for them to enter a standard date.
+            rawInput.value = '';
+            observable(null);
+            precisionSelect.value = 'date';
+            showForPrecision('date');
+        };
+
+        precisionSelect.addEventListener('change', onPrecisionChange);
+        yearInput.addEventListener('input', onYearInput);
         monthInput.addEventListener('change', writeValue);
         dateInput.addEventListener('change', writeValue);
+        rawInput.addEventListener('input', writeRawValue);
+        convertBtn.addEventListener('click', onConvertClick);
 
         // --- Initial population ---
+        // readValue() only updates DOM, not the observable, so a non-standard
+        // load keeps the original value intact until the user edits it.
         readValue();
 
         // --- Subscribe to external changes (revert, update) ---
-        observable.subscribe(function () {
+        var sub = observable.subscribe(function () {
             readValue();
         });
 
-        // Cleanup on node removal
+        // Cleanup on node removal. Stash handler refs so removeEventListener
+        // actually finds them (the previous version passed an inline anonymous
+        // function that was never registered, leaking listeners across modal
+        // re-opens).
         ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
-            precisionSelect.removeEventListener('change', showForPrecision);
-            yearInput.removeEventListener('input', writeValue);
+            precisionSelect.removeEventListener('change', onPrecisionChange);
+            yearInput.removeEventListener('input', onYearInput);
             monthInput.removeEventListener('change', writeValue);
             dateInput.removeEventListener('change', writeValue);
+            rawInput.removeEventListener('input', writeRawValue);
+            convertBtn.removeEventListener('click', onConvertClick);
+            sub.dispose();
         });
     }
 };

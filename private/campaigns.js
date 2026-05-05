@@ -15,13 +15,16 @@ CampaignViewModel.prototype.editCampaign = function () {
 CampaignViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    self.commit();
+    // Don't commit before submit — Cancel calls revert(), so cache must hold
+    // the last KNOWN-GOOD state, not the in-flight (possibly invalid) state.
+    // See refs.js submitEdits for full rationale. (#112)
     $.ajax({
         url: "/campaigns/" + self.id(),
         contentType: "application/json",
         data: JSON.stringify({ name: self.name(), description: self.description() }),
         type: "POST",
         success: function (data) {
+            self.commit();
             $("#editCampaignModal").modal("hide");
             window.location.href = data.redirect || '/campaigns';
         },
@@ -37,13 +40,13 @@ CampaignViewModel.prototype.newCampaignHandler = function () {
     var self = this;
     formError('');
     formSuccess('');
-    self.commit();
     $.ajax({
         url: "/campaigns/new",
         contentType: "application/json",
         data: JSON.stringify({ name: self.name(), description: self.description() }),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.blank();
             $("#newCampaignModal").modal("hide");
             window.location.href = data.redirect || '/campaigns';

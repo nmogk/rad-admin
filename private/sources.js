@@ -34,13 +34,17 @@ SrcViewModel.prototype.editSource = function () {
 SrcViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    self.commit();
+    // Snapshot at submit time, commit only on success — see refs.js submitEdits
+    // for the rationale (cache must hold the last KNOWN-GOOD state so revert()
+    // after Cancel restores cleanly even if validation failed). (#112)
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/sources/" + self.id() + window.location.search,
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             $("#editSourceModal").modal("hide");
             window.location.href = data.redirect || '/sources';
         },
@@ -58,13 +62,14 @@ SrcViewModel.prototype.newSourceHandler = function () {
     var self = this;
     formError('');
     formSuccess('');
-    self.commit();
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/sources/new",
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.blank();
             localStorage['sourcesEditor'] = ko.toJSON(self);
             $("#newSourceModal").modal("hide");

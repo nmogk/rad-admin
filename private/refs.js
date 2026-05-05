@@ -73,13 +73,19 @@ RefViewModel.prototype.submitEdits = function () {
     publisherSuggestions([]);
     publisherNotFound(false);
     syncSourceFromPublisher(self);
-    self.commit();
-    $.ajax({ // Makes an AJAX query to the server for the source
+    // Snapshot the current VM state at submit time. Do NOT call commit() here:
+    // committing before we know the server accepted the edit overwrites
+    // cache.latestData with a possibly-broken state, so a subsequent Cancel
+    // (which calls revert()) would restore the broken state instead of the
+    // original load. (#112)
+    var payload = ko.toJS(self);
+    $.ajax({
         url: "/refs/" + self.id() + window.location.search,
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             $("#editRefModal").modal("hide");
             window.location.href = data.redirect || '/refs';
         },
@@ -102,13 +108,14 @@ RefViewModel.prototype.newRefHandler = function () {
     publisherSuggestions([]);
     publisherNotFound(false);
     syncSourceFromPublisher(self);
-    self.commit();
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/refs/new",
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.blank();
             localStorage['refsEditor'] = ko.toJSON(self);
             $("#newRefModal").modal("hide");
@@ -138,13 +145,14 @@ RefViewModel.prototype.saveAndAddAnother = function () {
     publisherSuggestions([]);
     publisherNotFound(false);
     syncSourceFromPublisher(self);
-    self.commit();
+    var payload = ko.toJS(self);
     $.ajax({
         url: "/refs/new",
         contentType: "application/json",
-        data: JSON.stringify(self.cache.latestData),
+        data: JSON.stringify(payload),
         type: "POST",
         success: function (data) {
+            self.commit();
             self.holdOver();
             localStorage['refsEditor'] = ko.toJSON(self);
             formSuccess('Reference saved. Enter the next reference below.');
