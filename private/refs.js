@@ -41,6 +41,16 @@ RefViewModel.prototype.viewPublisherForEditing = function () {
 };
 
 /**
+ * Snapshot of #editRefModal's pristine inner HTML, captured on first edit.
+ * `ko.cleanNode` clears Knockout state but doesn't remove DOM nodes that
+ * `<!-- ko if -->` and `foreach` previously cloned, so each re-applyBindings
+ * was appending fresh copies on top of stale ones — visible as duplicated
+ * "Problematic characters" warnings (and stale autocomplete leftovers).
+ * Restoring the snapshot before re-binding gives KO a clean slate.
+ */
+var editRefModalSnapshot = null;
+
+/**
  * Provides functionality for populating the edit dialog with the correct
  * ref item.
  */
@@ -50,15 +60,32 @@ RefViewModel.prototype.editRef = function () {
     sourceNotFound(false);
     publisherSuggestions([]);
     publisherNotFound(false);
-    ko.cleanNode($("#editRefModal")[0]) // Must clear bindings in newer version of KO
-    this.source.subscribe(lookupSources);
-    this.publisher.subscribe(lookupPublishers);
+
+    var modal = $("#editRefModal")[0];
+    if (editRefModalSnapshot === null) {
+        editRefModalSnapshot = modal.innerHTML;
+    } else {
+        ko.cleanNode(modal);
+        modal.innerHTML = editRefModalSnapshot;
+    }
+
+    // Subscriptions on observables are NOT cleaned by ko.cleanNode (it only
+    // unwinds DOM bindings), so without explicit disposal each editRef would
+    // stack another lookup-on-keystroke handler on top of the previous ones.
+    if (this._editSubs) {
+        this._editSubs.forEach(function (s) { s.dispose(); });
+    }
+    this._editSubs = [
+        this.source.subscribe(lookupSources),
+        this.publisher.subscribe(lookupPublishers)
+    ];
+
     // Live computed of problematic chars currently in the form. Note: chars
     // that htmlDecode silently drops on the way from Solr to the observable
     // (NBSP, zero-width, etc.) won't appear here — the search button is the
     // canonical source for "this record contains invisibles."
     attachOddCharReport(this);
-    ko.applyBindings(this, $("#editRefModal")[0]);
+    ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
     $('#editRefModal [data-toggle="popover"]').popover();

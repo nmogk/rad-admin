@@ -18,13 +18,27 @@ SrcViewModel.prototype.deleteSource = function () {
 }
 
 /**
+ * Snapshot of #editSourceModal's pristine inner HTML. ko.cleanNode unwinds
+ * KO bindings but doesn't remove DOM nodes that `<!-- ko if -->`/`foreach`
+ * cloned, so each re-applyBindings was layering fresh copies on top. Reset
+ * to the snapshot to give KO a clean slate.
+ */
+var editSourceModalSnapshot = null;
+
+/**
  * Provides functionality for populating the edit dialog with the correct
  * source item.
  */
 SrcViewModel.prototype.editSource = function () {
     formError('');
-    ko.cleanNode($("#editSourceModal")[0]);
-    ko.applyBindings(this, $("#editSourceModal")[0]);
+    var modal = $("#editSourceModal")[0];
+    if (editSourceModalSnapshot === null) {
+        editSourceModalSnapshot = modal.innerHTML;
+    } else {
+        ko.cleanNode(modal);
+        modal.innerHTML = editSourceModalSnapshot;
+    }
+    ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
     $('#editSourceModal [data-toggle="popover"]').popover();
