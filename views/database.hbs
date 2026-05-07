@@ -24,7 +24,7 @@
         </select>
     </div>
     <button type="submit" class="btn btn-primary" id="createBackupButton">
-        <span class="glyphicon glyphicon-floppy-disk"></span> Create Backup
+        <span class="bi bi-floppy2-fill"></span> Create Backup
     </button>
     <span id="backupStatus" class="text-muted" style="margin-left: 1em;"></span>
 </form>
@@ -32,7 +32,7 @@
 <form class="form inline" id="recomputeStatsForm" style="margin-top: 1em;">
     <button type="submit" class="btn btn-info" id="recomputeStatsButton" data-toggle="tooltip"
         title="Scan the rad core and rebuild the latest reference, total record count, and highest id in database.json">
-        <span class="glyphicon glyphicon-refresh"></span> Recompute Stats
+        <span class="bi bi-arrow-repeat"></span> Recompute Stats
     </button>
     <span id="recomputeStatus" class="text-muted" style="margin-left: 1em;" aria-live="polite"></span>
 </form>
@@ -60,7 +60,7 @@
                     <td class="fit">{{sizeFormatted}}</td>
                     <td class="fit">
                         <a class="btn btn-default delete-backup" data-filename="{{name}}" title="Delete backup">
-                            <span class="glyphicon glyphicon-trash"></span>
+                            <span class="bi bi-trash3"></span>
                         </a>
                     </td>
                 </tr>

@@ -35,7 +35,7 @@
             </div>
           </div> {{!TODO: ensure max is consistent with server max }}
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button></div></div>
+            <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="bi bi-search"></span> Search</button></div></div>
         </form>
         
     {{/inline}}
@@ -60,7 +60,7 @@
                 <span class="col-sm-3">Author</span>
                 <span class="col-sm-6">Title</span>
                 <span class="col-sm-2">Date</span>
-                <span class="col-sm-1"><a href="#" data-bind="click: downloadList" data-toggle="tooltip" title="Download results (.csv)" style="color: #000000;"><span class="glyphicon glyphicon-arrow-down"></span></a></span>
+                <span class="col-sm-1"><a href="#" data-bind="click: downloadList" data-toggle="tooltip" title="Download results (.csv)" style="color: #000000;"><span class="bi bi-filetype-csv"></span></a></span>
               </h4>
             </div>
             <hr>
@@ -81,11 +81,11 @@
                   </a>
                   <div class="dropdown col-sm-1" aria-haspopup="true">
                     <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
-                    <span class="glyphicon glyphicon-option-vertical"></span></button>
+                    <span class="bi bi-three-dots-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: goSource"><span class="glyphicon glyphicon-link"></span> Go to source</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: generateCitation"><span class="glyphicon glyphicon-copy"></span> Copy citation</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: downloadCitation"><span class="glyphicon glyphicon-bookmark"></span> Save reference</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" target="_blank" data-bind="click: goSource"><span class="bi bi-link-45deg"></span> Go to source</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: generateCitation"><span class="bi bi-clipboard-plus"></span> Copy citation</a></li>
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: downloadCitation"><span class="bi bi-bookmark"></span> Save reference</a></li>
                     </ul>
                   </div>
                 </div>
@@ -95,9 +95,9 @@
                   <div class="row">
                     <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
                     <div class="col-sm-5">
-                      <h4>Publisher</h4><span data-bind="textPretty: publisher"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: publisherModal"><span class="glyphicon glyphicon-expand"></span></button>
+                      <h4>Publisher</h4><span data-bind="textPretty: publisher"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: publisherModal"><span class="bi bi-info-square"></span></button>
                       <!-- ko if: source() && source() !== publisher() -->
-                      <h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: sourceModal"><span class="glyphicon glyphicon-expand"></span></button>
+                      <h4>Source</h4><span data-bind="textPretty: source"></span> <button type="button" class="btn btn-link btn-sm" style="color: #000000;" data-bind="click: sourceModal"><span class="bi bi-info-square"></span></button>
                       <!-- /ko -->
                     </div>
                     <div class="col-sm-1"><h4><span data-bind="text: pageTitle">Page</span></h4><span data-bind="textPretty: page"></span></div>

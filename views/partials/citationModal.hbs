@@ -17,7 +17,7 @@
         <tr data-bind="style: { borderBottom: $index() < window.RAD.citations.styles.length - 1 ? '1px solid gray' : '' }">
           <td><p data-bind="html: window.RAD.citations.format(id, $parent), attr: { id: id + '-citation' }"></p></td>
           <td><button class="copy" data-bind="attr: { 'data-clipboard-target': '#' + id + '-citation', 'aria-label': 'Copy ' + label + ' formatted citation to clipboard' }">
-              <span class="glyphicon glyphicon-copy" alt="Copy to clipboard"></span>
+              <span class="bi bi-clipboard-plus" alt="Copy to clipboard"></span>
           </button></td>
         </tr>
         <!-- /ko -->

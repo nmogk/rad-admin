@@ -94,8 +94,8 @@ app.use(expressCspHeader({
     directives: {
         'default-src': [SELF], 
         'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:', INLINE], 
-        'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/', 'https://fonts.googleapis.com/css'],
-        'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://fonts.gstatic.com/'],
+        'style-src': [SELF, INLINE, 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/', 'https://fonts.googleapis.com/css'],
+        'font-src': [SELF,'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/fonts/', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/', 'https://fonts.gstatic.com/'],
         'img-src': [SELF, 'data:'],
         'frame-ancestors': [NONE]
     }

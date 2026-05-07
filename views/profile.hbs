@@ -2,15 +2,15 @@
     {{#*inline "custom-title"}}<h1>{{username}}</h1>{{/inline}}  
     
     {{#*inline "search-area"}}
-        <a href='/profile/password' class="btn btn-primary" ><span class="glyphicon glyphicon-wrench"></span> Update Password</a><a href="#" class="btn btn-link" data-toggle="modal" data-target="#deleteModal"><span class="glyphicon glyphicon-trash"></span> Delete Account</a>
+        <a href='/profile/password' class="btn btn-primary" ><span class="bi bi-wrench"></span> Update Password</a><a href="#" class="btn btn-link" data-toggle="modal" data-target="#deleteModal"><span class="bi bi-trash3"></span> Delete Account</a>
     {{/inline}}   
 
 
     {{#*inline "results-area"}}
         <dl>
-            <dt>Display Name: <a href='#' class="btn btn-link" data-toggle="modal" data-target="#dispNameModal"><span class="glyphicon glyphicon-pencil"></span> Change</a></dt>
+            <dt>Display Name: <a href='#' class="btn btn-link" data-toggle="modal" data-target="#dispNameModal"><span class="bi bi-pencil-fill"></span> Change</a></dt>
             <dd>{{#if dispname}}{{dispname}}{{else}}(Not added yet){{/if}}</dd>
-            <dt>Email: <a href="#" class="btn btn-link" data-toggle="modal" data-target="#emailModal"><span class="glyphicon glyphicon-pencil"></span> Change</a></dt>
+            <dt>Email: <a href="#" class="btn btn-link" data-toggle="modal" data-target="#emailModal"><span class="bi bi-pencil-fill"></span> Change</a></dt>
             <dd>{{email}}{{#if pendingEmail}} <span class="label label-warning">Pending change to {{pendingEmail}} &mdash; check your inbox</span>{{/if}}</dd>
         </dl>
     {{/inline}}  

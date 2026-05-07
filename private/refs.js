@@ -524,7 +524,7 @@ function searchOrphanSources() {
     var progress = document.getElementById('orphanSourceProgress');
     var originalHTML = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span>';
+    btn.innerHTML = '<span class="bi bi-arrow-repeat bi-spin"></span>';
     progress.style.display = '';
     progress.textContent = 'Loading sources…';
 
