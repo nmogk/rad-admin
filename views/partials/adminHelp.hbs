@@ -7,10 +7,10 @@
       </div>
       <div class="modal-body">
         <h3>Power Searches</h3>
-          <h4>Find Entries with Blank Fields (<span class="bi bi-dash-circle-fill"></span>)</h4>
+          <h4>Find Entries with Blank Fields (<span class="bi bi-dash-circle"></span>)</h4>
             <p>Click the minus-sign button next to <strong>Search</strong> to find references that are missing at least one of: author, title, reference, source, page, abstract, or date. To restrict the search to a single field, use the dropdown caret next to the button and pick a field.</p>
             <p>The button writes the corresponding Solr query into the search box, so you can refine it further or share the resulting URL with another editor.</p>
-          <h4>Find Entries with Problematic Characters (<span class="bi bi-question-circle-fill"></span>)</h4>
+          <h4>Find Entries with Problematic Characters (<span class="bi bi-question-circle"></span>)</h4>
             <p>Click the question-mark button to find references whose author, title, reference, source, page, or abstract field contains an unusual character that may interfere with searching, exporting, or rendering. Use the dropdown caret to narrow to a single category:</p>
             <ul>
               <li><strong>Control / non-printing</strong> &mdash; ASCII control characters (excluding tab, line feed, carriage return), DEL, and the Unicode replacement character (U+FFFD), which usually indicates the value was decoded from broken UTF-8.</li>
@@ -21,8 +21,8 @@
           <h4>Cross-Reference: Refs vs. Sources</h4>
             <p>Solr can't join across the references and sources cores in a single query, so these two buttons do the work in two steps: pull one side's full list, then build a Solr query that excludes those values from the other side.</p>
             <ul>
-              <li>On the <strong>References</strong> page, the <span class="bi bi-arrow-up-right-circle-fill"></span> button finds refs whose <code>source</code> field doesn't match any source's <code>name</code>. The matches are the ones you'll want to either correct (typo in the ref) or follow up on by adding the missing source.</li>
-              <li>On the <strong>Sources</strong> page, the <span class="bi bi-arrow-up-left-circle-fill"></span> button finds sources that no reference points to. Useful for pruning dead entries.</li>
+              <li>On the <strong>References</strong> page, the <span class="bi bi-arrow-up-right-circle"></span> button finds refs whose <code>source</code> field doesn't match any source's <code>name</code>. The matches are the ones you'll want to either correct (typo in the ref) or follow up on by adding the missing source.</li>
+              <li>On the <strong>Sources</strong> page, the <span class="bi bi-arrow-up-left-circle"></span> button finds sources that no reference points to. Useful for pruning dead entries.</li>
             </ul>
             <p>Both buttons fill the search box with the generated Solr query so you can refine it or share the URL. Note that they degrade once the source list passes Solr's default boolean-clause limit (~1024 entries); if that ceiling is reached, queries will start failing and the underlying approach needs to change.</p>
         <h3>Automatic Input Cleanup</h3>
