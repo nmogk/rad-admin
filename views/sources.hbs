@@ -19,12 +19,12 @@
           </div>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-5">
-              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="glyphicon glyphicon-search"></span> Search</button>
-              <button id="unusedSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find sources not used by any reference"><span class="glyphicon glyphicon-remove-sign"></span></button>
+              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="bi bi-search"></span> Search</button>
+              <button id="unusedSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find sources not used by any reference"><span class="bi bi-x-circle-fill"></span></button>
               <span id="unusedSourceProgress" class="text-muted small" style="display:none; margin-left:8px" aria-live="polite"></span>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
-              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newSourceModal" data-backdrop="static"><span class="glyphicon glyphicon-plus"></span> Add new source</button>
+              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newSourceModal" data-backdrop="static"><span class="bi bi-plus"></span> Add new source</button>
             </div>
           </div>
         </form>
@@ -65,10 +65,10 @@
                   </a>
                   <div class="dropdown col-sm-1" aria-haspopup="true">
                     <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
-                    <span class="glyphicon glyphicon-option-vertical"></span></button>
+                    <span class="bi bi-three-dots-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: editSource"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
-                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteSource"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>{{/if}}
+                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: editSource"><span class="bi bi-pencil-fill"></span> Edit</a></li>
+                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteSource"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
                 </div>
