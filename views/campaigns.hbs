@@ -14,12 +14,12 @@
 
     {{#*inline "results-area"}}
         <div id="mainDisplay" role="main">
-            <div id="res-head" class="panel-body">
+            <div id="res-head" class="card-body">
                 <div class="row">
                     <h4>
                         <span class="col-sm-4">Name</span>
                         <span class="col-sm-6">Description</span>
-                        <span class="col-sm-1 text-right">Refs</span>
+                        <span class="col-sm-1 text-end">Refs</span>
                         <span class="col-sm-1"></span>
                     </h4>
                 </div>
@@ -29,15 +29,15 @@
                 <!-- /ko -->
             </div>
 
-            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
                 <!-- ko foreach: campaigns -->
-                <div class="panel panel-default">
-                    <div class="panel-heading" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
+                <div class="card">
+                    <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
                         <div class="row">
                             <a data-bs-toggle="collapse" data-bs-parent="#accordion" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
                                 <div class="col-sm-4"><h5><span data-bind="textPretty: name">Name</span></h5></div>
                                 <div class="col-sm-6"><h5><span data-bind="textPretty: descriptionPreview">Description</span></h5></div>
-                                <div class="col-sm-1 text-right"><h5><span data-bind="text: refCount"></span></h5></div>
+                                <div class="col-sm-1 text-end"><h5><span data-bind="text: refCount"></span></h5></div>
                             </a>
                             <div class="dropdown col-sm-1" aria-haspopup="true">
                                 <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown" style="color: #000000;">
@@ -51,8 +51,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
-                        <div class="panel-body">
+                    <div class="collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+                        <div class="card-body">
                             <h4>Description</h4>
                             <p data-bind="textPretty: description" style="white-space: pre-wrap"></p>
                             <p class="small text-muted">id: <span data-bind="text: id"></span></p>

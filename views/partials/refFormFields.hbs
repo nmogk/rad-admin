@@ -1,20 +1,20 @@
-<div class="form-group">
+<div class="mb-3">
     <label for="authorField">Author{{#if fieldDocs.author}} {{> infoIcon fieldDocs.author}}{{/if}}</label>
     <input class="form-control" type="text" name="authorField" id="authorField" data-bind="textInput: author">
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label for="titleField">Title{{#if fieldDocs.title}} {{> infoIcon fieldDocs.title}}{{/if}}</label>
     <input class="form-control" type="text" name="titleField" id="titleField" data-bind="textInput: title">
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label>Date{{#if fieldDocs.date}} {{> infoIcon fieldDocs.date}}{{/if}}</label>
     <div data-bind="datePicker: date"></div>
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label for="referenceField">Reference{{#if fieldDocs.reference}} {{> infoIcon fieldDocs.reference}}{{/if}}</label>
     <input class="form-control" type="text" name="referenceField" id="referenceField" data-bind="textInput: reference">
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label for="publisherField">Publisher{{#if fieldDocs.publisher}} {{> infoIcon fieldDocs.publisher}}{{/if}}</label>
     <input class="form-control" type="text" name="publisherField" id="publisherField" data-bind="textInput: publisher" autocomplete="off">
     <!-- ko if: publisherSuggestions().length > 0 -->
@@ -29,12 +29,12 @@
     <small class="text-warning publisher-create-hint">No matching source found. <a href="#" data-bind="click: function() { createPublisherFromRef(); }">Create this publisher</a></small>
     <!-- /ko -->
 </div>
-<div class="form-group">
-    <div class="checkbox">
+<div class="mb-3">
+    <div class="form-check">
         <label><input type="checkbox" data-bind="checked: hasSeparateSource"> Add separate source</label>
     </div>
 </div>
-<div class="form-group" data-bind="visible: hasSeparateSource">
+<div class="mb-3" data-bind="visible: hasSeparateSource">
     <label for="sourceField">Source{{#if fieldDocs.source}} {{> infoIcon fieldDocs.source}}{{/if}}</label>
     <input class="form-control" type="text" name="sourceField" id="sourceField" data-bind="textInput: source" autocomplete="off">
     <!-- ko if: sourceSuggestions().length > 0 -->
@@ -49,12 +49,12 @@
     <small class="text-warning source-create-hint">No matching source found. <a href="#" data-bind="click: function() { createSourceFromRef(); }">Create this source</a></small>
     <!-- /ko -->
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label for="pageField">Page{{#if fieldDocs.page}} {{> infoIcon fieldDocs.page}}{{/if}}</label>
     <input class="form-control" type="text" name="pageField" id="pageField" data-bind="textInput: page">
     <small id="runtimeHelp" class="form-text text-muted">When "Reference" is "DVD"|"CD"|"cassette", this field represents run time.</small>
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label for="typeField">Type{{#if fieldDocs.type}} {{> infoIcon fieldDocs.type}}{{/if}}</label>
     <select class="form-control" name="typeField" id="typeField" data-bind="value: type">
         <option value="">(none)</option>
@@ -65,24 +65,24 @@
 </div>
 <div data-bind="visible: isReview">
     <h5>Reviewed work</h5>
-    <div class="form-group">
+    <div class="mb-3">
         <label for="rev_authorField">Reviewed Author{{#if fieldDocs.rev_author}} {{> infoIcon fieldDocs.rev_author}}{{/if}}</label>
         <input class="form-control" type="text" name="rev_authorField" id="rev_authorField" data-bind="textInput: rev_author">
     </div>
-    <div class="form-group">
+    <div class="mb-3">
         <label for="rev_titleField">Reviewed Title{{#if fieldDocs.rev_title}} {{> infoIcon fieldDocs.rev_title}}{{/if}}</label>
         <input class="form-control" type="text" name="rev_titleField" id="rev_titleField" data-bind="textInput: rev_title">
     </div>
-    <div class="form-group">
+    <div class="mb-3">
         <label>Reviewed Date{{#if fieldDocs.rev_date}} {{> infoIcon fieldDocs.rev_date}}{{/if}}</label>
         <div data-bind="datePicker: rev_date"></div>
     </div>
-    <div class="form-group">
+    <div class="mb-3">
         <label for="rev_sourceField">Reviewed Source{{#if fieldDocs.rev_source}} {{> infoIcon fieldDocs.rev_source}}{{/if}}</label>
         <input class="form-control" type="text" name="rev_sourceField" id="rev_sourceField" data-bind="textInput: rev_source">
     </div>
 </div>
-<div class="form-group">
+<div class="mb-3">
     <label for="abstField">Abstract{{#if fieldDocs.abstract}} {{> infoIcon fieldDocs.abstract}}{{/if}}</label>
     <textarea class="form-control" rows="8" name="abstField" id="abstField" data-bind="textInput: abst"></textarea>
 </div>

@@ -39,10 +39,10 @@
                 <select id="citationStyle" class="form-control" style="display: inline-block; width: auto;"
                         data-bind="options: styles, optionsText: 'label', optionsValue: 'id', value: selectedStyle"></select>
             </div>
-            <div class="panel-group" id="printSet" role="tablist">
+            <div class="accordion" id="printSet" role="tablist">
                 <!-- ko foreach: refs -->
-                <div class="panel panel-default">
-                    <div class="panel-heading" role="tab">
+                <div class="card">
+                    <div class="card-header" role="tab">
                         <a href="#" class="close-x" data-bind="click: $parent.removeOne" aria-label="close" tabindex=0>&times;</a>
                         <div class="row">
                             <div class="col-sm-4"><h5><span data-bind="text: author">Author</span></h5></div>
@@ -50,7 +50,7 @@
                             <div class="col-sm-1"><h5><span data-bind="text: date">Date</span></h5></div>
                         </div>
                     </div>
-                    <div class="panel-body">
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-sm-4"><h4>Reference</h4><span data-bind="text: reference"></span></div>
                             <div class="col-sm-6"><h4>Source</h4><span data-bind="text: source"></span></div>

@@ -12,7 +12,7 @@
                 <p class="text-muted">No campaigns yet. Create one on the <a href="/campaigns">Campaigns</a> page first.</p>
                 <!-- /ko -->
                 <!-- ko if: pickerCampaigns().length > 0 -->
-                <div class="form-group">
+                <div class="mb-3">
                     <select id="campaignPickerSelect" class="form-control" data-bind="options: pickerCampaigns, optionsText: 'label', optionsValue: 'id', value: pickerSelected"></select>
                 </div>
                 <!-- /ko -->
