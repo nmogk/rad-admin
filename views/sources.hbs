@@ -9,15 +9,15 @@
         <p>Search for sources by name, city, website, or any other field. Sources are referred to by name from the source and publisher fields of references. You can open the source associated with particular reference from the references page.</p>
 
         <form role="search" class="">
-          <div class="mb-3">
-            <label for="searchInput" class="form-label col-sm-2">Query:</label>
+          <div class="row mb-3">
+            <label for="searchInput" class="col-sm-2 col-form-label">Query:</label>
             <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
           </div>
-          <div class="mb-3">
-            <label for="rowsInput" class="form-label col-sm-2">Results per page:</label>
+          <div class="row mb-3">
+            <label for="rowsInput" class="col-sm-2 col-form-label">Results per page:</label>
             <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
           </div>
-          <div class="mb-3">
+          <div class="row mb-3">
             <div class="offset-sm-2 col-sm-5">
               <button type="submit" class="btn btn-primary" data-bs-toggle="tooltip" title="Search on query"><span class="bi bi-search"></span> Search</button>
               <button id="unusedSourceBtn" type="button" class="btn btn-primary" data-bs-toggle="tooltip" title="Find sources not used by any reference"><span class="bi bi-arrow-up-left-circle"></span></button>

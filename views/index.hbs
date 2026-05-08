@@ -14,14 +14,14 @@
         <p>Use the query bar below to search the most comprehensive database of creationist abstracts, popular and technical.  <a href="#" id="showStoryLink">Read</a> our story. View your <a target="printer" href="aggregator.html">saved references</a>. View search <a href="#" style="cursor: pointer" data-bs-toggle="modal" data-bs-target="#searchHelp">help</a> or <a href="https://github.com/nmogk/rad-admin/issues/new">report</a> an issue.</p><p class="text-muted"> (To see the abstract and other detailed information, click on the desired row in the results.)</p>
 
         <form role="search" class="">
-          <div class="mb-3">
-            <label for="searchInput" class="form-label col-sm-2">Query:</label>
+          <div class="row mb-3">
+            <label for="searchInput" class="col-sm-2 col-form-label">Query:</label>
             <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
           </div>
-          <div class="mb-3">
-            <label for="rowsInput" class="form-label col-sm-2">Results per page:</label>
+          <div class="row mb-3">
+            <label for="rowsInput" class="col-sm-2 col-form-label">Results per page:</label>
             <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
-            <label for="typeInput" class="form-label col-sm-1">Ref Type (experimental):</label>
+            <label for="typeInput" class="col-sm-1 col-form-label">Ref Type (experimental):</label>
             <div class="col-sm-2">
               <select id="typeInput" class="form-control" name="type">
                 <option value="">Any type</option>
@@ -34,7 +34,7 @@
               <label><input id="boostCheck" type="checkbox" name="boost" value="1"> Disable date boost</label>
             </div>
           </div> {{!TODO: ensure max is consistent with server max }}
-          <div class="mb-3">
+          <div class="row mb-3">
             <div class="offset-sm-2 col-sm-10"><button type="submit" class="btn btn-primary"><span class="bi bi-search"></span> Search</button></div></div>
         </form>
         
