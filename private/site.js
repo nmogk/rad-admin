@@ -60,7 +60,7 @@ function SiteViewModel() {
                 modal.on('hidden.bs.modal', function () {
                     container.empty();
                 });
-                modal.modal('show');
+                bsModalShow(modal);
             } else {
                 // Content doesn't contain a modal — fall back to inline preview
                 self.showPreview(!self.showPreview());

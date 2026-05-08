@@ -10,7 +10,7 @@ jQuery(function ($) {
 
             success: function (data, status) {
                 console.log("Submit success");
-                $form.closest(".modal").modal("hide");
+                bsModalHide($form.closest(".modal"));
             }, 
 
             error: function (jqXHR, status, error) {

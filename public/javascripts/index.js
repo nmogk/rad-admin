@@ -139,7 +139,7 @@ RefViewModel.prototype.generateCitation = function () {
     new ClipboardJS('.copy', {
         container: document.getElementById('#citationModal')
     });
-    $("#citationModal").modal("show");
+    bsModalShow("#citationModal");
 };
 
 // Adds reference information to localStorage so that it can be printed nicely

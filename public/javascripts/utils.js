@@ -23,6 +23,50 @@ function htmlDecode(value) {
 }
 
 /**
+ * BS5 modal helpers. Take a CSS selector, DOM node, or jQuery object and
+ * return / drive the corresponding bootstrap.Modal instance. Replaces the
+ * BS3 jQuery plugin shim (`$('#x').modal('show')`) which is gone in BS5.
+ */
+function bsModalEl(target) {
+    if (!target) return null;
+    if (typeof target === 'string') return document.querySelector(target);
+    if (target.jquery) return target[0] || null;
+    if (target.nodeType) return target;
+    return null;
+}
+function bsModal(target, options) {
+    var el = bsModalEl(target);
+    if (!el) return null;
+    return bootstrap.Modal.getOrCreateInstance(el, options || {});
+}
+function bsModalShow(target, options) {
+    var inst = bsModal(target, options);
+    if (inst) inst.show();
+    return inst;
+}
+function bsModalHide(target) {
+    var inst = bsModal(target);
+    if (inst) inst.hide();
+    return inst;
+}
+
+/**
+ * Initialises every [data-bs-toggle="tooltip"] and [data-bs-toggle="popover"]
+ * inside `root` (defaults to document). BS5 widgets are opt-in, so this must
+ * run after the DOM is built and after every ko.applyBindings that brings
+ * tooltip/popover triggers into the tree.
+ */
+function initBootstrapWidgets(root) {
+    root = bsModalEl(root) || document;
+    root.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        bootstrap.Tooltip.getOrCreateInstance(el);
+    });
+    root.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+        bootstrap.Popover.getOrCreateInstance(el);
+    });
+}
+
+/**
  * Wraps a string as a Solr quoted phrase, escaping backslashes and quotes
  * so the value can be substituted into queries like name:"<phrase>".
  */
@@ -42,8 +86,8 @@ function escapeSolrPhrase(value) {
 function confirmDialog(opts, onConfirm) {
     "use strict";
     opts = opts || {};
-    var $modal = $('#confirmModal');
-    if (!$modal.length || typeof $.fn.modal !== 'function') {
+    var modalEl = document.getElementById('confirmModal');
+    if (!modalEl || !window.bootstrap || !bootstrap.Modal) {
         if (window.confirm(opts.body || 'Are you sure?')) { onConfirm(); }
         return;
     }
@@ -55,10 +99,10 @@ function confirmDialog(opts, onConfirm) {
     // on destructive actions; keep btn so Bootstrap's base styles apply.
     $btn.attr('class', 'btn ' + (opts.confirmClass || 'btn-info'));
     $btn.off('click.confirmDialog').on('click.confirmDialog', function () {
-        $modal.modal('hide');
+        bsModalHide(modalEl);
         onConfirm();
     });
-    $modal.modal('show');
+    bsModalShow(modalEl);
 }
 
 /**

@@ -41,8 +41,8 @@ SrcViewModel.prototype.editSource = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
-    $('#editSourceModal [data-bs-toggle="popover"]').popover();
-    $("#editSourceModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#editSourceModal");
+    bsModalShow("#editSourceModal", { backdrop: 'static' });
 }
 
 SrcViewModel.prototype.submitEdits = function () {
@@ -59,7 +59,7 @@ SrcViewModel.prototype.submitEdits = function () {
         type: "POST",
         success: function (data) {
             self.commit();
-            $("#editSourceModal").modal("hide");
+            bsModalHide("#editSourceModal");
             window.location.href = data.redirect || '/sources';
         },
         error: function (jqXHR) {
@@ -86,7 +86,7 @@ SrcViewModel.prototype.newSourceHandler = function () {
             self.commit();
             self.blank();
             localStorage['sourcesEditor'] = ko.toJSON(self);
-            $("#newSourceModal").modal("hide");
+            bsModalHide("#newSourceModal");
             window.location.href = data.redirect || '/sources';
         },
         error: function (jqXHR) {
@@ -224,7 +224,7 @@ $(document).on('click', '#unusedSourceBtn', function () {
 // Bootstrap popovers must be opt-in.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-bs-toggle="popover"]').popover();
+    initBootstrapWidgets();
 });
 
 // Make sure the whole page is loaded before manipulating it

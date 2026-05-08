@@ -32,7 +32,7 @@ $(function () {
     $('.delete-backup').on('click', function () {
         pendingDelete = $(this).data('filename');
         $('#deleteBackupName').text(pendingDelete);
-        $('#deleteBackupConfirm').modal('show');
+        bsModalShow('#deleteBackupConfirm');
     });
 
     $('#confirm-delete-backup-button').on('click', function () {
@@ -106,6 +106,6 @@ $(function () {
             $latestRef.text('No reference in the index has a parseable date.');
         }
 
-        $('#recomputeResult').modal('show');
+        bsModalShow('#recomputeResult');
     }
 });

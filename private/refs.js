@@ -88,8 +88,8 @@ RefViewModel.prototype.editRef = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
-    $('#editRefModal [data-bs-toggle="popover"]').popover();
-    $("#editRefModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#editRefModal");
+    bsModalShow("#editRefModal", { backdrop: 'static' });
 }
 
 RefViewModel.prototype.submitEdits = function () {
@@ -113,7 +113,7 @@ RefViewModel.prototype.submitEdits = function () {
         type: "POST",
         success: function (data) {
             self.commit();
-            $("#editRefModal").modal("hide");
+            bsModalHide("#editRefModal");
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {
@@ -145,7 +145,7 @@ RefViewModel.prototype.newRefHandler = function () {
             self.commit();
             self.blank();
             localStorage['refsEditor'] = ko.toJSON(self);
-            $("#newRefModal").modal("hide");
+            bsModalHide("#newRefModal");
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {
@@ -413,7 +413,7 @@ function openSourceCreatorFromField(fieldName) {
             name = ctx[fieldName]() || '';
         }
     }
-    modal.modal('hide');
+    bsModalHide(modal);
 
     var blankSource = new SrcViewModel({ name: name });
     ko.cleanNode($("#newSourceModal")[0]);
@@ -429,12 +429,12 @@ function openSourceCreatorFromField(fieldName) {
             data: JSON.stringify(self.cache.latestData),
             type: "POST",
             success: function (data) {
-                $("#newSourceModal").modal("hide");
+                bsModalHide("#newSourceModal");
                 sourceNotFound(false);
                 sourceSuggestions([]);
                 publisherNotFound(false);
                 publisherSuggestions([]);
-                modal.modal({ backdrop: 'static' });
+                bsModalShow(modal, { backdrop: 'static' });
             },
             error: function (jqXHR) {
                 var msg = 'Error creating source';
@@ -448,7 +448,7 @@ function openSourceCreatorFromField(fieldName) {
     };
 
     ko.applyBindings(blankSource, $("#newSourceModal")[0]);
-    $("#newSourceModal").modal({ backdrop: 'static' });
+    bsModalShow("#newSourceModal", { backdrop: 'static' });
 }
 
 var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'publisher', 'page', 'abstract', 'dt'];
@@ -684,7 +684,7 @@ function attachOddCharReport(vm) {
 // the modal's overflow stack so they aren't clipped.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-bs-toggle="popover"]').popover();
+    initBootstrapWidgets();
 });
 
 // ===== Campaign integration =====
@@ -751,11 +751,11 @@ function openCampaignPicker(refIds) {
             });
             pickerCampaigns(opts);
             pickerSelected(opts.length ? opts[0].id : null);
-            $('#campaignPickerModal').modal({ backdrop: 'static' });
+            bsModalShow('#campaignPickerModal', { backdrop: 'static' });
         },
         error: function () {
             pickerError('Could not load campaign list.');
-            $('#campaignPickerModal').modal({ backdrop: 'static' });
+            bsModalShow('#campaignPickerModal', { backdrop: 'static' });
         }
     });
 }
@@ -773,7 +773,7 @@ function pickerSubmit() {
         data: JSON.stringify({ ids: ids }),
         success: function (data) {
             pickerBusy(false);
-            $('#campaignPickerModal').modal('hide');
+            bsModalHide('#campaignPickerModal');
             if (campaignId === _activeCampaignId) {
                 updateActiveCampaignCount(data && data.refCount);
             }

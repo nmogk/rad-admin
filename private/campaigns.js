@@ -19,8 +19,8 @@ CampaignViewModel.prototype.editCampaign = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which wipes Bootstrap's popover
     // state along with KO bindings. Re-init so the info icons work again.
-    $('#editCampaignModal [data-bs-toggle="popover"]').popover();
-    $("#editCampaignModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#editCampaignModal");
+    bsModalShow("#editCampaignModal", { backdrop: 'static' });
 };
 
 CampaignViewModel.prototype.submitEdits = function () {
@@ -36,7 +36,7 @@ CampaignViewModel.prototype.submitEdits = function () {
         type: "POST",
         success: function (data) {
             self.commit();
-            $("#editCampaignModal").modal("hide");
+            bsModalHide("#editCampaignModal");
             window.location.href = data.redirect || '/campaigns';
         },
         error: function (jqXHR) {
@@ -59,7 +59,7 @@ CampaignViewModel.prototype.newCampaignHandler = function () {
         success: function (data) {
             self.commit();
             self.blank();
-            $("#newCampaignModal").modal("hide");
+            bsModalHide("#newCampaignModal");
             window.location.href = data.redirect || '/campaigns';
         },
         error: function (jqXHR) {
@@ -144,7 +144,7 @@ function searchInit() {
 // Bootstrap popovers must be opt-in.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-bs-toggle="popover"]').popover();
+    initBootstrapWidgets();
 });
 
 $(document).ready(searchInit());
