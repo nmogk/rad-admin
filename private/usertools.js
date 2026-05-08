@@ -115,3 +115,4 @@ function UserViewModel(qString) {
 };
 
 ko.applyBindings(new UserViewModel());
+initBootstrapWidgets();

@@ -136,9 +136,11 @@ function searchInit() {
 
     var grid = new CampaignsGridViewModel(raw);
     ko.applyBindings(grid, document.getElementById('mainDisplay'));
+    initBootstrapWidgets();
 
     var blank = new CampaignViewModel({});
     ko.applyBindings(blank, $("#newCampaignModal")[0]);
+    initBootstrapWidgets("#newCampaignModal");
 }
 
 // Bootstrap popovers must be opt-in.

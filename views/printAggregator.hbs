@@ -129,6 +129,7 @@
 
             if(typeof(Storage) !== "undefined" ){
                 ko.applyBindings(new PrinterViewModel(), $('#aggregatorRoot')[0]);
+                initBootstrapWidgets('#aggregatorRoot');
                 new ClipboardJS('.copy-citation');
             } else {
                 alert("HTML5 storage must be available for the print function to work. Try a newer browser.");

@@ -93,3 +93,4 @@ function SiteViewModel() {
 }
 
 ko.applyBindings(new SiteViewModel());
+initBootstrapWidgets();

@@ -216,6 +216,7 @@ function searchInit() {
     blankRefViewModel.publisher.subscribe(lookupPublishers);
     attachOddCharReport(blankRefViewModel);
     ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
+    initBootstrapWidgets("#newRefModal");
 
     var orphanNotice = null;
     try { orphanNotice = sessionStorage.getItem('orphanRefsNotice'); } catch (e) {}
@@ -257,6 +258,7 @@ function searchInit() {
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
         document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
         ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
+        initBootstrapWidgets();
     }
 }
 
@@ -448,6 +450,7 @@ function openSourceCreatorFromField(fieldName) {
     };
 
     ko.applyBindings(blankSource, $("#newSourceModal")[0]);
+    initBootstrapWidgets("#newSourceModal");
     bsModalShow("#newSourceModal", { backdrop: 'static' });
 }
 
@@ -719,6 +722,7 @@ function initCampaignPicker() {
             pickerBusy: pickerBusy,
             pickerSubmit: pickerSubmit
         }, modalEl);
+        initBootstrapWidgets(modalEl);
     }
 
     $(document).on('click', '#addResultsToCampaignBtn', function (e) {

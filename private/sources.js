@@ -112,6 +112,7 @@ function searchInit() {
         blankSrcViewModel.update(JSON.parse(localStorage['sourcesEditor']));
     }
     ko.applyBindings(blankSrcViewModel, $("#newSourceModal")[0]);
+    initBootstrapWidgets("#newSourceModal");
 
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":");
@@ -119,6 +120,7 @@ function searchInit() {
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20"));
         document.getElementById("rowsInput").value = queryString.rows;
         ko.applyBindings(new SrcGridViewModel(queryString), $("#mainDisplay")[0]);
+        initBootstrapWidgets();
     }
 }
 
