@@ -44,7 +44,7 @@ RefViewModel.prototype.viewPublisherForEditing = function () {
  * Snapshot of #editRefModal's pristine inner HTML, captured on first edit.
  * `ko.cleanNode` clears Knockout state but doesn't remove DOM nodes that
  * `<!-- ko if -->` and `foreach` previously cloned, so each re-applyBindings
- * was appending fresh copies on top of stale ones â€” visible as duplicated
+ * was appending fresh copies on top of stale ones — visible as duplicated
  * "Problematic characters" warnings (and stale autocomplete leftovers).
  * Restoring the snapshot before re-binding gives KO a clean slate.
  */
@@ -82,7 +82,7 @@ RefViewModel.prototype.editRef = function () {
 
     // Live computed of problematic chars currently in the form. Note: chars
     // that htmlDecode silently drops on the way from Solr to the observable
-    // (NBSP, zero-width, etc.) won't appear here â€” the search button is the
+    // (NBSP, zero-width, etc.) won't appear here - the search button is the
     // canonical source for "this record contains invisibles."
     attachOddCharReport(this);
     ko.applyBindings(this, modal);
@@ -375,7 +375,7 @@ function syncSourceFromPublisher(vm) {
 
 // Dismiss source/publisher suggestions when clicking outside their field areas.
 // `mousedown` (rather than `click`) gives a snappier dismissal, but it fires
-// before `click` does â€” which means we must exclude the "create this â€¦" hint
+// before `click` does — which means we must exclude the "create this ..." hint
 // from the dismissal check, or else clearing the *NotFound observable would
 // detach the link from the DOM before its click handler ever ran.
 $(document).on('mousedown', function (e) {
@@ -405,7 +405,7 @@ function createPublisherFromRef() {
 // Pre-fills the new-source modal with the value from the ref modal's `source`
 // or `publisher` field, then hides the ref modal until the source is saved.
 // Publishers and sources share the sources core, so creating either is the
-// same action â€” only the source of the pre-filled name changes.
+// same action — only the source of the pre-filled name changes.
 function openSourceCreatorFromField(fieldName) {
     var modal = $('.modal.in');
     var name = '';
@@ -529,7 +529,7 @@ function searchOrphanSources() {
     btn.disabled = true;
     btn.innerHTML = '<span class="bi bi-arrow-repeat bi-spin"></span>';
     progress.style.display = '';
-    progress.textContent = 'Loading sourcesâ€¦';
+    progress.textContent = 'Loading sources...';
 
     var pageSize = 1000;
 
@@ -556,7 +556,7 @@ function searchOrphanSources() {
                         if (n) { names[n] = true; }
                     });
                     loaded += (data.response.docs || []).length;
-                    progress.textContent = 'Loading sourcesâ€¦ ' + loaded + ' of ' + data.response.numFound;
+                    progress.textContent = 'Loading sources... ' + loaded + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { callback(names); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -585,7 +585,7 @@ function searchOrphanSources() {
                         if ((sourceOrphan || publisherOrphan) && d.id !== undefined) { orphanIds.push(d.id); }
                     });
                     scanned += (data.response.docs || []).length;
-                    progress.textContent = 'Scanning refsâ€¦ ' + scanned + ' of ' + data.response.numFound;
+                    progress.textContent = 'Scanning refs... ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { finish(orphanIds); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -695,7 +695,7 @@ $(function () {
 // Set by initCampaignPicker; the active campaign id (number) or null.
 var _activeCampaignId = null;
 
-// Picker observables â€” bound to #campaignPickerModal in initCampaignPicker.
+// Picker observables — bound to #campaignPickerModal in initCampaignPicker.
 var pickerCampaigns = ko.observableArray([]);
 var pickerSelected = ko.observable(null);
 var pickerRefIds = ko.observableArray([]);
@@ -781,7 +781,7 @@ function pickerSubmit() {
             if (campaignId === _activeCampaignId) {
                 updateActiveCampaignCount(data && data.refCount);
             }
-            // Lightweight feedback â€” full flash would need a page refresh.
+            // Lightweight feedback - full flash would need a page refresh.
             alert('Added ' + (data.added || 0) + ' new reference' + ((data.added === 1) ? '' : 's') +
                 ' (campaign now has ' + (data.refCount || 0) + ').');
         },

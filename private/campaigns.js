@@ -26,7 +26,7 @@ CampaignViewModel.prototype.editCampaign = function () {
 CampaignViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    // Don't commit before submit â€” Cancel calls revert(), so cache must hold
+    // Don't commit before submit - Cancel calls revert(), so cache must hold
     // the last KNOWN-GOOD state, not the in-flight (possibly invalid) state.
     // See refs.js submitEdits for full rationale. (#112)
     $.ajax({
@@ -103,7 +103,7 @@ CampaignViewModel.prototype.deleteCampaign = function () {
 };
 
 // Build a /refs?q=id:(...) URL from the campaign's refs and navigate. The cap
-// matches the orphan-refs power query in private/refs.js â€” Solr URL length
+// matches the orphan-refs power query in private/refs.js - Solr URL length
 // limits force batching for big lists.
 CampaignViewModel.prototype.openInRefs = function () {
     var ids = (this.refs() || []).slice();
