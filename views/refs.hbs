@@ -30,10 +30,10 @@
           </div> {{!TODO: ensure max is consistent with server max }}
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-5">
-              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="bi bi-search"></span> Search</button>
+              <button type="submit" class="btn btn-primary" data-bs-toggle="tooltip" title="Search on query"><span class="bi bi-search"></span> Search</button>
               <div class="btn-group">
-                <button id="blankSearchBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for entries with any blank field"><span class="bi bi-dash-circle"></span></button>
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button id="blankSearchBtn" type="button" class="btn btn-primary" data-bs-toggle="tooltip" title="Search for entries with any blank field"><span class="bi bi-dash-circle"></span></button>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="caret"></span>
                   <span class="sr-only">Choose a specific blank field</span>
                 </button>
@@ -55,8 +55,8 @@
                 </ul>
               </div>
               <div class="btn-group">
-                <button id="oddCharSearchBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Search for entries with odd or problematic characters"><span class="bi bi-question-circle"></span></button>
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button id="oddCharSearchBtn" type="button" class="btn btn-primary" data-bs-toggle="tooltip" title="Search for entries with odd or problematic characters"><span class="bi bi-question-circle"></span></button>
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="caret"></span>
                   <span class="sr-only">Choose a specific character category</span>
                 </button>
@@ -68,11 +68,11 @@
                   <li role="presentation"><a role="menuitem" href="#" data-odd-chars="smart">Smart punctuation</a></li>
                 </ul>
               </div>
-              <button id="orphanSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find refs whose source is not in the source list"><span class="bi bi-arrow-up-right-circle"></span></button>
+              <button id="orphanSourceBtn" type="button" class="btn btn-primary" data-bs-toggle="tooltip" title="Find refs whose source is not in the source list"><span class="bi bi-arrow-up-right-circle"></span></button>
               <span id="orphanSourceProgress" class="text-muted small" style="display:none; margin-left:8px" aria-live="polite"></span>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
-              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newRefModal" data-backdrop="static"><span class="bi bi-plus-lg"></span> Add new reference</button>
+              <button type="button" class="btn btn-info" href="#" data-bs-toggle="modal" data-bs-target="#newRefModal" data-bs-backdrop="static"><span class="bi bi-plus-lg"></span> Add new reference</button>
             </div>
           </div>
         </form>
@@ -107,7 +107,7 @@
                 <span class="col-sm-3">Author</span>
                 <span class="col-sm-6">Title</span>
                 <span class="col-sm-2">Date</span>
-                <span class="col-sm-1"><a href="#" id="addResultsToCampaignBtn" data-toggle="tooltip" title="Add current references to campaign" style="color: #000000;"><span class="bi bi-list-task"></span></a></span>
+                <span class="col-sm-1"><a href="#" id="addResultsToCampaignBtn" data-bs-toggle="tooltip" title="Add current references to campaign" style="color: #000000;"><span class="bi bi-list-task"></span></a></span>
               </h4>
             </div>
             <hr>
@@ -119,15 +119,15 @@
           
             <!-- ko foreach: refs -->
             <div class="panel panel-default">
-              <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
+              <div class="panel-heading" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
               <div class="row">
-                  <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
+                  <a data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
                     <div class="col-sm-3"><h5><span data-bind="textPretty: author">Author</span></h5></div>
                     <div class="col-sm-6"><h5><span data-bind="textPretty: title">Title</span></h5></div>
                     <div class="col-sm-2"><h5><span data-bind="textPretty: date">Date</span></h5></div>
                   </a>
                   <div class="dropdown col-sm-1" aria-haspopup="true">
-                    <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
+                    <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown" style="color: #000000;">
                     <span class="bi bi-three-dots-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: editRef"><span class="bi bi-pencil"></span> Edit</a></li>

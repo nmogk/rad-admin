@@ -19,12 +19,12 @@
           </div>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-5">
-              <button type="submit" class="btn btn-primary" data-toggle="tooltip" title="Search on query"><span class="bi bi-search"></span> Search</button>
-              <button id="unusedSourceBtn" type="button" class="btn btn-primary" data-toggle="tooltip" title="Find sources not used by any reference"><span class="bi bi-arrow-up-left-circle"></span></button>
+              <button type="submit" class="btn btn-primary" data-bs-toggle="tooltip" title="Search on query"><span class="bi bi-search"></span> Search</button>
+              <button id="unusedSourceBtn" type="button" class="btn btn-primary" data-bs-toggle="tooltip" title="Find sources not used by any reference"><span class="bi bi-arrow-up-left-circle"></span></button>
               <span id="unusedSourceProgress" class="text-muted small" style="display:none; margin-left:8px" aria-live="polite"></span>
             </div>
             <div class="col-xs-offset-right-2 col-sm-3 text-right">
-              <button type="button" class="btn btn-info" href="#" data-toggle="modal" data-target="#newSourceModal" data-backdrop="static"><span class="bi bi-plus-lg"></span> Add new source</button>
+              <button type="button" class="btn btn-info" href="#" data-bs-toggle="modal" data-bs-target="#newSourceModal" data-bs-backdrop="static"><span class="bi bi-plus-lg"></span> Add new source</button>
             </div>
           </div>
         </form>
@@ -56,15 +56,15 @@
 
             <!-- ko foreach: sources -->
             <div class="panel panel-default">
-              <div class="panel-heading" tabindex=0 data-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
+              <div class="panel-heading" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
               <div class="row">
-                  <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
+                  <a data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
                     <div class="col-sm-6"><h5><span data-bind="textPretty: name">Name</span></h5></div>
                     <div class="col-sm-3"><h5><span data-bind="textPretty: city">City</span></h5></div>
                     <div class="col-sm-2"><h5><span data-bind="textPretty: state">State</span></h5></div>
                   </a>
                   <div class="dropdown col-sm-1" aria-haspopup="true">
-                    <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
+                    <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown" style="color: #000000;">
                     <span class="bi bi-three-dots-vertical"></span></button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: editSource"><span class="bi bi-pencil"></span> Edit</a></li>

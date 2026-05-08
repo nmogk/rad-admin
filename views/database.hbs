@@ -30,7 +30,7 @@
 </form>
 
 <form class="form inline" id="recomputeStatsForm" style="margin-top: 1em;">
-    <button type="submit" class="btn btn-info" id="recomputeStatsButton" data-toggle="tooltip"
+    <button type="submit" class="btn btn-info" id="recomputeStatsButton" data-bs-toggle="tooltip"
         title="Scan the rad core and rebuild the latest reference, total record count, and highest id in database.json">
         <span class="bi bi-arrow-repeat"></span> Recompute Stats
     </button>
@@ -81,15 +81,15 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="close">&times;</button>
                 <h4 class="modal-title">Delete this backup?</h4>
             </div>
             <div class="modal-body">
                 <p>About to delete <strong id="deleteBackupName"></strong>. This cannot be undone.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal" id="confirm-delete-backup-button">Delete</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="confirm-delete-backup-button">Delete</button>
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
@@ -99,7 +99,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="close">&times;</button>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="close">&times;</button>
                 <h4 class="modal-title">Recompute complete</h4>
             </div>
             <div class="modal-body">
@@ -113,7 +113,7 @@
                 <p id="recomputeLatestRef"></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

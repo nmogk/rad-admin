@@ -41,14 +41,14 @@ SrcViewModel.prototype.editSource = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
-    $('#editSourceModal [data-toggle="popover"]').popover();
+    $('#editSourceModal [data-bs-toggle="popover"]').popover();
     $("#editSourceModal").modal({ backdrop: 'static' });
 }
 
 SrcViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    // Snapshot at submit time, commit only on success — see refs.js submitEdits
+    // Snapshot at submit time, commit only on success â€” see refs.js submitEdits
     // for the rationale (cache must hold the last KNOWN-GOOD state so revert()
     // after Cancel restores cleanly even if validation failed). (#112)
     var payload = ko.toJS(self);
@@ -137,7 +137,7 @@ function searchUnusedSources() {
     btn.disabled = true;
     btn.innerHTML = '<span class="bi bi-arrow-repeat bi-spin"></span>';
     progress.style.display = '';
-    progress.textContent = 'Scanning refs…';
+    progress.textContent = 'Scanning refsâ€¦';
 
     var pageSize = 1000;
 
@@ -167,7 +167,7 @@ function searchUnusedSources() {
                         if (p) { used[p] = true; }
                     });
                     scanned += (data.response.docs || []).length;
-                    progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
+                    progress.textContent = 'Scanning refsâ€¦ ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { callback(used); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -192,7 +192,7 @@ function searchUnusedSources() {
                         if (n && !usedSet[n] && d.id) { unusedIds.push(d.id); }
                     });
                     scanned += (data.response.docs || []).length;
-                    progress.textContent = 'Scanning sources… ' + scanned + ' of ' + data.response.numFound;
+                    progress.textContent = 'Scanning sourcesâ€¦ ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { finish(unusedIds); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -224,7 +224,7 @@ $(document).on('click', '#unusedSourceBtn', function () {
 // Bootstrap popovers must be opt-in.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-toggle="popover"]').popover();
+    $('[data-bs-toggle="popover"]').popover();
 });
 
 // Make sure the whole page is loaded before manipulating it

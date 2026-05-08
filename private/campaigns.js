@@ -19,14 +19,14 @@ CampaignViewModel.prototype.editCampaign = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which wipes Bootstrap's popover
     // state along with KO bindings. Re-init so the info icons work again.
-    $('#editCampaignModal [data-toggle="popover"]').popover();
+    $('#editCampaignModal [data-bs-toggle="popover"]').popover();
     $("#editCampaignModal").modal({ backdrop: 'static' });
 };
 
 CampaignViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    // Don't commit before submit — Cancel calls revert(), so cache must hold
+    // Don't commit before submit â€” Cancel calls revert(), so cache must hold
     // the last KNOWN-GOOD state, not the in-flight (possibly invalid) state.
     // See refs.js submitEdits for full rationale. (#112)
     $.ajax({
@@ -103,7 +103,7 @@ CampaignViewModel.prototype.deleteCampaign = function () {
 };
 
 // Build a /refs?q=id:(...) URL from the campaign's refs and navigate. The cap
-// matches the orphan-refs power query in private/refs.js — Solr URL length
+// matches the orphan-refs power query in private/refs.js â€” Solr URL length
 // limits force batching for big lists.
 CampaignViewModel.prototype.openInRefs = function () {
     var ids = (this.refs() || []).slice();
@@ -144,7 +144,7 @@ function searchInit() {
 // Bootstrap popovers must be opt-in.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-toggle="popover"]').popover();
+    $('[data-bs-toggle="popover"]').popover();
 });
 
 $(document).ready(searchInit());
