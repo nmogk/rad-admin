@@ -119,6 +119,7 @@ router.post('/:key/reset', function(req, res, next) {
         } else {
             return new SiteContent({
                 section_key: key,
+                title: null,
                 content: content,
                 updated_at: now,
                 updated_by: email
@@ -130,8 +131,10 @@ router.post('/:key/reset', function(req, res, next) {
         res.json({ content: content, updated_at: now, updated_by: email });
     })
     .catch(function (err) {
+        // Surface the underlying DB / bookshelf error so the client alert
+        // includes something diagnostic instead of just "Problem saving".
         console.log(err);
-        res.status(500).json({ error: 'Problem saving site content.' });
+        res.status(500).json({ error: 'Problem saving site content: ' + (err && err.message ? err.message : err) });
     });
 });
 
