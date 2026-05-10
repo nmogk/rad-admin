@@ -40,12 +40,10 @@
               <span data-bind="text: summary"></span>
             </div>
             <div class="row">
-              <h4>
-                <span class="col-sm-6">Name</span>
-                <span class="col-sm-3">City</span>
-                <span class="col-sm-2">State</span>
-              </h4>
-              <span class="col-sm-1"></span>
+              <div class="col-12 col-sm-6"><h4>Name</h4></div>
+              <div class="col-12 col-sm-3"><h4>City</h4></div>
+              <div class="col-12 col-sm-2"><h4>State</h4></div>
+              <div class="col-12 col-sm-1"></div>
             </div>
             <hr>
             <div id="noResultsAlert" class="alert alert-info" aria-hidden="true" aria-live="assertive"><strong>No results!</strong> Your query did not match any sources. Make sure all words are spelled correctly. Try a less complex search or alternate search terms.</div>
@@ -57,20 +55,20 @@
             <!-- ko foreach: sources -->
             <div class="card">
               <div class="card-header" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
-              <div class="row">
-                  <a data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
-                    <div class="col-sm-6"><h5><span data-bind="textPretty: name">Name</span></h5></div>
-                    <div class="col-sm-3"><h5><span data-bind="textPretty: city">City</span></h5></div>
-                    <div class="col-sm-2"><h5><span data-bind="textPretty: state">State</span></h5></div>
-                  </a>
-                  <div class="dropdown col-sm-1" aria-haspopup="true">
-                    <button class="btn btn-link" type="button" data-bs-toggle="dropdown" style="color: #000000;">
-                    <span class="bi bi-three-dots-vertical"></span></button>
-                    <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="operations menu" tabindex=0>
+                <div class="row position-relative">
+                  <div class="col-12 col-sm-6"><h5><span data-bind="textPretty: name">Name</span></h5></div>
+                  <div class="col-12 col-sm-3"><h5><span data-bind="textPretty: city">City</span></h5></div>
+                  <div class="col-12 col-sm-2"><h5><span data-bind="textPretty: state">State</span></h5></div>
+                  <div class="col-12 col-sm-1 dropdown position-relative z-2">
+                    <button class="btn btn-link" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
+                      <span class="bi bi-three-dots-vertical"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="operations menu" tabindex=0>
                       <li role="presentation"><a role="menuitem" href="#" data-bind="click: editSource"><span class="bi bi-pencil"></span> Edit</a></li>
                       {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteSource"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
+                  <a class="stretched-link" data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                 </div>
               </div>
               <div class="collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
