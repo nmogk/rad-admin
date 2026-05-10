@@ -55,7 +55,11 @@ function buildDoc(body) {
 
 router.get('/', async function (req, res, next) {
     try {
-        var extras = { fieldDocs: fieldDescriptions.refs, refTypes: refTypes };
+        var extras = {
+            fieldDocs: fieldDescriptions.refs,
+            campaignFieldDocs: fieldDescriptions.campaigns,
+            refTypes: refTypes
+        };
         // Best-effort active-campaign banner. A bad/missing id just means no
         // banner — don't block the page from rendering.
         if (req.query.campaign && /^\d+$/.test(req.query.campaign)) {

@@ -59,7 +59,12 @@ router.post('/new', async function (req, res, next) {
         }).save();
         auditLogger.info(req.user.get("email") + " created a new campaign: " + JSON.stringify({ id: saved.get('id'), name: saved.get('name') }));
         req.flash('yay', 'Campaign created.');
-        res.json({ redirect: '/campaigns' });
+        // Return the saved id/name so callers that don't redirect (e.g. the
+        // refs-page picker's inline create flow) can preselect the new entry.
+        res.json({
+            redirect: '/campaigns',
+            campaign: { id: saved.get('id'), name: saved.get('name'), refCount: 0 }
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'A problem occurred saving the campaign.' });

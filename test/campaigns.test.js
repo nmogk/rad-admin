@@ -144,6 +144,15 @@ describe('Campaigns Routes', function () {
             expect(auditLoggerStub.info.calledOnce).to.be.true;
             expect(auditLoggerStub.info.firstCall.args[0]).to.include('created a new campaign');
         });
+
+        it('returns the saved campaign id/name for inline create flows', async function () {
+            var req = mockReq({ method: 'POST', body: { name: 'Fix dates' }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(campaignsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            expect(res._json.campaign).to.deep.equal({ id: 99, name: 'Fix dates', refCount: 0 });
+        });
     });
 
     describe('POST /:id (edit)', function () {

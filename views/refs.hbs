@@ -198,6 +198,8 @@
 
         {{> campaignPickerModal}}
 
+        {{> newCampaignModal fieldDocs=campaignFieldDocs}}
+
         {{> confirmModal}}
 
         {{> adminHelp}}
@@ -220,6 +222,7 @@
       <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/srcViewModel.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/campaignViewModel.js"></script>
       <script nonce="{{nonce}}" src="private/refs.js"></script>
     {{/inline}}
 
