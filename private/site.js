@@ -111,7 +111,13 @@ function SiteViewModel() {
                     section.updated_by(data.updated_by);
                 },
                 error: function (jqXHR) {
-                    console.log("Reset error: " + jqXHR.status);
+                    // Surface the server's error so failures (stale server
+                    // running an older ALLOWED_KEYS list, missing source
+                    // file, permission denied, etc.) don't disappear into
+                    // the console with no UI feedback.
+                    var detail = (jqXHR.responseJSON && jqXHR.responseJSON.error) || ('HTTP ' + jqXHR.status);
+                    alert('Reset from file failed: ' + detail);
+                    console.log("Reset error: " + jqXHR.status, jqXHR.responseJSON);
                 }
             });
         });
