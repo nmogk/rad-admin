@@ -51,6 +51,9 @@
                     <span class="bi bi-eye"></span>
                     <span data-bind="text: $root.showPreview() ? 'Hide Preview' : 'Show Preview'"></span>
                 </button>
+                <button class="btn btn-warning" data-bind="click: $root.resetFromFile">
+                    <span class="bi bi-arrow-counterclockwise"></span> Reset from file
+                </button>
                 {{/if}}
             </div>
             <!-- ko if: $root.showPreview -->
@@ -73,6 +76,7 @@
 
     {{#*inline "modal-block"}}
     {{> adminHelp}}
+    {{> confirmModal}}
     <div id="previewContainer"></div>
     {{/inline}}
 
@@ -80,6 +84,7 @@
     <script nonce="{{nonce}}">
         var siteContentData = {{{sectionsJson}}};
     </script>
+    <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
     <script nonce="{{nonce}}" src="private/site.js"></script>
     {{/inline}}
 

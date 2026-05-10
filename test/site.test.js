@@ -35,9 +35,14 @@ var log4jsStub = {
     })
 };
 
+var fsStub = {
+    readFileSync: sinon.stub().returns('<p>From file</p>')
+};
+
 var siteRouter = proxyquire('../routes/site', {
     '../models/site-content': SiteContentStub,
-    'log4js': log4jsStub
+    'log4js': log4jsStub,
+    'fs': fsStub
 });
 
 describe('Site Routes', function () {
@@ -46,6 +51,8 @@ describe('Site Routes', function () {
         fetchAllStub.resolves({ models: sectionModels });
         fetchStub.reset();
         saveStub.reset();
+        fsStub.readFileSync.resetHistory();
+        fsStub.readFileSync.returns('<p>From file</p>');
     });
 
     describe('GET /', function () {
@@ -171,6 +178,107 @@ describe('Site Routes', function () {
 
             var handler = findHandler(siteRouter, 'post', '/:key');
             handler(req, res, next);
+        });
+    });
+
+    describe('POST /:key/reset', function () {
+
+        it('should reject users with permission < 1', function () {
+            var user = mockUser({ permission: 0 });
+            var req = mockReq({
+                user: user,
+                params: { key: 'backstory' }
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(siteRouter, 'post', '/:key/reset');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(403)).to.be.true;
+            expect(fsStub.readFileSync.called).to.be.false;
+        });
+
+        it('should reject invalid section keys', function () {
+            var user = mockUser({ permission: 1 });
+            var req = mockReq({
+                user: user,
+                params: { key: 'not_a_section' }
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(siteRouter, 'post', '/:key/reset');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(fsStub.readFileSync.called).to.be.false;
+        });
+
+        it('should read the partial file and write its content to the existing row', function (done) {
+            var existing = {
+                set: sinon.stub(),
+                save: sinon.stub().resolves(),
+                get: function (key) { return 'backstory'; }
+            };
+            fetchStub.resolves(existing);
+
+            var user = mockUser({ permission: 1, email: 'editor@test.com' });
+            var req = mockReq({
+                user: user,
+                params: { key: 'backstory' }
+            });
+            var res = mockRes();
+            res.json = sinon.stub().callsFake(function (data) {
+                expect(fsStub.readFileSync.calledOnce).to.be.true;
+                expect(fsStub.readFileSync.firstCall.args[0]).to.match(/backstoryContents\.hbs$/);
+                expect(existing.set.calledWith('content', '<p>From file</p>')).to.be.true;
+                expect(existing.set.calledWith('updated_by', 'editor@test.com')).to.be.true;
+                expect(existing.save.calledOnce).to.be.true;
+                expect(data.content).to.equal('<p>From file</p>');
+                expect(data.updated_by).to.equal('editor@test.com');
+                done();
+            });
+            var next = sinon.spy();
+
+            var handler = findHandler(siteRouter, 'post', '/:key/reset');
+            handler(req, res, next);
+        });
+
+        it('should insert a new row when the section does not exist', function (done) {
+            fetchStub.resolves(null);
+
+            var user = mockUser({ permission: 2, email: 'admin@test.com' });
+            var req = mockReq({
+                user: user,
+                params: { key: 'search_help' }
+            });
+            var res = mockRes();
+            res.json = sinon.stub().callsFake(function (data) {
+                expect(data.content).to.equal('<p>From file</p>');
+                done();
+            });
+            var next = sinon.spy();
+
+            var handler = findHandler(siteRouter, 'post', '/:key/reset');
+            handler(req, res, next);
+        });
+
+        it('should 500 if the source file cannot be read', function () {
+            fsStub.readFileSync.throws(new Error('ENOENT'));
+
+            var user = mockUser({ permission: 1, email: 'editor@test.com' });
+            var req = mockReq({
+                user: user,
+                params: { key: 'backstory' }
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            var handler = findHandler(siteRouter, 'post', '/:key/reset');
+            handler(req, res, next);
+
+            expect(res.status.calledWith(500)).to.be.true;
         });
     });
 });

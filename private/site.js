@@ -90,6 +90,31 @@ function SiteViewModel() {
             }
         });
     };
+
+    self.resetFromFile = function () {
+        var section = self.currentSection();
+        if (!section) return;
+
+        confirmDialog({
+            title: 'Reset from file?',
+            body: 'This overwrites the "' + section.section_key + '" content in the database with the current contents of views/partials/. Any saved or unsaved DB edits to this section will be lost.',
+            confirmText: 'Reset',
+            confirmClass: 'btn-danger'
+        }, function () {
+            $.ajax({
+                url: "https://" + window.location.host + "/site/" + section.section_key + "/reset",
+                method: "POST",
+                success: function (data) {
+                    section.content(data.content);
+                    section.updated_at(data.updated_at);
+                    section.updated_by(data.updated_by);
+                },
+                error: function (jqXHR) {
+                    console.log("Reset error: " + jqXHR.status);
+                }
+            });
+        });
+    };
 }
 
 ko.applyBindings(new SiteViewModel());
