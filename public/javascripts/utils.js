@@ -190,7 +190,7 @@ ko.bindingHandlers.datePicker = {
 
         var convertBtn = document.createElement('button');
         convertBtn.type = 'button';
-        convertBtn.className = 'btn btn-default btn-sm';
+        convertBtn.className = 'btn btn-secondary btn-sm';
         convertBtn.textContent = 'Convert to standard date';
 
         rawWrapper.appendChild(rawNotice);

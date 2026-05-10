@@ -29,7 +29,7 @@
 
     {{#*inline "search-area"}}
         <p class="text-body-secondary">Use this page to collect references to print. Each reference you select on the main search results page with the <span style="white-space: nowrap;">&quot;<span class="bi bi-bookmark"></span> Save reference&quot;</span> menu option will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
-        <a href="#" class="btn btn-primary" id="printListButton"><span class="bi bi-printer-fill"></span> Print</a><a href="#" class="btn btn-default" id="clearListButton"><span class="bi bi-trash3"></span> Clear</a>
+        <a href="#" class="btn btn-primary" id="printListButton"><span class="bi bi-printer-fill"></span> Print</a><a href="#" class="btn btn-secondary" id="clearListButton"><span class="bi bi-trash3"></span> Clear</a>
     {{/inline}}
 
     {{#*inline "results-area"}}
@@ -60,7 +60,7 @@
                         <p data-bind="text: abstract"></p>
                         <h4>Citation</h4>
                         <p data-bind="html: $parent.formatCitation($data), attr: { id: 'citation-' + $index() }" style="display: inline-block; margin-right: 8px;"></p>
-                        <button type="button" class="btn btn-default btn-sm copy copy-citation"
+                        <button type="button" class="btn btn-secondary btn-sm copy copy-citation"
                                 data-bind="attr: { 'data-clipboard-target': '#citation-' + $index() }"
                                 aria-label="Copy citation to clipboard">
                             <span class="bi bi-clipboard-plus"></span>
