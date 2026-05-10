@@ -56,7 +56,7 @@ function SrcGridViewModel(qString) {
             }
 
             var pageList = document.createElement("UL");
-            pageList.setAttribute("class", "pagination");
+            pageList.setAttribute("class", "pagination justify-content-center");
 
             self.pgList = function (text, start, active, ariaLab) {
                 if (active === undefined) {

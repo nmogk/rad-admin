@@ -1,6 +1,14 @@
 {{#> layout title="Saved References"}}
 
     {{#*inline "header-block"}}
+        <style type="text/css">
+            /* Per-row remove-X. Was BS3 .close before the migration; renamed
+               to .close-x so it doesn't collide with BS5's modal .btn-close.
+               Restores the BS3 .close visual: small floated X with hover. */
+            .close-x { float: right; font-size: 1.5rem; font-weight: 700; line-height: 1;
+                color: #000; opacity: 0.5; text-decoration: none; padding: 0 .25rem; }
+            .close-x:hover, .close-x:focus { opacity: 0.75; text-decoration: none; color: #000; }
+        </style>
         <style media="print" type="text/css">
             @media print {
                 body * {

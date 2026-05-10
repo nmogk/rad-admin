@@ -90,7 +90,7 @@ function RefsGridViewModel(qString) {
             }
 
             var pageList = document.createElement("UL");
-            pageList.setAttribute("class", "pagination");
+            pageList.setAttribute("class", "pagination justify-content-center");
 
             // Dynamically create pagination list items given relevant inputs
             // Each list item is a link to the relevant page search, which is specified by the 'start'
