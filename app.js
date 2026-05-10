@@ -94,7 +94,7 @@ app.use(expressCspHeader({
     directives: {
         'default-src': [SELF], 
         'script-src': [NONCE, STRICT_DYNAMIC, EVAL, 'https:', INLINE], 
-        'style-src': [SELF, INLINE, 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/', 'https://bootswatch.com/5/journal/', 'https://fonts.googleapis.com/css'],
+        'style-src': [SELF, INLINE, 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/', 'https://bootswatch.com/5/journal/', 'https://fonts.googleapis.com/'],
         'font-src': [SELF, 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/fonts/', 'https://fonts.gstatic.com/'],
         'img-src': [SELF, 'data:'],
         'frame-ancestors': [NONE]
