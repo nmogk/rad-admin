@@ -17,6 +17,11 @@ var sections = [
         file: path.join(__dirname, '..', 'views', 'partials', 'backstoryContents.hbs')
     },
     {
+        section_key: 'search_area',
+        title: 'Search Area Intro',
+        file: path.join(__dirname, '..', 'views', 'partials', 'searchArea.hbs')
+    },
+    {
         section_key: 'search_help',
         title: 'Search Help',
         file: path.join(__dirname, '..', 'views', 'partials', 'searchHelp.hbs')

@@ -6,14 +6,15 @@ var SiteContent = require('../models/site-content');
 var log4js = require('log4js');
 var auditLogger = log4js.getLogger('audit');
 
-var ALLOWED_KEYS = ['backstory', 'search_help', 'rest_help'];
+var ALLOWED_KEYS = ['backstory', 'search_help', 'rest_help', 'search_area'];
 
 // Source file for each section, used by POST /:key/reset to reload the
 // canonical on-disk markup back into the DB. Mirrors tools/seedSiteContent.js.
 var FILE_BY_KEY = {
     'backstory':   path.join(__dirname, '..', 'views', 'partials', 'backstoryContents.hbs'),
     'search_help': path.join(__dirname, '..', 'views', 'partials', 'searchHelp.hbs'),
-    'rest_help':   path.join(__dirname, '..', 'views', 'partials', 'restHelp.hbs')
+    'rest_help':   path.join(__dirname, '..', 'views', 'partials', 'restHelp.hbs'),
+    'search_area': path.join(__dirname, '..', 'views', 'partials', 'searchArea.hbs')
 };
 
 router.get('/', function(req, res, next) {

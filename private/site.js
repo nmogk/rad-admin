@@ -5,6 +5,7 @@ function SiteViewModel() {
 
     self.sectionList = [
         { key: 'backstory', label: 'Backstory' },
+        { key: 'search_area', label: 'Search Area Intro' },
         { key: 'search_help', label: 'Search Help' },
         { key: 'rest_help', label: 'REST API Help' }
     ];
