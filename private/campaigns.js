@@ -19,14 +19,14 @@ CampaignViewModel.prototype.editCampaign = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which wipes Bootstrap's popover
     // state along with KO bindings. Re-init so the info icons work again.
-    $('#editCampaignModal [data-toggle="popover"]').popover();
-    $("#editCampaignModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#editCampaignModal");
+    bsModalShow("#editCampaignModal", { backdrop: 'static' });
 };
 
 CampaignViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    // Don't commit before submit — Cancel calls revert(), so cache must hold
+    // Don't commit before submit - Cancel calls revert(), so cache must hold
     // the last KNOWN-GOOD state, not the in-flight (possibly invalid) state.
     // See refs.js submitEdits for full rationale. (#112)
     $.ajax({
@@ -36,7 +36,7 @@ CampaignViewModel.prototype.submitEdits = function () {
         type: "POST",
         success: function (data) {
             self.commit();
-            $("#editCampaignModal").modal("hide");
+            bsModalHide("#editCampaignModal");
             window.location.href = data.redirect || '/campaigns';
         },
         error: function (jqXHR) {
@@ -59,7 +59,7 @@ CampaignViewModel.prototype.newCampaignHandler = function () {
         success: function (data) {
             self.commit();
             self.blank();
-            $("#newCampaignModal").modal("hide");
+            bsModalHide("#newCampaignModal");
             window.location.href = data.redirect || '/campaigns';
         },
         error: function (jqXHR) {
@@ -103,7 +103,7 @@ CampaignViewModel.prototype.deleteCampaign = function () {
 };
 
 // Build a /refs?q=id:(...) URL from the campaign's refs and navigate. The cap
-// matches the orphan-refs power query in private/refs.js — Solr URL length
+// matches the orphan-refs power query in private/refs.js - Solr URL length
 // limits force batching for big lists.
 CampaignViewModel.prototype.openInRefs = function () {
     var ids = (this.refs() || []).slice();
@@ -136,15 +136,17 @@ function searchInit() {
 
     var grid = new CampaignsGridViewModel(raw);
     ko.applyBindings(grid, document.getElementById('mainDisplay'));
+    initBootstrapWidgets();
 
     var blank = new CampaignViewModel({});
     ko.applyBindings(blank, $("#newCampaignModal")[0]);
+    initBootstrapWidgets("#newCampaignModal");
 }
 
 // Bootstrap popovers must be opt-in.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-toggle="popover"]').popover();
+    initBootstrapWidgets();
 });
 
 $(document).ready(searchInit());

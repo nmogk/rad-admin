@@ -23,6 +23,50 @@ function htmlDecode(value) {
 }
 
 /**
+ * BS5 modal helpers. Take a CSS selector, DOM node, or jQuery object and
+ * return / drive the corresponding bootstrap.Modal instance. Replaces the
+ * BS3 jQuery plugin shim (`$('#x').modal('show')`) which is gone in BS5.
+ */
+function bsModalEl(target) {
+    if (!target) return null;
+    if (typeof target === 'string') return document.querySelector(target);
+    if (target.jquery) return target[0] || null;
+    if (target.nodeType) return target;
+    return null;
+}
+function bsModal(target, options) {
+    var el = bsModalEl(target);
+    if (!el) return null;
+    return bootstrap.Modal.getOrCreateInstance(el, options || {});
+}
+function bsModalShow(target, options) {
+    var inst = bsModal(target, options);
+    if (inst) inst.show();
+    return inst;
+}
+function bsModalHide(target) {
+    var inst = bsModal(target);
+    if (inst) inst.hide();
+    return inst;
+}
+
+/**
+ * Initialises every [data-bs-toggle="tooltip"] and [data-bs-toggle="popover"]
+ * inside `root` (defaults to document). BS5 widgets are opt-in, so this must
+ * run after the DOM is built and after every ko.applyBindings that brings
+ * tooltip/popover triggers into the tree.
+ */
+function initBootstrapWidgets(root) {
+    root = bsModalEl(root) || document;
+    root.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        bootstrap.Tooltip.getOrCreateInstance(el);
+    });
+    root.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+        bootstrap.Popover.getOrCreateInstance(el);
+    });
+}
+
+/**
  * Wraps a string as a Solr quoted phrase, escaping backslashes and quotes
  * so the value can be substituted into queries like name:"<phrase>".
  */
@@ -42,8 +86,8 @@ function escapeSolrPhrase(value) {
 function confirmDialog(opts, onConfirm) {
     "use strict";
     opts = opts || {};
-    var $modal = $('#confirmModal');
-    if (!$modal.length || typeof $.fn.modal !== 'function') {
+    var modalEl = document.getElementById('confirmModal');
+    if (!modalEl || !window.bootstrap || !bootstrap.Modal) {
         if (window.confirm(opts.body || 'Are you sure?')) { onConfirm(); }
         return;
     }
@@ -55,10 +99,10 @@ function confirmDialog(opts, onConfirm) {
     // on destructive actions; keep btn so Bootstrap's base styles apply.
     $btn.attr('class', 'btn ' + (opts.confirmClass || 'btn-info'));
     $btn.off('click.confirmDialog').on('click.confirmDialog', function () {
-        $modal.modal('hide');
+        bsModalHide(modalEl);
         onConfirm();
     });
-    $modal.modal('show');
+    bsModalShow(modalEl);
 }
 
 /**
@@ -114,6 +158,18 @@ ko.bindingHandlers.datePicker = {
 
         var monthInput = document.createElement('input');
         monthInput.type = 'month';
+        // Firefox and Safari don't support <input type="month"> — they
+        // silently degrade to text with no placeholder and no calendar
+        // icon. Detect the fallback (the assigned .type stays 'text' on
+        // unsupported browsers) and add YYYY-MM hints so editors can
+        // still see the expected format. (#133)
+        if (monthInput.type !== 'month') {
+            monthInput.type = 'text';
+            monthInput.inputMode = 'numeric';
+            monthInput.placeholder = 'YYYY-MM';
+            monthInput.pattern = '\\d{4}-\\d{2}';
+            monthInput.maxLength = 7;
+        }
         monthInput.className = 'form-control';
 
         var dateInput = document.createElement('input');
@@ -146,7 +202,7 @@ ko.bindingHandlers.datePicker = {
 
         var convertBtn = document.createElement('button');
         convertBtn.type = 'button';
-        convertBtn.className = 'btn btn-default btn-sm';
+        convertBtn.className = 'btn btn-secondary btn-sm';
         convertBtn.textContent = 'Convert to standard date';
 
         rawWrapper.appendChild(rawNotice);
@@ -169,17 +225,46 @@ ko.bindingHandlers.datePicker = {
         function parseISO(val) {
             if (!val) return { precision: 'date', year: '', month: '', date: '', raw: '' };
             val = String(val).trim();
+            // Populate year/month/date for ALL precisions, padding missing
+            // pieces with -01 (Jan / day 1). When the user switches the
+            // precision dropdown, the about-to-be-shown input is already
+            // filled in, so writeValue writes a sensible value rather than
+            // an empty string that the subscribe would parse back to the
+            // default and snap the dropdown around. (#134)
+            //
             // Full date: 2025-06-15 or longer (with time)
             if (/^\d{4}-\d{2}-\d{2}/.test(val)) {
-                return { precision: 'date', year: '', month: val.substring(0, 7), date: val.substring(0, 10), raw: '' };
+                return {
+                    precision: 'date',
+                    year: val.substring(0, 4),
+                    month: val.substring(0, 7),
+                    date: val.substring(0, 10),
+                    raw: ''
+                };
             }
             // Year-month: 2025-06
             if (/^\d{4}-\d{2}$/.test(val)) {
-                return { precision: 'month', year: '', month: val, date: '', raw: '' };
+                return {
+                    precision: 'month',
+                    year: val.substring(0, 4),
+                    month: val,
+                    date: val + '-01',
+                    raw: ''
+                };
             }
             // Year only: 2025
             if (/^\d{1,4}$/.test(val)) {
-                return { precision: 'year', year: val, month: '', date: '', raw: '' };
+                // <input type="date|month"> require a 4-digit year, so pad
+                // the synthesized month/date even when the year is shorter.
+                // The yearInput stays as the user entered it.
+                var year4 = ('0000' + val).slice(-4);
+                return {
+                    precision: 'year',
+                    year: val,
+                    month: year4 + '-01',
+                    date: year4 + '-01-01',
+                    raw: ''
+                };
             }
             // Unparseable — preserve raw so the editor can see and correct it
             // rather than silently losing it. (#112)

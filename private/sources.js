@@ -41,14 +41,14 @@ SrcViewModel.prototype.editSource = function () {
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
-    $('#editSourceModal [data-toggle="popover"]').popover();
-    $("#editSourceModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#editSourceModal");
+    bsModalShow("#editSourceModal", { backdrop: 'static' });
 }
 
 SrcViewModel.prototype.submitEdits = function () {
     var self = this;
     formError('');
-    // Snapshot at submit time, commit only on success — see refs.js submitEdits
+    // Snapshot at submit time, commit only on success - see refs.js submitEdits
     // for the rationale (cache must hold the last KNOWN-GOOD state so revert()
     // after Cancel restores cleanly even if validation failed). (#112)
     var payload = ko.toJS(self);
@@ -59,7 +59,7 @@ SrcViewModel.prototype.submitEdits = function () {
         type: "POST",
         success: function (data) {
             self.commit();
-            $("#editSourceModal").modal("hide");
+            bsModalHide("#editSourceModal");
             window.location.href = data.redirect || '/sources';
         },
         error: function (jqXHR) {
@@ -86,7 +86,7 @@ SrcViewModel.prototype.newSourceHandler = function () {
             self.commit();
             self.blank();
             localStorage['sourcesEditor'] = ko.toJSON(self);
-            $("#newSourceModal").modal("hide");
+            bsModalHide("#newSourceModal");
             window.location.href = data.redirect || '/sources';
         },
         error: function (jqXHR) {
@@ -112,6 +112,7 @@ function searchInit() {
         blankSrcViewModel.update(JSON.parse(localStorage['sourcesEditor']));
     }
     ko.applyBindings(blankSrcViewModel, $("#newSourceModal")[0]);
+    initBootstrapWidgets("#newSourceModal");
 
     if (queryString.q !== undefined) {
         queryString.q = queryString["q"].replace(/%3A/g, ":");
@@ -119,6 +120,7 @@ function searchInit() {
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20"));
         document.getElementById("rowsInput").value = queryString.rows;
         ko.applyBindings(new SrcGridViewModel(queryString), $("#mainDisplay")[0]);
+        initBootstrapWidgets();
     }
 }
 
@@ -137,7 +139,7 @@ function searchUnusedSources() {
     btn.disabled = true;
     btn.innerHTML = '<span class="bi bi-arrow-repeat bi-spin"></span>';
     progress.style.display = '';
-    progress.textContent = 'Scanning refs…';
+    progress.textContent = 'Scanning refs...';
 
     var pageSize = 1000;
 
@@ -167,7 +169,7 @@ function searchUnusedSources() {
                         if (p) { used[p] = true; }
                     });
                     scanned += (data.response.docs || []).length;
-                    progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
+                    progress.textContent = 'Scanning refs... ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { callback(used); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -192,7 +194,7 @@ function searchUnusedSources() {
                         if (n && !usedSet[n] && d.id) { unusedIds.push(d.id); }
                     });
                     scanned += (data.response.docs || []).length;
-                    progress.textContent = 'Scanning sources… ' + scanned + ' of ' + data.response.numFound;
+                    progress.textContent = 'Scanning sources... ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { finish(unusedIds); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -224,7 +226,7 @@ $(document).on('click', '#unusedSourceBtn', function () {
 // Bootstrap popovers must be opt-in.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-toggle="popover"]').popover();
+    initBootstrapWidgets();
 });
 
 // Make sure the whole page is loaded before manipulating it

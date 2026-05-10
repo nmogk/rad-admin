@@ -5,23 +5,21 @@
 {{#> layout title="Campaigns" nav=1 cmpActive=1}}
 
     {{#*inline "search-area"}}
-        <p>A campaign is a named cleanup task plus a list of references that need it. Build one here, then on the references page add individual refs or whole pages of search results to it. Open a campaign in references to work through its refs and remove them as they're handled.</p>
+        <p class="text-body-secondary">A campaign is a named cleanup task plus a list of references that need it. Build one here, then on the references page add individual refs or whole pages of search results to it. Open a campaign in references to work through its refs and remove them as they're handled.</p>
 
         <p>
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#newCampaignModal" data-backdrop="static"><span class="bi bi-plus-lg"></span> Add new campaign</button>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#newCampaignModal" data-bs-backdrop="static"><span class="bi bi-plus-lg"></span> Add new campaign</button>
         </p>
     {{/inline}}
 
     {{#*inline "results-area"}}
         <div id="mainDisplay" role="main">
-            <div id="res-head" class="panel-body">
+            <div id="res-head" class="card-body">
                 <div class="row">
-                    <h4>
-                        <span class="col-sm-4">Name</span>
-                        <span class="col-sm-6">Description</span>
-                        <span class="col-sm-1 text-right">Refs</span>
-                        <span class="col-sm-1"></span>
-                    </h4>
+                    <div class="col-12 col-sm-4"><h4>Name</h4></div>
+                    <div class="col-12 col-sm-6"><h4>Description</h4></div>
+                    <div class="col-12 col-sm-1 text-end"><h4>Refs</h4></div>
+                    <div class="col-12 col-sm-1"></div>
                 </div>
                 <hr>
                 <!-- ko if: campaigns().length === 0 -->
@@ -29,30 +27,29 @@
                 <!-- /ko -->
             </div>
 
-            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
                 <!-- ko foreach: campaigns -->
-                <div class="panel panel-default">
-                    <div class="panel-heading" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
-                        <div class="row">
-                            <a data-toggle="collapse" data-parent="#accordion" data-bind="attr: {href: '#'+colId}" style="color: #000000;">
-                                <div class="col-sm-4"><h5><span data-bind="textPretty: name">Name</span></h5></div>
-                                <div class="col-sm-6"><h5><span data-bind="textPretty: descriptionPreview">Description</span></h5></div>
-                                <div class="col-sm-1 text-right"><h5><span data-bind="text: refCount"></span></h5></div>
-                            </a>
-                            <div class="dropdown col-sm-1" aria-haspopup="true">
-                                <button class="btn btn-link dropdown-toggle" type="button" data-toggle="dropdown" style="color: #000000;">
+                <div class="card">
+                    <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
+                        <div class="row position-relative">
+                            <div class="col-12 col-sm-4"><h6><span data-bind="textPretty: name">Name</span></h6></div>
+                            <div class="col-12 col-sm-6"><h6><span data-bind="textPretty: descriptionPreview">Description</span></h6></div>
+                            <div class="col-12 col-sm-1 text-end"><h6><span data-bind="text: refCount"></span></h6></div>
+                            <div class="col-12 col-sm-1 dropdown">
+                                <button class="btn btn-link position-relative z-2" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
                                     <span class="bi bi-three-dots-vertical"></span>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-label="campaign operations" tabindex=0>
-                                    <li role="presentation"><a role="menuitem" href="#" data-bind="click: editCampaign"><span class="bi bi-pencil"></span> Edit</a></li>
-                                    <li role="presentation"><a role="menuitem" href="#" data-bind="click: openInRefs"><span class="bi bi-search"></span> Open in references</a></li>
-                                    {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteCampaign"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
+                                <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="campaign operations" tabindex=0>
+                                    <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: editCampaign"><span class="bi bi-pencil"></span> Edit</a></li>
+                                    <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: openInRefs"><span class="bi bi-search"></span> Open in references</a></li>
+                                    {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: deleteCampaign"><span class="bi bi-trash3"></span> Delete campaign</a></li>{{/if}}
                                 </ul>
                             </div>
+                            <a class="stretched-link" data-bs-toggle="collapse" data-bs-parent="#accordion" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                         </div>
                     </div>
-                    <div class="panel-collapse collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
-                        <div class="panel-body">
+                    <div class="collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+                        <div class="card-body">
                             <h4>Description</h4>
                             <p data-bind="textPretty: description" style="white-space: pre-wrap"></p>
                             <p class="small text-muted">id: <span data-bind="text: id"></span></p>

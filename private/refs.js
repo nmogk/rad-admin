@@ -82,14 +82,14 @@ RefViewModel.prototype.editRef = function () {
 
     // Live computed of problematic chars currently in the form. Note: chars
     // that htmlDecode silently drops on the way from Solr to the observable
-    // (NBSP, zero-width, etc.) won't appear here — the search button is the
+    // (NBSP, zero-width, etc.) won't appear here - the search button is the
     // canonical source for "this record contains invisibles."
     attachOddCharReport(this);
     ko.applyBindings(this, modal);
     // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
     // state. Re-init so the info icons keep working after edit-open.
-    $('#editRefModal [data-toggle="popover"]').popover();
-    $("#editRefModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#editRefModal");
+    bsModalShow("#editRefModal", { backdrop: 'static' });
 }
 
 RefViewModel.prototype.submitEdits = function () {
@@ -113,7 +113,7 @@ RefViewModel.prototype.submitEdits = function () {
         type: "POST",
         success: function (data) {
             self.commit();
-            $("#editRefModal").modal("hide");
+            bsModalHide("#editRefModal");
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {
@@ -145,7 +145,7 @@ RefViewModel.prototype.newRefHandler = function () {
             self.commit();
             self.blank();
             localStorage['refsEditor'] = ko.toJSON(self);
-            $("#newRefModal").modal("hide");
+            bsModalHide("#newRefModal");
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {
@@ -216,6 +216,7 @@ function searchInit() {
     blankRefViewModel.publisher.subscribe(lookupPublishers);
     attachOddCharReport(blankRefViewModel);
     ko.applyBindings(blankRefViewModel, $("#newRefModal")[0]);
+    initBootstrapWidgets("#newRefModal");
 
     var orphanNotice = null;
     try { orphanNotice = sessionStorage.getItem('orphanRefsNotice'); } catch (e) {}
@@ -257,6 +258,7 @@ function searchInit() {
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
         document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
         ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
+        initBootstrapWidgets();
     }
 }
 
@@ -373,7 +375,7 @@ function syncSourceFromPublisher(vm) {
 
 // Dismiss source/publisher suggestions when clicking outside their field areas.
 // `mousedown` (rather than `click`) gives a snappier dismissal, but it fires
-// before `click` does — which means we must exclude the "create this …" hint
+// before `click` does — which means we must exclude the "create this ..." hint
 // from the dismissal check, or else clearing the *NotFound observable would
 // detach the link from the DOM before its click handler ever ran.
 $(document).on('mousedown', function (e) {
@@ -413,7 +415,7 @@ function openSourceCreatorFromField(fieldName) {
             name = ctx[fieldName]() || '';
         }
     }
-    modal.modal('hide');
+    bsModalHide(modal);
 
     var blankSource = new SrcViewModel({ name: name });
     ko.cleanNode($("#newSourceModal")[0]);
@@ -429,12 +431,12 @@ function openSourceCreatorFromField(fieldName) {
             data: JSON.stringify(self.cache.latestData),
             type: "POST",
             success: function (data) {
-                $("#newSourceModal").modal("hide");
+                bsModalHide("#newSourceModal");
                 sourceNotFound(false);
                 sourceSuggestions([]);
                 publisherNotFound(false);
                 publisherSuggestions([]);
-                modal.modal({ backdrop: 'static' });
+                bsModalShow(modal, { backdrop: 'static' });
             },
             error: function (jqXHR) {
                 var msg = 'Error creating source';
@@ -448,7 +450,8 @@ function openSourceCreatorFromField(fieldName) {
     };
 
     ko.applyBindings(blankSource, $("#newSourceModal")[0]);
-    $("#newSourceModal").modal({ backdrop: 'static' });
+    initBootstrapWidgets("#newSourceModal");
+    bsModalShow("#newSourceModal", { backdrop: 'static' });
 }
 
 var BLANK_QUERYABLE_FIELDS = ['author', 'title', 'reference', 'source', 'publisher', 'page', 'abstract', 'dt'];
@@ -526,7 +529,7 @@ function searchOrphanSources() {
     btn.disabled = true;
     btn.innerHTML = '<span class="bi bi-arrow-repeat bi-spin"></span>';
     progress.style.display = '';
-    progress.textContent = 'Loading sources…';
+    progress.textContent = 'Loading sources...';
 
     var pageSize = 1000;
 
@@ -553,7 +556,7 @@ function searchOrphanSources() {
                         if (n) { names[n] = true; }
                     });
                     loaded += (data.response.docs || []).length;
-                    progress.textContent = 'Loading sources… ' + loaded + ' of ' + data.response.numFound;
+                    progress.textContent = 'Loading sources... ' + loaded + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { callback(names); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -582,7 +585,7 @@ function searchOrphanSources() {
                         if ((sourceOrphan || publisherOrphan) && d.id !== undefined) { orphanIds.push(d.id); }
                     });
                     scanned += (data.response.docs || []).length;
-                    progress.textContent = 'Scanning refs… ' + scanned + ' of ' + data.response.numFound;
+                    progress.textContent = 'Scanning refs... ' + scanned + ' of ' + data.response.numFound;
                     if (start + pageSize >= data.response.numFound) { finish(orphanIds); }
                     else { fetchPage(start + pageSize); }
                 },
@@ -680,11 +683,11 @@ function attachOddCharReport(vm) {
     });
 }
 
-// Bootstrap popovers must be opt-in. data-container="body" lifts them out of
+// Bootstrap popovers must be opt-in. data-bs-container="body" lifts them out of
 // the modal's overflow stack so they aren't clipped.
 $(document).on('click', '.info-icon', function (e) { e.preventDefault(); });
 $(function () {
-    $('[data-toggle="popover"]').popover();
+    initBootstrapWidgets();
 });
 
 // ===== Campaign integration =====
@@ -719,6 +722,7 @@ function initCampaignPicker() {
             pickerBusy: pickerBusy,
             pickerSubmit: pickerSubmit
         }, modalEl);
+        initBootstrapWidgets(modalEl);
     }
 
     $(document).on('click', '#addResultsToCampaignBtn', function (e) {
@@ -751,11 +755,11 @@ function openCampaignPicker(refIds) {
             });
             pickerCampaigns(opts);
             pickerSelected(opts.length ? opts[0].id : null);
-            $('#campaignPickerModal').modal({ backdrop: 'static' });
+            bsModalShow('#campaignPickerModal', { backdrop: 'static' });
         },
         error: function () {
             pickerError('Could not load campaign list.');
-            $('#campaignPickerModal').modal({ backdrop: 'static' });
+            bsModalShow('#campaignPickerModal', { backdrop: 'static' });
         }
     });
 }
@@ -773,11 +777,11 @@ function pickerSubmit() {
         data: JSON.stringify({ ids: ids }),
         success: function (data) {
             pickerBusy(false);
-            $('#campaignPickerModal').modal('hide');
+            bsModalHide('#campaignPickerModal');
             if (campaignId === _activeCampaignId) {
                 updateActiveCampaignCount(data && data.refCount);
             }
-            // Lightweight feedback — full flash would need a page refresh.
+            // Lightweight feedback - full flash would need a page refresh.
             alert('Added ' + (data.added || 0) + ' new reference' + ((data.added === 1) ? '' : 's') +
                 ' (campaign now has ' + (data.refCount || 0) + ').');
         },

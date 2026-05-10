@@ -136,10 +136,11 @@ RefViewModel.prototype.generateCitation = function () {
         modal.innerHTML = citationModalTemplate;
     }
     ko.applyBindings(this, modal);
+    initBootstrapWidgets(modal);
     new ClipboardJS('.copy', {
         container: document.getElementById('#citationModal')
     });
-    $("#citationModal").modal("show");
+    bsModalShow("#citationModal");
 };
 
 // Adds reference information to localStorage so that it can be printed nicely
@@ -210,6 +211,7 @@ function searchInit() {
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
         document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
         ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
+        initBootstrapWidgets();
     }
 }
 

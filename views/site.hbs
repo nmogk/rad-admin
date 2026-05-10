@@ -17,25 +17,25 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
-    <p>Edit the public-facing website content. Changes are reflected immediately on the homepage.</p>
+    <p class="text-body-secondary">Edit the public-facing website content. Changes are reflected immediately on the homepage.</p>
     {{/inline}}
 
     {{#*inline "results-area"}}
     <div id="mainDisplay" role="main">
         <ul class="nav nav-tabs" role="tablist" data-bind="foreach: sectionList">
-            <li role="presentation" data-bind="css: { active: $root.selectedKey() === key }">
-                <a href="#" data-bind="text: label, click: function() { $root.selectSection(key); }"></a>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="#" data-bind="text: label, click: function() { $root.selectSection(key); }, css: { active: $root.selectedKey() === key }"></a>
             </li>
         </ul>
 
         <div class="tab-content" style="padding-top: 20px;">
             <!-- ko with: currentSection -->
             <div class="section-editor">
-                <div class="form-group">
+                <div class="mb-3">
                     <label>Section Title</label>
                     <input type="text" class="form-control" data-bind="value: title" placeholder="Section title">
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <label>Content (HTML)</label>
                     <textarea class="form-control" data-bind="value: content"></textarea>
                 </div>
@@ -47,14 +47,17 @@
                 <button class="btn btn-primary" data-bind="click: $root.save">
                     <span class="bi bi-floppy2-fill"></span> Save
                 </button>
-                <button class="btn btn-default" data-bind="click: $root.togglePreview">
+                <button class="btn btn-secondary" data-bind="click: $root.togglePreview">
                     <span class="bi bi-eye"></span>
                     <span data-bind="text: $root.showPreview() ? 'Hide Preview' : 'Show Preview'"></span>
+                </button>
+                <button class="btn btn-warning" data-bind="click: $root.resetFromFile">
+                    <span class="bi bi-arrow-counterclockwise"></span> Reset from file
                 </button>
                 {{/if}}
             </div>
             <!-- ko if: $root.showPreview -->
-            <div class="well" style="margin-top: 15px;">
+            <div class="card card-body" style="margin-top: 15px;">
                 <h4>Preview</h4>
                 <hr>
                 <div data-bind="html: content"></div>
@@ -73,6 +76,7 @@
 
     {{#*inline "modal-block"}}
     {{> adminHelp}}
+    {{> confirmModal}}
     <div id="previewContainer"></div>
     {{/inline}}
 
@@ -80,6 +84,7 @@
     <script nonce="{{nonce}}">
         var siteContentData = {{{sectionsJson}}};
     </script>
+    <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
     <script nonce="{{nonce}}" src="private/site.js"></script>
     {{/inline}}
 

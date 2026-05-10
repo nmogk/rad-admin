@@ -5,6 +5,7 @@ function SiteViewModel() {
 
     self.sectionList = [
         { key: 'backstory', label: 'Backstory' },
+        { key: 'search_area', label: 'Search Area Intro' },
         { key: 'search_help', label: 'Search Help' },
         { key: 'rest_help', label: 'REST API Help' }
     ];
@@ -60,7 +61,7 @@ function SiteViewModel() {
                 modal.on('hidden.bs.modal', function () {
                     container.empty();
                 });
-                modal.modal('show');
+                bsModalShow(modal);
             } else {
                 // Content doesn't contain a modal — fall back to inline preview
                 self.showPreview(!self.showPreview());
@@ -90,6 +91,38 @@ function SiteViewModel() {
             }
         });
     };
+
+    self.resetFromFile = function () {
+        var section = self.currentSection();
+        if (!section) return;
+
+        confirmDialog({
+            title: 'Reset from file?',
+            body: 'This overwrites the "' + section.section_key + '" content in the database with the current contents of views/partials/. Any saved or unsaved DB edits to this section will be lost.',
+            confirmText: 'Reset',
+            confirmClass: 'btn-danger'
+        }, function () {
+            $.ajax({
+                url: "https://" + window.location.host + "/site/" + section.section_key + "/reset",
+                method: "POST",
+                success: function (data) {
+                    section.content(data.content);
+                    section.updated_at(data.updated_at);
+                    section.updated_by(data.updated_by);
+                },
+                error: function (jqXHR) {
+                    // Surface the server's error so failures (stale server
+                    // running an older ALLOWED_KEYS list, missing source
+                    // file, permission denied, etc.) don't disappear into
+                    // the console with no UI feedback.
+                    var detail = (jqXHR.responseJSON && jqXHR.responseJSON.error) || ('HTTP ' + jqXHR.status);
+                    alert('Reset from file failed: ' + detail);
+                    console.log("Reset error: " + jqXHR.status, jqXHR.responseJSON);
+                }
+            });
+        });
+    };
 }
 
 ko.applyBindings(new SiteViewModel());
+initBootstrapWidgets();

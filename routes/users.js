@@ -40,7 +40,7 @@ router.get('/all', function (req, res, next) {
 router.post('/invite', function (req, res, next) {
   if (!req.body.newUserEmail) {
     req.flash('error', 'No email specified');
-    res.redirect(400, '/users');
+    res.redirect(303, '/users');
     return;
   }
 
@@ -114,7 +114,7 @@ router.post('/resend/:id(\\d+)', function (req, res, next) {
 router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
   if (req.params.level < 0 || req.params.level > 2) {
     req.flash('error', 'Invalid permission level');
-    res.redirect(400, '/users');
+    res.redirect(303, '/users');
     return;
   }
 

@@ -1,10 +1,21 @@
 var express = require('express');
+var fs = require('fs');
+var path = require('path');
 var router = express.Router();
 var SiteContent = require('../models/site-content');
 var log4js = require('log4js');
 var auditLogger = log4js.getLogger('audit');
 
-var ALLOWED_KEYS = ['backstory', 'search_help', 'rest_help'];
+var ALLOWED_KEYS = ['backstory', 'search_help', 'rest_help', 'search_area'];
+
+// Source file for each section, used by POST /:key/reset to reload the
+// canonical on-disk markup back into the DB. Mirrors tools/seedSiteContent.js.
+var FILE_BY_KEY = {
+    'backstory':   path.join(__dirname, '..', 'views', 'partials', 'backstoryContents.hbs'),
+    'search_help': path.join(__dirname, '..', 'views', 'partials', 'searchHelp.hbs'),
+    'rest_help':   path.join(__dirname, '..', 'views', 'partials', 'restHelp.hbs'),
+    'search_area': path.join(__dirname, '..', 'views', 'partials', 'searchArea.hbs')
+};
 
 router.get('/', function(req, res, next) {
     SiteContent.fetchAll()
@@ -44,7 +55,7 @@ router.post('/:key', function(req, res, next) {
         return;
     }
 
-    new SiteContent({ section_key: key }).fetch()
+    new SiteContent({ section_key: key }).fetch({ require: false })
     .then(function (existing) {
         if (existing) {
             existing.set('title', req.body.title || null);
@@ -71,6 +82,59 @@ router.post('/:key', function(req, res, next) {
         console.log(err);
         req.flash('error', 'Problem saving site content.');
         res.json({ redirect: '/site' });
+    });
+});
+
+router.post('/:key/reset', function(req, res, next) {
+    if (req.user.get('permission') < 1) {
+        res.status(403).json({ error: 'You do not have permission to edit site content.' });
+        return;
+    }
+
+    var key = req.params.key;
+    if (ALLOWED_KEYS.indexOf(key) === -1) {
+        res.status(400).json({ error: 'Invalid content section.' });
+        return;
+    }
+
+    var content;
+    try {
+        content = fs.readFileSync(FILE_BY_KEY[key], 'utf8');
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Failed to read source file.' });
+        return;
+    }
+
+    var now = new Date();
+    var email = req.user.get('email');
+
+    new SiteContent({ section_key: key }).fetch({ require: false })
+    .then(function (existing) {
+        if (existing) {
+            existing.set('content', content);
+            existing.set('updated_at', now);
+            existing.set('updated_by', email);
+            return existing.save();
+        } else {
+            return new SiteContent({
+                section_key: key,
+                title: null,
+                content: content,
+                updated_at: now,
+                updated_by: email
+            }).save(null, { method: 'insert' });
+        }
+    })
+    .then(function () {
+        auditLogger.info(email + ' reset site content from file: ' + key);
+        res.json({ content: content, updated_at: now, updated_by: email });
+    })
+    .catch(function (err) {
+        // Surface the underlying DB / bookshelf error so the client alert
+        // includes something diagnostic instead of just "Problem saving".
+        console.log(err);
+        res.status(500).json({ error: 'Problem saving site content: ' + (err && err.message ? err.message : err) });
     });
 });
 

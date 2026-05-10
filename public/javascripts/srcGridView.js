@@ -56,7 +56,7 @@ function SrcGridViewModel(qString) {
             }
 
             var pageList = document.createElement("UL");
-            pageList.setAttribute("class", "pagination");
+            pageList.setAttribute("class", "pagination justify-content-center");
 
             self.pgList = function (text, start, active, ariaLab) {
                 if (active === undefined) {
@@ -66,13 +66,12 @@ function SrcGridViewModel(qString) {
                 qString.start = start;
                 var link = "?" + $.param(qString);
                 var listItem = document.createElement("LI");
-                if (active) {
-                    listItem.setAttribute("class", "active");
-                }
+                listItem.setAttribute("class", active ? "page-item active" : "page-item");
                 if (ariaLab) {
                     listItem.setAttribute("aria-label", ariaLab);
                 }
                 var anchor = document.createElement("A");
+                anchor.setAttribute("class", "page-link");
                 anchor.setAttribute("href", link);
                 anchor.appendChild(document.createTextNode(text));
                 listItem.appendChild(anchor);

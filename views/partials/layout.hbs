@@ -23,10 +23,9 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Instantly search the most comprehensive database of creationist research and publication abstracts.">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> {{! Might not
-  need this one. Need to check}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://bootswatch.com/5/journal/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="/stylesheets/journal-square-bootstrap.min.css">
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
   <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
@@ -35,10 +34,44 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
   <meta name="theme-color" content="#ffffff">
   <style>[aria-hidden="true"]{display: none;}
     @keyframes biSpin { to { transform: rotate(360deg); } }
-    .bi-spin { animation: biSpin 1s linear infinite; display: inline-block; }</style>
+    .bi-spin { animation: biSpin 1s linear infinite; display: inline-block; }
+    /* Bootswatch Journal 5 underlines every link by default; restore the
+       BS3-era look (no underline; underline only on hover). */
+    a { text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    /* The legacy BS3 .sr-only class. BS5 calls the same thing
+       .visually-hidden but the templates still use sr-only in places. */
+    .sr-only { position: absolute !important; width: 1px !important; height: 1px !important;
+        padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+    /* Banner styling — recreates the BS3 .jumbotron look (left-aligned).
+       BS3 jumbotron paragraphs were 21px / weight 200; BS5's nearest is
+       .lead (1.25rem / weight 300). Apply that size to every paragraph
+       inside the banner so the description text sits at the larger size
+       without each search-area having to opt in. */
+    .banner { background-color: #eee; padding: 30px 15px; margin-bottom: 30px; }
+    .banner h1 { font-size: 4rem; font-weight: 600; }
+    .banner p { font-size: 1.25rem; font-weight: 300; }
+    /* The result-row header (#res-head) is a .card-body sibling of the
+       .accordion. The data rows below it sit inside .card > .card-header,
+       which adds 1px of border + 1rem of card-header padding to the
+       outside, indenting the data text rightward of the natural left
+       edge. Match that with the same border + extra padding on #res-head
+       so the column labels line up with the data text below them. */
+    #res-head { border: 1px solid transparent; padding-left: 1rem; padding-right: 1rem; }
+    /* Accordion card-headers visibly skew toward the bottom: BS5
+       headings have margin-bottom: 0.5rem but margin-top: 0, so the
+       0.5rem padding-bottom + 0.5rem heading margin pile up below the
+       text while the top has only the 0.5rem padding. Bump padding-top
+       so the white space above the heading matches the space below. */
+    .accordion .card-header { padding-top: 1rem; }
+    /* Spelling suggestions and pagination sit immediately under the last
+       result card with no breathing room; nudge them down. */
+    #spellingSuggestions, #pages { margin-top: 1rem; }
+</style>
   {{#if nav}}<style>body { padding-top: 60px; }</style>{{/if}}
   <script nonce="{{nonce}}" src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-  <script nonce="{{nonce}}" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script nonce="{{nonce}}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script nonce="{{nonce}}" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
   <script nonce="{{nonce}}" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
   {{#> header-block}}{{/header-block}}
@@ -48,33 +81,27 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
   {{#if nav}}
   {{> navbar}}
   {{/if}}
-  <div class="jumbotron" role="banner">
+  <div class="banner" role="banner">
     <div class="container">
       {{#> custom-title}}<h1>{{title}}</h1>{{/custom-title}}
 
       {{#if errorMessage}}
       <div class="alert alert-danger alert-dismissible show" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span>&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         {{errorMessage}}
       </div>
       {{/if}}
 
       {{#if yayMessage}}
       <div class="alert alert-success alert-dismissible show" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span>&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         {{yayMessage}}
       </div>
       {{/if}}
 
       {{#if infoMessage}}
       <div class="alert alert-info alert-dismissible show" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span>&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         {{infoMessage}}
       </div>
       {{/if}}

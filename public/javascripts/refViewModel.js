@@ -37,13 +37,15 @@ function RefViewModel(data) {
     self.sourceModal = function () {
         ko.cleanNode($("#sourceModal")[0]) // Must clear bindings in newer version of KO
         ko.applyBindings(new SourceViewModel(self.source()), $("#sourceModal")[0]); // AJAX call is done in SourceViewModel constructor
-        $("#sourceModal").modal("show");
+        initBootstrapWidgets("#sourceModal");
+        bsModalShow("#sourceModal");
     };
 
     self.publisherModal = function () {
         ko.cleanNode($("#sourceModal")[0])
         ko.applyBindings(new SourceViewModel(self.publisher()), $("#sourceModal")[0]);
-        $("#sourceModal").modal("show");
+        initBootstrapWidgets("#sourceModal");
+        bsModalShow("#sourceModal");
     };
 }
 

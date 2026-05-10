@@ -1,6 +1,14 @@
 {{#> layout title="Saved References"}}
 
     {{#*inline "header-block"}}
+        <style type="text/css">
+            /* Per-row remove-X. Was BS3 .close before the migration; renamed
+               to .close-x so it doesn't collide with BS5's modal .btn-close.
+               Restores the BS3 .close visual: small floated X with hover. */
+            .close-x { float: right; font-size: 1.5rem; font-weight: 700; line-height: 1;
+                color: #000; opacity: 0.5; text-decoration: none; padding: 0 .25rem; }
+            .close-x:hover, .close-x:focus { opacity: 0.75; text-decoration: none; color: #000; }
+        </style>
         <style media="print" type="text/css">
             @media print {
                 body * {
@@ -28,8 +36,8 @@
     {{/inline}}
 
     {{#*inline "search-area"}}
-        <p>Use this page to collect references to print. Each reference you select on the main search results page with the <span style="white-space: nowrap;">&quot;<span class="bi bi-bookmark"></span> Save reference&quot;</span> menu option will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
-        <a href="#" class="btn btn-primary" id="printListButton"><span class="bi bi-printer-fill"></span> Print</a><a href="#" class="btn btn-default" id="clearListButton"><span class="bi bi-trash3"></span> Clear</a>
+        <p class="text-body-secondary">Use this page to collect references to print. Each reference you select on the main search results page with the <span style="white-space: nowrap;">&quot;<span class="bi bi-bookmark"></span> Save reference&quot;</span> menu option will appear below, formatted for easy printing. Use  the buttons below to print or start a new list. Lists are persistent across browser restarts.</p>
+        <a href="#" class="btn btn-primary" id="printListButton"><span class="bi bi-printer-fill"></span> Print</a><a href="#" class="btn btn-secondary" id="clearListButton"><span class="bi bi-trash3"></span> Clear</a>
     {{/inline}}
 
     {{#*inline "results-area"}}
@@ -39,18 +47,18 @@
                 <select id="citationStyle" class="form-control" style="display: inline-block; width: auto;"
                         data-bind="options: styles, optionsText: 'label', optionsValue: 'id', value: selectedStyle"></select>
             </div>
-            <div class="panel-group" id="printSet" role="tablist">
+            <div class="accordion" id="printSet" role="tablist">
                 <!-- ko foreach: refs -->
-                <div class="panel panel-default">
-                    <div class="panel-heading" role="tab">
-                        <a href="#" class="close" data-bind="click: $parent.removeOne" aria-label="close" tabindex=0>&times;</a>
+                <div class="card">
+                    <div class="card-header" role="tab">
+                        <a href="#" class="close-x" data-bind="click: $parent.removeOne" aria-label="close" tabindex=0>&times;</a>
                         <div class="row">
-                            <div class="col-sm-4"><h5><span data-bind="text: author">Author</span></h5></div>
-                            <div class="col-sm-6"><h5><span data-bind="text: title">Title</span></h5></div>
-                            <div class="col-sm-1"><h5><span data-bind="text: date">Date</span></h5></div>
+                            <div class="col-12 col-sm-4"><h6><span data-bind="text: author">Author</span></h6></div>
+                            <div class="col-12 col-sm-6"><h6><span data-bind="text: title">Title</span></h6></div>
+                            <div class="col-12 col-sm-1"><h6><span data-bind="text: date">Date</span></h6></div>
                         </div>
                     </div>
-                    <div class="panel-body">
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-sm-4"><h4>Reference</h4><span data-bind="text: reference"></span></div>
                             <div class="col-sm-6"><h4>Source</h4><span data-bind="text: source"></span></div>
@@ -60,7 +68,7 @@
                         <p data-bind="text: abstract"></p>
                         <h4>Citation</h4>
                         <p data-bind="html: $parent.formatCitation($data), attr: { id: 'citation-' + $index() }" style="display: inline-block; margin-right: 8px;"></p>
-                        <button type="button" class="btn btn-default btn-sm copy copy-citation"
+                        <button type="button" class="btn btn-secondary btn-sm copy copy-citation"
                                 data-bind="attr: { 'data-clipboard-target': '#citation-' + $index() }"
                                 aria-label="Copy citation to clipboard">
                             <span class="bi bi-clipboard-plus"></span>
@@ -129,6 +137,7 @@
 
             if(typeof(Storage) !== "undefined" ){
                 ko.applyBindings(new PrinterViewModel(), $('#aggregatorRoot')[0]);
+                initBootstrapWidgets('#aggregatorRoot');
                 new ClipboardJS('.copy-citation');
             } else {
                 alert("HTML5 storage must be available for the print function to work. Try a newer browser.");

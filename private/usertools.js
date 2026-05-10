@@ -34,9 +34,9 @@ function UserViewModel(qString) {
     function showSelfWarning(title, message, onConfirm) {
         $('#selfActionWarningTitle').text(title);
         $('#selfActionWarningMessage').text(message);
-        $('#selfActionWarning').modal('show');
+        bsModalShow('#selfActionWarning');
         $('#confirm-self-action-button').off('click').one('click', function () {
-            $('#selfActionWarning').modal('hide');
+            bsModalHide('#selfActionWarning');
             onConfirm();
         });
     }
@@ -49,7 +49,7 @@ function UserViewModel(qString) {
                 function () { performDelete(user); }
             );
         } else {
-            $( "#deleteUserConfirm" ).modal('show');
+            bsModalShow("#deleteUserConfirm");
 
             $('#deleteUserConfirm .modal-footer button').on('click', function(event) {
                 var $button = $(event.target);
@@ -115,3 +115,4 @@ function UserViewModel(qString) {
 };
 
 ko.applyBindings(new UserViewModel());
+initBootstrapWidgets();
