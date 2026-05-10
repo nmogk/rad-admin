@@ -52,6 +52,18 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
     .banner { background-color: #eee; padding: 30px 15px; margin-bottom: 30px; }
     .banner h1 { font-size: 4rem; font-weight: 600; }
     .banner p { font-size: 1.25rem; font-weight: 300; }
+    /* The result-row header (#res-head) is a .card-body sibling of the
+       .accordion. The data rows below it sit inside .card > .card-header,
+       and the .card border makes their inner width 2px narrower than the
+       header's. A transparent 1px border on #res-head re-aligns them
+       without changing the visible layout. */
+    #res-head { border: 1px solid transparent; }
+    /* Accordion card-headers visibly skew toward the bottom: BS5
+       headings have margin-bottom: 0.5rem but margin-top: 0, so the
+       0.5rem padding-bottom + 0.5rem heading margin pile up below the
+       text while the top has only the 0.5rem padding. Bump padding-top
+       so the white space above the heading matches the space below. */
+    .accordion .card-header { padding-top: 1rem; }
 </style>
   {{#if nav}}<style>body { padding-top: 60px; }</style>{{/if}}
   <script nonce="{{nonce}}" src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
