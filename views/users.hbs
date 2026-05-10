@@ -16,7 +16,7 @@
 {{/inline}}
 
 {{#*inline "search-area"}}
-<p>Manage users and their permissions. Normal users can view, edit, and add references, sources, and campaigns. Delete adds the ability to delete content and edit website text. Superusers can manage users and the database.</p>
+<p class="text-body-secondary">Manage users and their permissions. Normal users can view, edit, and add references, sources, and campaigns. Delete adds the ability to delete content and edit website text. Superusers can manage users and the database.</p>
 
 <form class="form inline" method="post" action="/users/invite">
     <div class="mb-3">
@@ -99,8 +99,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         <h4 class="modal-title">Delete this user?</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <p>This cannot be undone! Are you sure?</p>
@@ -118,8 +118,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         <h4 class="modal-title" id="selfActionWarningTitle">Warning</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <p id="selfActionWarningMessage"></p>

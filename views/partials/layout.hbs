@@ -44,9 +44,14 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
     .sr-only { position: absolute !important; width: 1px !important; height: 1px !important;
         padding: 0 !important; margin: -1px !important; overflow: hidden !important;
         clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
-    /* Banner styling — recreates the BS3 .jumbotron look. */
-    .banner { background-color: #eee; padding: 30px 15px; margin-bottom: 30px; text-align: center; }
+    /* Banner styling — recreates the BS3 .jumbotron look (left-aligned).
+       BS3 jumbotron paragraphs were 21px / weight 200; BS5's nearest is
+       .lead (1.25rem / weight 300). Apply that size to every paragraph
+       inside the banner so the description text sits at the larger size
+       without each search-area having to opt in. */
+    .banner { background-color: #eee; padding: 30px 15px; margin-bottom: 30px; }
     .banner h1 { font-size: 4rem; font-weight: 600; }
+    .banner p { font-size: 1.25rem; font-weight: 300; }
     /* BS5 grid requires col-* to be direct .row children; some legacy
        markup wraps columns in <a> or <h4> for whole-row click targets or
        header rows. Make those wrappers flex containers so the columns

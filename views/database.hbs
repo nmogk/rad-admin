@@ -12,7 +12,7 @@
 {{/inline}}
 
 {{#*inline "search-area"}}
-<p>Perform administrative actions on the reference database, like creating backups or retabulating reference statistics. Backups must be restored from the command line.</p>
+<p class="text-body-secondary">Perform administrative actions on the reference database, like creating backups or retabulating reference statistics. Backups must be restored from the command line.</p>
 
 <form class="form inline" id="createBackupForm">
     <div class="mb-3">
@@ -81,8 +81,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 <h4 class="modal-title">Delete this backup?</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>About to delete <strong id="deleteBackupName"></strong>. This cannot be undone.</p>
@@ -99,8 +99,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 <h4 class="modal-title">Recompute complete</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p id="recomputeSummary"></p>
