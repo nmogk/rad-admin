@@ -12,6 +12,13 @@
         {{!-- Force long unbreakable strings (e.g. URLs in author) to wrap inside
               their column instead of overflowing into the next cell. Issue #13. --}}
         <style>#mainDisplay [class*="col-sm-"] { overflow-wrap: anywhere; word-wrap: break-word; }</style>
+        <style>
+          @keyframes refEditFlash {
+            0% { background-color: #fff3cd; }
+            100% { background-color: transparent; }
+          }
+          .ref-edit-highlight { animation: refEditFlash 2s ease-out; }
+        </style>
     {{/inline}}
 
     {{#*inline "search-area"}}
@@ -115,7 +122,7 @@
           
             <!-- ko foreach: refs -->
             <div class="card">
-              <div class="card-header" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
+              <div class="card-header" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab, 'data-ref-id': id}">
                 <div class="row position-relative">
                   <div class="col-12 col-sm-3"><h6><span data-bind="textPretty: author">Author</span></h6></div>
                   <div class="col-12 col-sm-6"><h6><span data-bind="textPretty: title">Title</span></h6></div>

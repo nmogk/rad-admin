@@ -114,6 +114,16 @@ RefViewModel.prototype.submitEdits = function () {
         success: function (data) {
             self.commit();
             bsModalHide("#editRefModal");
+            // Stash scroll position + edited id so refGridView can restore the
+            // user's place (and flash the row) after the redirect reloads /refs.
+            try {
+                sessionStorage.setItem('refsEditScroll', JSON.stringify({
+                    y: window.scrollY,
+                    refId: self.id(),
+                    url: window.location.pathname + window.location.search,
+                    time: Date.now()
+                }));
+            } catch (e) { /* sessionStorage may be unavailable */ }
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {

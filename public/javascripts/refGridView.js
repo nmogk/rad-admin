@@ -142,7 +142,43 @@ function RefsGridViewModel(qString) {
         },
         error: function (jqXHR) {
             console.log("ajax error " + jqXHR.status);
+        },
+        complete: function () {
+            restoreEditScroll();
         }
     });
 
+}
+
+// Restore the user's scroll position and flash the edited row after submitEdits
+// reloads /refs. The submit handler in private/refs.js writes {y, refId, url,
+// time} to sessionStorage; we apply it only when the URL still matches and the
+// entry is recent so a stale tab doesn't jump unexpectedly.
+function restoreEditScroll() {
+    var raw;
+    try { raw = sessionStorage.getItem('refsEditScroll'); }
+    catch (e) { return; }
+    if (!raw) { return; }
+    try { sessionStorage.removeItem('refsEditScroll'); } catch (e) {}
+
+    var state;
+    try { state = JSON.parse(raw); } catch (e) { return; }
+    if (!state) { return; }
+
+    var hereUrl = window.location.pathname + window.location.search;
+    if (state.url !== hereUrl) { return; }
+    if (!state.time || (Date.now() - state.time) > 60000) { return; }
+
+    // setTimeout(0) lets KO finish rendering the foreach against the just-
+    // populated observableArray so the document is tall enough for the scroll.
+    setTimeout(function () {
+        if (typeof state.y === 'number') { window.scrollTo(0, state.y); }
+        if (state.refId !== undefined && state.refId !== null) {
+            var row = document.querySelector('[data-ref-id="' + state.refId + '"]');
+            if (row) {
+                row.classList.add('ref-edit-highlight');
+                setTimeout(function () { row.classList.remove('ref-edit-highlight'); }, 2000);
+            }
+        }
+    }, 0);
 }
