@@ -55,7 +55,7 @@ router.post('/:key', function(req, res, next) {
         return;
     }
 
-    new SiteContent({ section_key: key }).fetch()
+    new SiteContent({ section_key: key }).fetch({ require: false })
     .then(function (existing) {
         if (existing) {
             existing.set('title', req.body.title || null);
@@ -109,7 +109,7 @@ router.post('/:key/reset', function(req, res, next) {
     var now = new Date();
     var email = req.user.get('email');
 
-    new SiteContent({ section_key: key }).fetch()
+    new SiteContent({ section_key: key }).fetch({ require: false })
     .then(function (existing) {
         if (existing) {
             existing.set('content', content);
