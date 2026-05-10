@@ -37,20 +37,20 @@
                   <span class="sr-only">Choose a specific blank field</span>
                 </button>
                 <ul class="dropdown-menu" role="menu" aria-label="Blank field search options">
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="">Any field</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="">Any field</a></li>
                   <li role="separator" class="divider"></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="author">Author</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="title">Title</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="reference">Reference</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="source">Source</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="page">Page</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="type">Type</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="abstract">Abstract</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="dt">Date</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_author">Reviewed Author</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_title">Reviewed Title</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_date">Reviewed Date</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-blank-field="rev_source">Reviewed Source</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="author">Author</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="title">Title</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="reference">Reference</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="source">Source</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="page">Page</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="type">Type</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="abstract">Abstract</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="dt">Date</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="rev_author">Reviewed Author</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="rev_title">Reviewed Title</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="rev_date">Reviewed Date</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-blank-field="rev_source">Reviewed Source</a></li>
                 </ul>
               </div>
               <div class="btn-group">
@@ -59,11 +59,11 @@
                   <span class="sr-only">Choose a specific character category</span>
                 </button>
                 <ul class="dropdown-menu" role="menu" aria-label="Problematic character search options">
-                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="">Any problematic</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-odd-chars="">Any problematic</a></li>
                   <li role="separator" class="divider"></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="control">Control / non-printing</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="invisible">Invisible / zero-width</a></li>
-                  <li role="presentation"><a role="menuitem" href="#" data-odd-chars="smart">Smart punctuation</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-odd-chars="control">Control / non-printing</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-odd-chars="invisible">Invisible / zero-width</a></li>
+                  <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-odd-chars="smart">Smart punctuation</a></li>
                 </ul>
               </div>
               <button id="orphanSourceBtn" type="button" class="btn btn-primary" data-bs-toggle="tooltip" title="Find refs whose source is not in the source list"><span class="bi bi-arrow-up-right-circle"></span></button>
@@ -120,21 +120,21 @@
                   <div class="col-12 col-sm-3"><h5><span data-bind="textPretty: author">Author</span></h5></div>
                   <div class="col-12 col-sm-6"><h5><span data-bind="textPretty: title">Title</span></h5></div>
                   <div class="col-12 col-sm-2"><h5><span data-bind="textPretty: date">Date</span></h5></div>
-                  <div class="col-12 col-sm-1 dropdown position-relative z-2">
-                    <button class="btn btn-link" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
+                  <div class="col-12 col-sm-1 dropdown">
+                    <button class="btn btn-link position-relative z-2" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
                       <span class="bi bi-three-dots-vertical"></span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: editRef"><span class="bi bi-pencil"></span> Edit</a></li>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: addToCampaign"><span class="bi bi-flag"></span> Add to campaign</a></li>
+                      <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: editRef"><span class="bi bi-pencil"></span> Edit</a></li>
+                      <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: addToCampaign"><span class="bi bi-flag"></span> Add to campaign</a></li>
                       {{#if activeCampaign}}
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: removeFromActiveCampaign"><span class="bi bi-x-circle"></span> Remove from this campaign</a></li>
+                      <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: removeFromActiveCampaign"><span class="bi bi-x-circle"></span> Remove from this campaign</a></li>
                       {{/if}}
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewPublisherForEditing"><span class="bi bi-eye"></span> View publisher for editing</a></li>
+                      <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: viewPublisherForEditing"><span class="bi bi-eye"></span> View publisher for editing</a></li>
                       <!-- ko if: source() && source() !== publisher() -->
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: viewSourceForEditing"><span class="bi bi-eye"></span> View source for editing</a></li>
+                      <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: viewSourceForEditing"><span class="bi bi-eye"></span> View source for editing</a></li>
                       <!-- /ko -->
-                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteRef"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
+                      {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: deleteRef"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
                   <a class="stretched-link" data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>

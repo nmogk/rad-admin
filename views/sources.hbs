@@ -59,13 +59,13 @@
                   <div class="col-12 col-sm-6"><h5><span data-bind="textPretty: name">Name</span></h5></div>
                   <div class="col-12 col-sm-3"><h5><span data-bind="textPretty: city">City</span></h5></div>
                   <div class="col-12 col-sm-2"><h5><span data-bind="textPretty: state">State</span></h5></div>
-                  <div class="col-12 col-sm-1 dropdown position-relative z-2">
-                    <button class="btn btn-link" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
+                  <div class="col-12 col-sm-1 dropdown">
+                    <button class="btn btn-link position-relative z-2" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
                       <span class="bi bi-three-dots-vertical"></span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="operations menu" tabindex=0>
-                      <li role="presentation"><a role="menuitem" href="#" data-bind="click: editSource"><span class="bi bi-pencil"></span> Edit</a></li>
-                      {{#if deletable}}<li role="presentation"><a role="menuitem" href="#" data-bind="click: deleteSource"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
+                      <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: editSource"><span class="bi bi-pencil"></span> Edit</a></li>
+                      {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: deleteSource"><span class="bi bi-trash3"></span> Delete</a></li>{{/if}}
                     </ul>
                   </div>
                   <a class="stretched-link" data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
