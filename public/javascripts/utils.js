@@ -158,6 +158,18 @@ ko.bindingHandlers.datePicker = {
 
         var monthInput = document.createElement('input');
         monthInput.type = 'month';
+        // Firefox and Safari don't support <input type="month"> — they
+        // silently degrade to text with no placeholder and no calendar
+        // icon. Detect the fallback (the assigned .type stays 'text' on
+        // unsupported browsers) and add YYYY-MM hints so editors can
+        // still see the expected format. (#133)
+        if (monthInput.type !== 'month') {
+            monthInput.type = 'text';
+            monthInput.inputMode = 'numeric';
+            monthInput.placeholder = 'YYYY-MM';
+            monthInput.pattern = '\\d{4}-\\d{2}';
+            monthInput.maxLength = 7;
+        }
         monthInput.className = 'form-control';
 
         var dateInput = document.createElement('input');
@@ -213,17 +225,46 @@ ko.bindingHandlers.datePicker = {
         function parseISO(val) {
             if (!val) return { precision: 'date', year: '', month: '', date: '', raw: '' };
             val = String(val).trim();
+            // Populate year/month/date for ALL precisions, padding missing
+            // pieces with -01 (Jan / day 1). When the user switches the
+            // precision dropdown, the about-to-be-shown input is already
+            // filled in, so writeValue writes a sensible value rather than
+            // an empty string that the subscribe would parse back to the
+            // default and snap the dropdown around. (#134)
+            //
             // Full date: 2025-06-15 or longer (with time)
             if (/^\d{4}-\d{2}-\d{2}/.test(val)) {
-                return { precision: 'date', year: '', month: val.substring(0, 7), date: val.substring(0, 10), raw: '' };
+                return {
+                    precision: 'date',
+                    year: val.substring(0, 4),
+                    month: val.substring(0, 7),
+                    date: val.substring(0, 10),
+                    raw: ''
+                };
             }
             // Year-month: 2025-06
             if (/^\d{4}-\d{2}$/.test(val)) {
-                return { precision: 'month', year: '', month: val, date: '', raw: '' };
+                return {
+                    precision: 'month',
+                    year: val.substring(0, 4),
+                    month: val,
+                    date: val + '-01',
+                    raw: ''
+                };
             }
             // Year only: 2025
             if (/^\d{1,4}$/.test(val)) {
-                return { precision: 'year', year: val, month: '', date: '', raw: '' };
+                // <input type="date|month"> require a 4-digit year, so pad
+                // the synthesized month/date even when the year is shorter.
+                // The yearInput stays as the user entered it.
+                var year4 = ('0000' + val).slice(-4);
+                return {
+                    precision: 'year',
+                    year: val,
+                    month: year4 + '-01',
+                    date: year4 + '-01-01',
+                    raw: ''
+                };
             }
             // Unparseable — preserve raw so the editor can see and correct it
             // rather than silently losing it. (#112)
