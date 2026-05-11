@@ -86,6 +86,13 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 // /tracker reverse proxy don't go through validation. Token generation is
 // stateless: a signed cookie is paired with a token echoed back via either
 // the x-csrf-token header (AJAX) or a hidden _csrf form input.
+// Fail fast: without CSRFSECRET, the HMAC step crashes per-request with a
+// cryptic "key argument must be of type string" error, surfaced as a 500 on
+// every page including static assets. Better to refuse to boot.
+if (!process.env.CSRFSECRET) {
+    appLog.fatal('CSRFSECRET environment variable is required. Set it in .env to a random ~64-char string.');
+    throw new Error('CSRFSECRET environment variable is not set.');
+}
 var { doubleCsrfProtection, generateCsrfToken, invalidCsrfTokenError } = doubleCsrf({
     getSecret: function () { return process.env.CSRFSECRET; },
     getSessionIdentifier: function (req) { return req.sessionID || req.ip; },
