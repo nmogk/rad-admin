@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.0",
-    "bcrypt": "^5.0",
+    "bcrypt": "^6.0",
     "connect-flash": "^0.1.1",
     "connect-session-knex": "^5.0",
     "cookie-parser": "~1.4.3",
@@ -56,5 +56,8 @@
     "proxyquire": "^2.1",
     "sinon": "^15.0",
     "supertest": "^6.3"
+  },
+  "overrides": {
+    "psl": "^1.15.0"
   }
 }
