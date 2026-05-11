@@ -923,7 +923,7 @@ describe('Refs Routes', function () {
             expect(doc.author).to.equal('Jane Doe');
         });
 
-        it('replaces en/em dashes in reference with a hyphen', async function () {
+        it('preserves en/em dashes in reference (normalisation disabled)', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: { reference: 'Vol 1' + '–' + '2' + '—' + 'pages' },
@@ -937,10 +937,10 @@ describe('Refs Routes', function () {
             await handler(req, res, sinon.spy());
 
             var doc = solrClientStub.add.firstCall.args[0];
-            expect(doc.reference).to.equal('Vol 1-2-pages');
+            expect(doc.reference).to.equal('Vol 1' + '–' + '2' + '—' + 'pages');
         });
 
-        it('replaces ellipsis in abstract with three dots', async function () {
+        it('preserves ellipsis in abstract (normalisation disabled)', async function () {
             var req = mockReq({
                 method: 'POST',
                 body: { abst: 'continued' + '…' },
@@ -954,7 +954,7 @@ describe('Refs Routes', function () {
             await handler(req, res, sinon.spy());
 
             var doc = solrClientStub.add.firstCall.args[0];
-            expect(doc.abstract).to.equal('continued...');
+            expect(doc.abstract).to.equal('continued' + '…');
         });
 
         it('strips zero-width chars from source and queries Solr with the cleaned name', async function () {

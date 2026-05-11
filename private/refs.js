@@ -114,6 +114,16 @@ RefViewModel.prototype.submitEdits = function () {
         success: function (data) {
             self.commit();
             bsModalHide("#editRefModal");
+            // Stash scroll position + edited id so refGridView can restore the
+            // user's place (and flash the row) after the redirect reloads /refs.
+            try {
+                sessionStorage.setItem('refsEditScroll', JSON.stringify({
+                    y: window.scrollY,
+                    refId: self.id(),
+                    url: window.location.pathname + window.location.search,
+                    time: Date.now()
+                }));
+            } catch (e) { /* sessionStorage may be unavailable */ }
             window.location.href = data.redirect || '/refs';
         },
         error: function (jqXHR) {
@@ -720,7 +730,8 @@ function initCampaignPicker() {
             pickerRefIds: pickerRefIds,
             pickerError: pickerError,
             pickerBusy: pickerBusy,
-            pickerSubmit: pickerSubmit
+            pickerSubmit: pickerSubmit,
+            openCampaignCreator: openCampaignCreator
         }, modalEl);
         initBootstrapWidgets(modalEl);
     }
@@ -742,7 +753,7 @@ function initCampaignPicker() {
     });
 }
 
-function openCampaignPicker(refIds) {
+function openCampaignPicker(refIds, preselectId) {
     pickerError('');
     pickerRefIds(refIds);
     pickerBusy(false);
@@ -754,7 +765,11 @@ function openCampaignPicker(refIds) {
                 return { id: c.id, label: c.name + ' (' + c.refCount + ')' };
             });
             pickerCampaigns(opts);
-            pickerSelected(opts.length ? opts[0].id : null);
+            var defaultId = opts.length ? opts[0].id : null;
+            if (preselectId && opts.some(function (o) { return o.id === preselectId; })) {
+                defaultId = preselectId;
+            }
+            pickerSelected(defaultId);
             bsModalShow('#campaignPickerModal', { backdrop: 'static' });
         },
         error: function () {
@@ -762,6 +777,48 @@ function openCampaignPicker(refIds) {
             bsModalShow('#campaignPickerModal', { backdrop: 'static' });
         }
     });
+}
+
+// Inline create flow from the picker modal. Mirrors openSourceCreatorFromField:
+// hide the picker, show #newCampaignModal with a custom handler that POSTs to
+// /campaigns/new and on success reopens the picker with the new entry preselected.
+function openCampaignCreator() {
+    var refIds = pickerRefIds().slice();
+    bsModalHide('#campaignPickerModal');
+
+    var blank = new CampaignViewModel({});
+    ko.cleanNode($('#newCampaignModal')[0]);
+
+    blank.newCampaignHandler = function () {
+        var self = this;
+        formError('');
+        formSuccess('');
+        $.ajax({
+            url: '/campaigns/new',
+            contentType: 'application/json',
+            data: JSON.stringify({ name: self.name(), description: self.description() }),
+            type: 'POST',
+            success: function (data) {
+                self.commit();
+                self.blank();
+                bsModalHide('#newCampaignModal');
+                var newId = data && data.campaign && data.campaign.id;
+                openCampaignPicker(refIds, newId);
+            },
+            error: function (jqXHR) {
+                var msg = 'Error creating campaign';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+                formError(msg);
+            }
+        });
+        return false;
+    };
+
+    formError('');
+    formSuccess('');
+    ko.applyBindings(blank, $('#newCampaignModal')[0]);
+    initBootstrapWidgets('#newCampaignModal');
+    bsModalShow('#newCampaignModal', { backdrop: 'static' });
 }
 
 function pickerSubmit() {

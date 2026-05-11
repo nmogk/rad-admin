@@ -9,13 +9,14 @@
                 <p>Adding <strong data-bind="text: pickerRefIds().length"></strong> reference<span data-bind="visible: pickerRefIds().length !== 1">s</span> to:</p>
                 <div class="alert alert-danger" style="display:none" data-bind="visible: pickerError, text: pickerError"></div>
                 <!-- ko if: pickerCampaigns().length === 0 -->
-                <p class="text-muted">No campaigns yet. Create one on the <a href="/campaigns">Campaigns</a> page first.</p>
+                <p class="text-muted">No campaigns yet.</p>
                 <!-- /ko -->
                 <!-- ko if: pickerCampaigns().length > 0 -->
                 <div class="mb-3">
                     <select id="campaignPickerSelect" class="form-control" data-bind="options: pickerCampaigns, optionsText: 'label', optionsValue: 'id', value: pickerSelected"></select>
                 </div>
                 <!-- /ko -->
+                <p class="small mb-0">Don't see the one you want? <a href="#" data-bind="click: openCampaignCreator">Create a new campaign</a>.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-info" data-bind="click: pickerSubmit, enable: pickerCampaigns().length > 0 && !pickerBusy()">Add</button>

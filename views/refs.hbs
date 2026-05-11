@@ -12,6 +12,13 @@
         {{!-- Force long unbreakable strings (e.g. URLs in author) to wrap inside
               their column instead of overflowing into the next cell. Issue #13. --}}
         <style>#mainDisplay [class*="col-sm-"] { overflow-wrap: anywhere; word-wrap: break-word; }</style>
+        <style>
+          @keyframes refEditFlash {
+            0% { background-color: #fff3cd; }
+            100% { background-color: transparent; }
+          }
+          .ref-edit-highlight { animation: refEditFlash 2s ease-out; }
+        </style>
     {{/inline}}
 
     {{#*inline "search-area"}}
@@ -19,7 +26,7 @@
         <form role="search" class="">
           <div class="row mb-3">
             <label for="searchInput" class="col-sm-2 col-form-label text-sm-end">Query:</label>
-            <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
+            <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus list="searchHistory" data-history-key="refs"><datalist id="searchHistory"></datalist></div>
           </div>
           <div class="row mb-3">
             <label for="rowsInput" class="col-sm-2 col-form-label text-sm-end">Results per page:</label>
@@ -115,7 +122,7 @@
           
             <!-- ko foreach: refs -->
             <div class="card">
-              <div class="card-header" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab}">
+              <div class="card-header" tabindex=0 data-bs-toggle="tooltip" title="Click to expand" role="tab" data-bind="attr: {id: ariaLab, 'data-ref-id': id}">
                 <div class="row position-relative">
                   <div class="col-12 col-sm-3"><h6><span data-bind="textPretty: author">Author</span></h6></div>
                   <div class="col-12 col-sm-6"><h6><span data-bind="textPretty: title">Title</span></h6></div>
@@ -198,6 +205,8 @@
 
         {{> campaignPickerModal}}
 
+        {{> newCampaignModal fieldDocs=campaignFieldDocs}}
+
         {{> confirmModal}}
 
         {{> adminHelp}}
@@ -220,6 +229,8 @@
       <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/srcViewModel.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/campaignViewModel.js"></script>
+      <script nonce="{{nonce}}" src="javascripts/searchHistory.js"></script>
       <script nonce="{{nonce}}" src="private/refs.js"></script>
     {{/inline}}
 
