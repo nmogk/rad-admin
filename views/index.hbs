@@ -16,7 +16,7 @@
         <form role="search" class="">
           <div class="row mb-3">
             <label for="searchInput" class="col-sm-2 col-form-label text-sm-end">Query:</label>
-            <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus></div>
+            <div class="col-sm-8"><input id="searchInput" class="form-control" type="search" placeholder="Type query here" name="q" aria-required="true" required autofocus list="searchHistory" data-history-key="index"><datalist id="searchHistory"></datalist></div>
           </div>
           <div class="row mb-3">
             <label for="rowsInput" class="col-sm-2 col-form-label text-sm-end">Results per page:</label>
@@ -156,6 +156,7 @@
         <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
         <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
         <script nonce="{{nonce}}" src="javascripts/citations.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/searchHistory.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
         <script nonce="{{nonce}}" src="javascripts/index.js"></script>
     {{/inline}}
