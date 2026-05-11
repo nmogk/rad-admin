@@ -8,6 +8,7 @@ var flash = require('connect-flash');
 var session = require('express-session');
 var KnexSessionStore = require('connect-session-knex')(session);
 var { expressCspHeader, NONCE, INLINE, SELF, STRICT_DYNAMIC, EVAL, NONE} = require('express-csp-header');
+var { doubleCsrf } = require('csrf-csrf');
 var passport = require('./config/passport');
 var knex = require('./config/database');
 var log4js = require('./config/logger'); // Configures logger. All subsequent requires -> require('log4js')
@@ -56,7 +57,7 @@ app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser()); // read cookies (needed for auth)
+app.use(cookieParser(process.env.COOKIESECRET)); // read cookies (needed for auth + CSRF)
 
 // Session setup required for passport
 var store = new KnexSessionStore({
@@ -79,6 +80,23 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(flash()); // use connect-flash for flash messages stored in session
+
+// CSRF protection (double-submit cookie via csrf-csrf). The middleware is
+// installed below the proxies/static handlers so /solr/* (GET-only) and the
+// /tracker reverse proxy don't go through validation. Token generation is
+// stateless: a signed cookie is paired with a token echoed back via either
+// the x-csrf-token header (AJAX) or a hidden _csrf form input.
+var { doubleCsrfProtection, generateCsrfToken, invalidCsrfTokenError } = doubleCsrf({
+    getSecret: function () { return process.env.CSRFSECRET; },
+    getSessionIdentifier: function (req) { return req.sessionID || req.ip; },
+    cookieName: '__Host-x-csrf-token',
+    cookieOptions: { sameSite: 'strict', secure: true, httpOnly: true, path: '/' },
+    size: 64,
+    ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+    getCsrfTokenFromRequest: function (req) {
+        return req.headers['x-csrf-token'] || (req.body && req.body._csrf);
+    }
+});
 
 
 // custom middleware =============================================================
@@ -104,6 +122,14 @@ app.use(expressCspHeader({
 app.use(function (request, response, next){
     hbs.registerHelper('nonce', function(opts){
         return request.nonce;
+    });
+    // Generate (or reuse, when overwrite:false) a CSRF token for this request
+    // and expose it to templates via both res.locals (auto-merged) and a
+    // `{{csrf}}` helper that emits the hidden form input.
+    var token = generateCsrfToken(request, response);
+    response.locals.csrfToken = token;
+    hbs.registerHelper('csrf', function () {
+        return new hbs.SafeString('<input type="hidden" name="_csrf" value="' + token + '">');
     });
     next();
 })
@@ -146,6 +172,10 @@ if (process.env.PROXY_URL) {
 app.all('/private/*', isLoggedIn); // This must come before the next line
 app.use('/private', express.static(path.join(__dirname, 'private')));
 
+// Mount CSRF validation just before route handlers so the Solr proxy
+// (GET-only) and the /tracker reverse proxy above are not subject to it.
+// GET/HEAD/OPTIONS are skipped via ignoredMethods.
+app.use(doubleCsrfProtection);
 
 app.use('/', require('./routes/index'));
 app.use('/login', require('./routes/login'));
@@ -166,6 +196,20 @@ app.use('/users/signup', isLoggedIn, superuser, require('./routes/signup'));
 app.use(function (req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
+    next(err);
+});
+
+// CSRF rejection handler — return 403 JSON for AJAX clients, HTML otherwise.
+// Placed before the generic error handler so the user sees a clear error
+// instead of a stack trace.
+app.use(function (err, req, res, next) {
+    if (err && err.code === 'EBADCSRFTOKEN') {
+        res.status(403);
+        if (req.accepts('json') === 'json' || req.is('application/json')) {
+            return res.json({ error: 'Invalid CSRF token' });
+        }
+        return res.send('Invalid CSRF token');
+    }
     next(err);
 });
 

@@ -77,6 +77,8 @@ Add entries for the following values:
 	DBUSER={username of mysql user}
 	DBUSERPASS={password for mysql user}
 	SESSIONKEY={a random key}
+	COOKIESECRET={a random key for signing cookies}
+	CSRFSECRET={a random key for the CSRF HMAC}
 	HTTPPORT={http port}
 	HTTPSPORT={https port}
 	SSLKEY={path to server private key}
