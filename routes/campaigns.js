@@ -9,13 +9,13 @@ var fieldDescriptions = require('../config/fieldDescriptions');
 // small (campaign count is in the dozens, not thousands) so we don't paginate.
 router.get('/', async function (req, res, next) {
     try {
-        var collection = await Campaign.fetchAll();
-        var campaigns = collection.models.map(function (m) {
+        var collection = await Campaign.query();
+        var campaigns = collection.map(function (m) {
             return {
-                id: m.get('id'),
-                name: m.get('name'),
-                description: m.get('description'),
-                refs: m.get('refs') || []
+                id: m.id,
+                name: m.name,
+                description: m.description,
+                refs: m.refs || []
             };
         });
         res.render('campaigns', Object.assign({}, req.replacements, {
@@ -32,10 +32,10 @@ router.get('/', async function (req, res, next) {
 // full refs array — just enough for the user to choose a campaign.
 router.get('/list.json', async function (req, res, next) {
     try {
-        var collection = await Campaign.fetchAll();
-        var list = collection.models.map(function (m) {
-            var refs = m.get('refs') || [];
-            return { id: m.get('id'), name: m.get('name'), refCount: refs.length };
+        var collection = await Campaign.query();
+        var list = collection.map(function (m) {
+            var refs = m.refs || [];
+            return { id: m.id, name: m.name, refCount: refs.length };
         });
         res.json(list);
     } catch (err) {
@@ -52,18 +52,18 @@ router.post('/new', async function (req, res, next) {
     }
 
     try {
-        var saved = await new Campaign({
+        var saved = await Campaign.query().insertAndFetch({
             name: name,
             description: req.body.description || '',
             refs: []
-        }).save();
-        auditLogger.info(req.user.get("email") + " created a new campaign: " + JSON.stringify({ id: saved.get('id'), name: saved.get('name') }));
+        });
+        auditLogger.info(req.user.email + " created a new campaign: " + JSON.stringify({ id: saved.id, name: saved.name }));
         req.flash('yay', 'Campaign created.');
         // Return the saved id/name so callers that don't redirect (e.g. the
         // refs-page picker's inline create flow) can preselect the new entry.
         res.json({
             redirect: '/campaigns',
-            campaign: { id: saved.get('id'), name: saved.get('name'), refCount: 0 }
+            campaign: { id: saved.id, name: saved.name, refCount: 0 }
         });
     } catch (err) {
         console.log(err);
@@ -81,18 +81,17 @@ router.post('/:id(\\d+)', async function (req, res, next) {
     }
 
     try {
-        var campaign = await new Campaign({ id: req.params.id }).fetch();
-        var oldName = campaign.get('name');
-        var oldDescription = campaign.get('description');
-        campaign.set({ name: name, description: req.body.description || '' });
-        await campaign.save();
-        auditLogger.info(req.user.get("email") + " edited campaign " + req.params.id +
+        var campaign = await Campaign.query().findById(req.params.id).throwIfNotFound();
+        var oldName = campaign.name;
+        var oldDescription = campaign.description;
+        await campaign.$query().patch({ name: name, description: req.body.description || '' });
+        auditLogger.info(req.user.email + " edited campaign " + req.params.id +
             ":\nOriginal: " + JSON.stringify({ name: oldName, description: oldDescription }) +
             "\nUpdated: " + JSON.stringify({ name: name, description: req.body.description || '' }));
         req.flash('yay', 'Campaign updated.');
         res.json({ redirect: '/campaigns' });
     } catch (err) {
-        if (err && err.message && /EmptyResponse/.test(err.message)) {
+        if (err instanceof Campaign.NotFoundError) {
             res.status(404).json({ error: 'Campaign not found.' });
             return;
         }
@@ -105,14 +104,14 @@ router.post('/:id(\\d+)', async function (req, res, next) {
 // caller passes ?force=1. The client uses the 409 response + refCount to
 // surface a "really delete?" confirm dialog.
 router.delete('/:id(\\d+)', async function (req, res, next) {
-    if (req.user.get("permission") < 1) {
+    if (req.user.permission < 1) {
         res.status(403).json({ error: 'Insufficient permission.' });
         return;
     }
 
     try {
-        var campaign = await new Campaign({ id: req.params.id }).fetch();
-        var refs = campaign.get('refs') || [];
+        var campaign = await Campaign.query().findById(req.params.id).throwIfNotFound();
+        var refs = campaign.refs || [];
         if (refs.length > 0 && req.query.force !== '1') {
             res.status(409).json({
                 error: 'Campaign still has references attached.',
@@ -121,13 +120,13 @@ router.delete('/:id(\\d+)', async function (req, res, next) {
             return;
         }
 
-        var snapshot = { id: campaign.get('id'), name: campaign.get('name'), refCount: refs.length };
-        await campaign.destroy();
-        auditLogger.info(req.user.get("email") + " deleted campaign: " + JSON.stringify(snapshot));
+        var snapshot = { id: campaign.id, name: campaign.name, refCount: refs.length };
+        await campaign.$query().delete();
+        auditLogger.info(req.user.email + " deleted campaign: " + JSON.stringify(snapshot));
         req.flash('yay', 'Campaign deleted.');
         res.json({ redirect: '/campaigns' });
     } catch (err) {
-        if (err && err.message && /EmptyResponse/.test(err.message)) {
+        if (err instanceof Campaign.NotFoundError) {
             res.status(404).json({ error: 'Campaign not found.' });
             return;
         }
@@ -155,20 +154,19 @@ router.post('/:id(\\d+)/refs', async function (req, res, next) {
     }
 
     try {
-        var campaign = await new Campaign({ id: req.params.id }).fetch();
-        var existing = campaign.get('refs') || [];
+        var campaign = await Campaign.query().findById(req.params.id).throwIfNotFound();
+        var existing = campaign.refs || [];
         var seen = {};
         existing.forEach(function (n) { seen[n] = true; });
         var added = [];
         numericIds.forEach(function (n) {
             if (!seen[n]) { seen[n] = true; existing.push(n); added.push(n); }
         });
-        campaign.set('refs', existing);
-        await campaign.save();
-        auditLogger.info(req.user.get("email") + " added refs to campaign " + req.params.id + ": " + JSON.stringify(added));
+        await campaign.$query().patch({ refs: existing });
+        auditLogger.info(req.user.email + " added refs to campaign " + req.params.id + ": " + JSON.stringify(added));
         res.json({ added: added.length, refCount: existing.length });
     } catch (err) {
-        if (err && err.message && /EmptyResponse/.test(err.message)) {
+        if (err instanceof Campaign.NotFoundError) {
             res.status(404).json({ error: 'Campaign not found.' });
             return;
         }
@@ -181,20 +179,19 @@ router.delete('/:id(\\d+)/refs/:refId(\\d+)', async function (req, res, next) {
     var refId = parseInt(req.params.refId, 10);
 
     try {
-        var campaign = await new Campaign({ id: req.params.id }).fetch();
-        var existing = campaign.get('refs') || [];
+        var campaign = await Campaign.query().findById(req.params.id).throwIfNotFound();
+        var existing = campaign.refs || [];
         var filtered = existing.filter(function (n) { return n !== refId; });
         if (filtered.length === existing.length) {
             // Nothing to do; treat as success so the UI can move on.
             res.json({ removed: 0, refCount: existing.length });
             return;
         }
-        campaign.set('refs', filtered);
-        await campaign.save();
-        auditLogger.info(req.user.get("email") + " removed ref " + refId + " from campaign " + req.params.id);
+        await campaign.$query().patch({ refs: filtered });
+        auditLogger.info(req.user.email + " removed ref " + refId + " from campaign " + req.params.id);
         res.json({ removed: 1, refCount: filtered.length });
     } catch (err) {
-        if (err && err.message && /EmptyResponse/.test(err.message)) {
+        if (err instanceof Campaign.NotFoundError) {
             res.status(404).json({ error: 'Campaign not found.' });
             return;
         }

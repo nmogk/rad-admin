@@ -5,23 +5,20 @@ var SiteContent = require('../models/site-content');
 var refTypes = require('../config/refTypes');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', async function (req, res, next) {
   var contents = fs.readFileSync("database.json");
   var dbMeta = JSON.parse(contents);
   dbMeta.refTypes = refTypes;
 
-  SiteContent.fetchAll()
-  .then(function (sections) {
-    sections.models.forEach(function (section) {
-      dbMeta[section.get('section_key')] = section.get('content');
+  try {
+    var sections = await SiteContent.query();
+    sections.forEach(function (section) {
+      dbMeta[section.section_key] = section.content;
     });
-  })
-  .catch(function (err) {
+  } catch (err) {
     // If site_content table doesn't exist or is empty, fall back to partials
-  })
-  .finally(function () {
-    res.render('index', dbMeta);
-  });
+  }
+  res.render('index', dbMeta);
 });
 
 router.get('/aggregator.html', function(req, res, next) {

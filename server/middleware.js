@@ -9,12 +9,12 @@ function isLoggedIn(req, res, next) {
             req.replacements = {}
         }
 
-        req.replacements.email = req.user.get("email");
-        req.replacements.dispname = req.user.get("name")
-        req.replacements.username = req.user.get("name") || req.user.get("email");
-        req.replacements.users = req.user.get("permission") >= 2;
-        req.replacements.deletable = req.user.get("permission") >= 1;
-        req.replacements.pendingEmail = req.user.get("pending_email");
+        req.replacements.email = req.user.email;
+        req.replacements.dispname = req.user.name;
+        req.replacements.username = req.user.name || req.user.email;
+        req.replacements.users = req.user.permission >= 2;
+        req.replacements.deletable = req.user.permission >= 1;
+        req.replacements.pendingEmail = req.user.pending_email;
         req.replacements.nav = 1;
 
         return next();
@@ -57,7 +57,7 @@ var forceSsl = function (req, res, next) {
 // Redirects to profile page if a particular user does not have
 // sufficient permissions to use the user editing interface
 var superuser = function (req, res, next) {
-    if (req.user.get("permission") >= 2) {
+    if (req.user.permission >= 2) {
         return next(); }
     res.redirect(302, '/profile');
 };

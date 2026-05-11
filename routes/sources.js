@@ -46,7 +46,7 @@ router.post('/new', async function (req, res, next) {
         return;
     }
 
-    auditLogger.info(req.user.get("email") + " added a new source:\n" + JSON.stringify(doc));
+    auditLogger.info(req.user.email + " added a new source:\n" + JSON.stringify(doc));
     req.flash('yay', 'New source successfully added.');
     var encodedName = encodeURIComponent('"' + doc.name + '"');
     res.json({ redirect: '/sources?rows=1&q=name:' + encodedName });
@@ -76,14 +76,14 @@ router.post("/:id", async function (req, res, next) {
         return;
     }
 
-    auditLogger.info(req.user.get("email") + " edited a source:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
+    auditLogger.info(req.user.email + " edited a source:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
     req.flash('yay', 'Source successfully edited.');
     res.json({ redirect: url.format({ pathname: "/sources", query: req.query }) });
 });
 
 /* Delete a source */
 router.delete("/:id", async function (req, res, next) {
-    if (req.user.get("permission") < 1) {
+    if (req.user.permission < 1) {
         res.redirect(403, "/sources");
         return;
     }
@@ -92,7 +92,7 @@ router.delete("/:id", async function (req, res, next) {
 
     try {
         var doc = await client.deleteByID(id);
-        auditLogger.info(req.user.get("email") + " deleted a source:\n" + JSON.stringify(doc));
+        auditLogger.info(req.user.email + " deleted a source:\n" + JSON.stringify(doc));
         req.flash('yay', 'Source successfully deleted.');
         res.json({ redirect: url.format({ pathname: "/sources", query: req.query }) });
     } catch (err) {

@@ -1,54 +1,27 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
-var { mockReq, mockRes, mockUser } = require('./helpers');
+var { mockReq, mockRes, mockUser, mockQueryBuilder } = require('./helpers');
 
-// ---- Campaign stub ----
-// The route does three things with the model:
-//   - new Campaign({name, description, refs:[]}).save()       (POST /new)
-//   - new Campaign({id}).fetch()                              (POST /:id, DELETE /:id, /refs ops)
-//   - Campaign.fetchAll()                                     (GET /, GET /list.json)
-// Tests configure `fetchedCampaign` with whatever .get/.set/.save/.destroy
-// behaviour they need, and `savedNewCampaign` for the create path.
+// Campaign stub:
+//   - Campaign.query()                                    listing endpoints
+//   - Campaign.query().insertAndFetch({...})              POST /new
+//   - Campaign.query().findById(id).throwIfNotFound()     POST /:id, DELETE /:id, refs ops
+//   - campaign.$query().patch({...}) / .delete()          mutations on the fetched row
 
+var campaignQb;
 var fetchedCampaign;
-var savedNewCampaign;
-var saveStub;
-var destroyStub;
-var fetchStub;
-var fetchAllStub;
 
-function buildFetchedCampaign(initial) {
+function makeCampaign(initial) {
     var data = Object.assign({ id: 1, name: 'C', description: '', refs: [] }, initial || {});
-    saveStub = sinon.stub().resolves();
-    destroyStub = sinon.stub().resolves();
-    return {
-        get: sinon.stub().callsFake(function (k) { return data[k]; }),
-        set: sinon.stub().callsFake(function (k, v) {
-            if (typeof k === 'object') { Object.assign(data, k); }
-            else { data[k] = v; }
-        }),
-        save: saveStub,
-        destroy: destroyStub
-    };
+    var qb = mockQueryBuilder();
+    data.$query = sinon.stub().returns(qb);
+    data._qb = qb;
+    return data;
 }
 
-var CampaignStub = function (attrs) {
-    if (attrs && (attrs.name !== undefined) && attrs.refs !== undefined) {
-        // create path
-        savedNewCampaign = {
-            get: sinon.stub().callsFake(function (k) {
-                if (k === 'id') { return 99; }
-                return attrs[k];
-            })
-        };
-        return { save: sinon.stub().resolves(savedNewCampaign) };
-    }
-    // load-by-id path
-    fetchStub = sinon.stub().resolves(fetchedCampaign);
-    return { fetch: fetchStub };
-};
-CampaignStub.fetchAll = function () { return fetchAllStub(); };
+var CampaignStub = { query: sinon.stub() };
+CampaignStub.NotFoundError = class NotFoundError extends Error {};
 
 var auditLoggerStub = { info: sinon.stub() };
 var log4jsStub = { getLogger: sinon.stub().returns(auditLoggerStub) };
@@ -69,19 +42,16 @@ function findHandler(router, method, path) {
 describe('Campaigns Routes', function () {
 
     beforeEach(function () {
-        fetchedCampaign = buildFetchedCampaign();
-        savedNewCampaign = null;
-        fetchAllStub = sinon.stub().resolves({ models: [] });
+        campaignQb = mockQueryBuilder();
+        fetchedCampaign = makeCampaign();
+        CampaignStub.query.reset();
+        CampaignStub.query.returns(campaignQb);
         auditLoggerStub.info.reset();
     });
 
     describe('GET /', function () {
         it('renders campaigns view with campaigns list', async function () {
-            fetchAllStub = sinon.stub().resolves({
-                models: [
-                    { get: sinon.stub().callsFake(function (k) { return ({id: 1, name: 'A', description: 'desc', refs: [10, 20]})[k]; }) }
-                ]
-            });
+            campaignQb.resolves([{ id: 1, name: 'A', description: 'desc', refs: [10, 20] }]);
             var req = mockReq({ user: mockUser(), replacements: {} });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'get', '/');
@@ -97,12 +67,10 @@ describe('Campaigns Routes', function () {
 
     describe('GET /list.json', function () {
         it('returns lightweight {id, name, refCount}', async function () {
-            fetchAllStub = sinon.stub().resolves({
-                models: [
-                    { get: sinon.stub().callsFake(function (k) { return ({id: 1, name: 'A', refs: [1,2,3]})[k]; }) },
-                    { get: sinon.stub().callsFake(function (k) { return ({id: 2, name: 'B', refs: []})[k]; }) }
-                ]
-            });
+            campaignQb.resolves([
+                { id: 1, name: 'A', refs: [1, 2, 3] },
+                { id: 2, name: 'B', refs: [] }
+            ]);
             var req = mockReq({ user: mockUser() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'get', '/list.json');
@@ -135,6 +103,7 @@ describe('Campaigns Routes', function () {
         });
 
         it('saves and redirects on success', async function () {
+            campaignQb.insertAndFetch.resolves({ id: 99, name: 'Fix dates' });
             var req = mockReq({ method: 'POST', body: { name: 'Fix dates', description: 'normalise YYYY' }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'post', '/new');
@@ -146,6 +115,7 @@ describe('Campaigns Routes', function () {
         });
 
         it('returns the saved campaign id/name for inline create flows', async function () {
+            campaignQb.insertAndFetch.resolves({ id: 99, name: 'Fix dates' });
             var req = mockReq({ method: 'POST', body: { name: 'Fix dates' }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'post', '/new');
@@ -166,18 +136,18 @@ describe('Campaigns Routes', function () {
         });
 
         it('updates name/description without touching refs', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, name: 'Old', description: 'Old desc', refs: [1, 2, 3] });
+            fetchedCampaign = makeCampaign({ id: 5, name: 'Old', description: 'Old desc', refs: [1, 2, 3] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'POST', params: { id: '5' }, body: { name: 'New', description: 'New desc' }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'post', '/:id(\\d+)');
             await handler(req, res, sinon.spy());
 
-            expect(saveStub.calledOnce).to.be.true;
-            expect(fetchedCampaign.set.calledOnce).to.be.true;
-            var setArgs = fetchedCampaign.set.firstCall.args[0];
-            expect(setArgs).to.have.property('name', 'New');
-            expect(setArgs).to.have.property('description', 'New desc');
-            expect(setArgs).to.not.have.property('refs');
+            expect(fetchedCampaign._qb.patch.calledOnce).to.be.true;
+            var patchArgs = fetchedCampaign._qb.patch.firstCall.args[0];
+            expect(patchArgs).to.have.property('name', 'New');
+            expect(patchArgs).to.have.property('description', 'New desc');
+            expect(patchArgs).to.not.have.property('refs');
             expect(res._json.redirect).to.equal('/campaigns');
         });
     });
@@ -193,7 +163,8 @@ describe('Campaigns Routes', function () {
         });
 
         it('returns 409 with refCount when refs present and force not set', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [1, 2, 3] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [1, 2, 3] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'DELETE', params: { id: '5' }, query: {}, user: mockUser({ permission: 1 }), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'delete', '/:id(\\d+)');
@@ -201,28 +172,30 @@ describe('Campaigns Routes', function () {
 
             expect(res.status.calledWith(409)).to.be.true;
             expect(res._json.refCount).to.equal(3);
-            expect(destroyStub.called).to.be.false;
+            expect(fetchedCampaign._qb.delete.called).to.be.false;
         });
 
         it('deletes when refs present but force=1', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [1, 2] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [1, 2] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'DELETE', params: { id: '5' }, query: { force: '1' }, user: mockUser({ permission: 1 }), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'delete', '/:id(\\d+)');
             await handler(req, res, sinon.spy());
 
-            expect(destroyStub.calledOnce).to.be.true;
+            expect(fetchedCampaign._qb.delete.calledOnce).to.be.true;
             expect(res._json.redirect).to.equal('/campaigns');
         });
 
         it('deletes empty campaign on first try', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'DELETE', params: { id: '5' }, query: {}, user: mockUser({ permission: 1 }), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'delete', '/:id(\\d+)');
             await handler(req, res, sinon.spy());
 
-            expect(destroyStub.calledOnce).to.be.true;
+            expect(fetchedCampaign._qb.delete.calledOnce).to.be.true;
             expect(auditLoggerStub.info.firstCall.args[0]).to.include('deleted campaign');
         });
     });
@@ -238,23 +211,23 @@ describe('Campaigns Routes', function () {
         });
 
         it('appends new IDs and de-dups against existing', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [10, 20] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [10, 20] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'POST', params: { id: '5' }, body: { ids: [20, 30, 40] }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'post', '/:id(\\d+)/refs');
             await handler(req, res, sinon.spy());
 
-            expect(saveStub.calledOnce).to.be.true;
-            // Final state: [10, 20, 30, 40] — 30 and 40 added, 20 already present.
-            var setCalls = fetchedCampaign.set.getCalls();
-            var finalRefs = setCalls[setCalls.length - 1].args[1] || setCalls[setCalls.length - 1].args[0].refs;
-            expect(finalRefs).to.deep.equal([10, 20, 30, 40]);
+            expect(fetchedCampaign._qb.patch.calledOnce).to.be.true;
+            var patchArgs = fetchedCampaign._qb.patch.firstCall.args[0];
+            expect(patchArgs.refs).to.deep.equal([10, 20, 30, 40]);
             expect(res._json.added).to.equal(2);
             expect(res._json.refCount).to.equal(4);
         });
 
         it('accepts a single id via body.id', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'POST', params: { id: '5' }, body: { id: 42 }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'post', '/:id(\\d+)/refs');
@@ -265,7 +238,8 @@ describe('Campaigns Routes', function () {
         });
 
         it('writes audit log with the added IDs', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'POST', params: { id: '5' }, body: { ids: [1, 2] }, user: mockUser({ email: 'editor@test.com' }), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'post', '/:id(\\d+)/refs');
@@ -281,25 +255,27 @@ describe('Campaigns Routes', function () {
 
     describe('DELETE /:id/refs/:refId', function () {
         it('removes the ref ID and reports counts', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [10, 20, 30] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [10, 20, 30] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'DELETE', params: { id: '5', refId: '20' }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'delete', '/:id(\\d+)/refs/:refId(\\d+)');
             await handler(req, res, sinon.spy());
 
-            expect(saveStub.calledOnce).to.be.true;
+            expect(fetchedCampaign._qb.patch.calledOnce).to.be.true;
             expect(res._json.removed).to.equal(1);
             expect(res._json.refCount).to.equal(2);
         });
 
         it('is a no-op when ID not present (still 200)', async function () {
-            fetchedCampaign = buildFetchedCampaign({ id: 5, refs: [10, 20] });
+            fetchedCampaign = makeCampaign({ id: 5, refs: [10, 20] });
+            campaignQb.resolves(fetchedCampaign);
             var req = mockReq({ method: 'DELETE', params: { id: '5', refId: '999' }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(campaignsRouter, 'delete', '/:id(\\d+)/refs/:refId(\\d+)');
             await handler(req, res, sinon.spy());
 
-            expect(saveStub.called).to.be.false;
+            expect(fetchedCampaign._qb.patch.called).to.be.false;
             expect(res._json.removed).to.equal(0);
             expect(res._json.refCount).to.equal(2);
         });

@@ -66,11 +66,11 @@ router.get('/', async function (req, res, next) {
         // banner — don't block the page from rendering.
         if (req.query.campaign && /^\d+$/.test(req.query.campaign)) {
             try {
-                var campaign = await new Campaign({ id: req.query.campaign }).fetch();
+                var campaign = await Campaign.query().findById(req.query.campaign).throwIfNotFound();
                 extras.activeCampaign = {
-                    id: campaign.get('id'),
-                    name: campaign.get('name'),
-                    refCount: (campaign.get('refs') || []).length
+                    id: campaign.id,
+                    name: campaign.name,
+                    refCount: (campaign.refs || []).length
                 };
             } catch (err) {
                 console.log('Active campaign lookup failed:', err && err.message);
@@ -156,7 +156,7 @@ router.post('/new', async function (req, res, next) {
         return;
     }
 
-    auditLogger.info(req.user.get("email") + " added a new reference:\n" + JSON.stringify(doc));
+    auditLogger.info(req.user.email + " added a new reference:\n" + JSON.stringify(doc));
     await db.recordInsert(doc.dt);
     req.flash('yay', 'New reference successfully added.');
     res.json({ redirect: '/refs?rows=1&q=id%3A' + doc.id });
@@ -271,14 +271,14 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         return;
     }
 
-    auditLogger.info(req.user.get("email") + " edited a reference:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
+    auditLogger.info(req.user.email + " edited a reference:\n" + JSON.stringify(oldDoc) + "\nA Original ||||| Updated V\n" + JSON.stringify(doc));
     await db.recordEdit(doc.dt);
     req.flash('yay', 'Reference successfully edited.');
     res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });
 });
 
 router.delete("/:id(\\d+)", async function (req, res, next) {
-    if (req.user.get("permission") < 1) {
+    if (req.user.permission < 1) {
         res.redirect(403, "/refs");
         return;
     }
@@ -287,7 +287,7 @@ router.delete("/:id(\\d+)", async function (req, res, next) {
 
     try {
         var doc = await client.deleteByID(id);
-        auditLogger.info(req.user.get("email") + " deleted a reference:\n" + JSON.stringify(doc));
+        auditLogger.info(req.user.email + " deleted a reference:\n" + JSON.stringify(doc));
         await db.recordDelete();
         req.flash('yay', 'Reference successfully deleted.');
         res.json({ redirect: url.format({ pathname: "/refs", query: req.query }) });

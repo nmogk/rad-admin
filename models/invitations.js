@@ -1,12 +1,19 @@
-var bookshelf = require('../config/bookshelf');
-var user = require('./user');
+var Model = require('../config/objection');
 
-var model = bookshelf.Model.extend({
-    tableName: 'invitations',
-    idAttribute: 'token',
-    user: function(){
-        return this.belongsTo(user);
+class Invitation extends Model {
+    static get tableName() { return 'invitations'; }
+    static get idColumn() { return 'token'; }
+
+    static get relationMappings() {
+        var User = require('./user');
+        return {
+            user: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: User,
+                join: { from: 'invitations.user_id', to: 'users.id' }
+            }
+        };
     }
-});
+}
 
-module.exports = model;
+module.exports = Invitation;

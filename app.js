@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var hbs = require('hbs');
 var flash = require('connect-flash');
 var session = require('express-session');
-var KnexSessionStore = require('connect-session-knex')(session);
+var { ConnectSessionKnexStore } = require('connect-session-knex');
 var { expressCspHeader, NONCE, INLINE, SELF, STRICT_DYNAMIC, EVAL, NONE} = require('express-csp-header');
 var { doubleCsrf } = require('csrf-csrf');
 var passport = require('./config/passport');
@@ -60,9 +60,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIESECRET)); // read cookies (needed for auth + CSRF)
 
 // Session setup required for passport
-var store = new KnexSessionStore({
+var store = new ConnectSessionKnexStore({
     knex: knex,
-    createtable: true
+    createTable: true
 });
 
 app.use(session({

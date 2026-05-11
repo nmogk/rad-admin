@@ -24,11 +24,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.0",
-    "bookshelf": "^1.0",
-    "bookshelf-secure-password": "^5.0",
-    "bookshelf-virtuals-plugin": "^1.0.0",
+    "bcrypt": "^5.0",
     "connect-flash": "^0.1.1",
-    "connect-session-knex": "^3.0",
+    "connect-session-knex": "^5.0",
     "cookie-parser": "~1.4.3",
     "csrf-csrf": "^4.0.3",
     "debug": "^4.0",
@@ -39,21 +37,18 @@
     "hbs": "^4.1",
     "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^2.0",
-    "knex": ">=2.4.2 <3.0.0",
+    "knex": "^3.0",
     "lodash": "^4.17.20",
     "log4js": "^6.3",
     "morgan": "^1.9",
     "mysql2": "^3.3",
     "nodemailer": "^8.0",
+    "objection": "^3.1",
     "passport": "^0.6.0",
     "passport-local": "^1.0",
     "password-validator": "^5.0",
     "serve-favicon": "^2.4",
-    "streamroller": "^3.1",
-    "when": "^3.7.8"
-  },
-  "dependenciesComments": {
-    "when": "when is a promise library used by bookshelf. It is not used directly in our code, but it is required to run the application."
+    "streamroller": "^3.1"
   },
   "devDependencies": {
     "chai": "^4.3",
@@ -61,8 +56,5 @@
     "proxyquire": "^2.1",
     "sinon": "^15.0",
     "supertest": "^6.3"
-  },
-  "overrides": {
-    "bcrypt": "^5.0"
   }
 }

@@ -1,40 +1,27 @@
-var Reset = require('../models/invitations');
 var crypto = require('crypto');
 var { promisify } = require('util');
-var randomBytesAsync = promisify(crypto.randomBytes);
+var Invitation = require('./invitations');
 
-var self = this;
+var randomBytesAsync = promisify(crypto.randomBytes);
 var byteLength = 20;
 
-// Returns a token promise
-self.getToken = function (expireHours) {
-    return randomBytesAsync(byteLength)
-        .then(function (buf) {
-            var token = buf.toString('hex');
-            let date = new Date();
-            date.setHours(date.getHours() + expireHours);
-            return new Reset(
-                {
-                    token: token,
-                    expires: date
-                }
-            )
-        });
+// Returns a plain { token, expires } payload. Callers spread it, add user_id,
+// then Invitation.query().insertAndFetch(...) to persist.
+exports.getToken = async function (expireHours) {
+    var buf = await randomBytesAsync(byteLength);
+    var token = buf.toString('hex');
+    var expires = new Date();
+    expires.setHours(expires.getHours() + expireHours);
+    return { token: token, expires: expires };
 };
 
-self.randomHexString = function () {
-    return crypto.randomBytes(20).toString('hex');
-}
-
-self.clearRelated = function (userPromise) {
-    return userPromise
-    .then(function (user) {
-        return new Reset({ user_id: user.get('id') }).fetch();
-    })
-    .then(function (currentToken) {
-        return currentToken.destroy(); // Remove the expired token
-    })
-    .catch(function (err) { }); // No token found. All is well
+exports.randomHexString = function () {
+    return crypto.randomBytes(byteLength).toString('hex');
 };
 
-module.exports = self;
+exports.clearRelated = async function (userPromise) {
+    try {
+        var user = await userPromise;
+        await Invitation.query().delete().where({ user_id: user.id });
+    } catch (err) { /* nothing to clear */ }
+};

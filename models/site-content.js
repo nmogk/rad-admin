@@ -1,7 +1,7 @@
-var bookshelf = require('../config/bookshelf');
+var Model = require('../config/objection');
 
-var model = bookshelf.Model.extend({
-    tableName: 'site_content'
-});
+class SiteContent extends Model {
+    static get tableName() { return 'site_content'; }
+}
 
-module.exports = model;
+module.exports = SiteContent;

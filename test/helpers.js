@@ -53,7 +53,9 @@ function mockRes() {
 }
 
 /**
- * Creates a mock Bookshelf user model with get() support.
+ * Creates a mock Objection user model instance: a plain object with attribute
+ * properties plus a chainable $query() and an authenticate() stub. Tests can
+ * assert against `user._qb.patch.calledWith(...)` etc.
  */
 function mockUser(attrs) {
     var defaults = {
@@ -64,25 +66,45 @@ function mockUser(attrs) {
         validated: 1,
         password_digest: '$2b$10$fakehash'
     };
-    var data = Object.assign(defaults, attrs);
-
-    return {
-        id: data.id,
-        get: sinon.stub().callsFake(function (key) { return data[key]; }),
-        set: sinon.stub().callsFake(function (key, val) {
-            if (typeof key === 'object') {
-                Object.assign(data, key);
-            } else {
-                data[key] = val;
-            }
-        }),
-        save: sinon.stub().resolves(this),
-        destroy: sinon.stub().resolves(),
-        fetch: sinon.stub().resolves(this),
-        authenticate: sinon.stub().resolves(this),
-        related: sinon.stub().returns(this),
-        _data: data
-    };
+    var user = Object.assign({}, defaults, attrs);
+    var qb = mockQueryBuilder();
+    user.$query = sinon.stub().returns(qb);
+    user.authenticate = sinon.stub().resolves(user);
+    user._qb = qb;
+    return user;
 }
 
-module.exports = { mockReq, mockRes, mockUser };
+/**
+ * Returns a chainable thenable that mimics Objection's QueryBuilder. Chain
+ * methods (findById, findOne, where, withGraphFetched, throwIfNotFound)
+ * return the qb itself; awaiting the qb resolves to qb._resolveTo (default
+ * undefined). Terminal operations (patch, insertAndFetch, delete, ...) are
+ * individual sinon stubs you can configure per-test.
+ *
+ * Set the terminal value for "await qb" chains with qb.resolves(value).
+ */
+function mockQueryBuilder() {
+    var qb = {};
+    qb._resolveTo = undefined;
+    qb._reject = undefined;
+    qb.findById = sinon.stub().returns(qb);
+    qb.findOne = sinon.stub().returns(qb);
+    qb.where = sinon.stub().returns(qb);
+    qb.withGraphFetched = sinon.stub().returns(qb);
+    qb.throwIfNotFound = sinon.stub().returns(qb);
+    qb.patch = sinon.stub().resolves(1);
+    qb.patchAndFetch = sinon.stub().resolves(undefined);
+    qb.insert = sinon.stub().resolves(undefined);
+    qb.insertAndFetch = sinon.stub().resolves(undefined);
+    qb.delete = sinon.stub().resolves(1);
+    qb.then = function (onFulfilled, onRejected) {
+        if (qb._reject) return Promise.reject(qb._reject).then(onFulfilled, onRejected);
+        return Promise.resolve(qb._resolveTo).then(onFulfilled, onRejected);
+    };
+    qb.catch = function (onRejected) { return qb.then(undefined, onRejected); };
+    qb.resolves = function (v) { qb._resolveTo = v; return qb; };
+    qb.rejects = function (e) { qb._reject = e; return qb; };
+    return qb;
+}
+
+module.exports = { mockReq, mockRes, mockUser, mockQueryBuilder };

@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('../config/passport');
-var nodemailer = require('nodemailer');
 var User = require('../models/user');
 var Reset = require('../models/invitations');
 var mail = require('../config/mailer');
@@ -20,42 +19,32 @@ router.get('/', function (req, res, next) {
 // process the login form
 router.post('/', passport.authenticate('local-login',
     {
-        successRedirect: '/refs', // redirect to the secure profile section
-        failureRedirect: '/login', // redirect back to the login page if there is an error
-        failureFlash: true // allow flash messages
+        successRedirect: '/refs',
+        failureRedirect: '/login',
+        failureFlash: true
     })
 );
 
-router.post('/forgot', function (req, res, next) {
-
-    // Fetch the user from the given email. This will happen only once, and this promise will be reused
-    // If the user is not found, then it will throw a User.NotFoundError which is caught below.
-    var userPromise = new User({ email: req.body.email }).fetch()
-
-    // Wait for all the ingredients to return before using them
-    Promise.all([token.getToken(1), userPromise, token.clearRelated(userPromise)])
-        .then(function (results) {
-            var invite = results[0], user = results[1];
-            invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
-
-            return mail.sendResetMail(req, user.get('email'), invite.get('token'));
-        })
-        .then(function () { // Success
-            appLog.info(`Password reset email sent to: ${req.body.email}`);
-            return req.flash('login', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
-        })
-        .catch(function (err) {
-            if (err instanceof User.NotFoundError) { // Reset attempted with wrong account
-                appLog.info(`Password reset request by non-user: ${req.body.email}`);
-                return req.flash('login', 'No account with that email address exists.');
-            }
-            appLog.err(`Problem sending password reset email to: ${req.body.email}`);;
-            return req.flash('login', 'Problem sending reset.');
-        })
-        .finally(function () { // All responses get redirected to /login to display flash message
-            res.redirect(303, '/login'); // 303 ensures that the client uses GET rather than POST.
-        });
-
+router.post('/forgot', async function (req, res, next) {
+    try {
+        var user = await User.query().findOne({ email: req.body.email }).throwIfNotFound();
+        await token.clearRelated(Promise.resolve(user));
+        var tokenData = await token.getToken(1);
+        var invite = await Reset.query().insertAndFetch(Object.assign({}, tokenData, { user_id: user.id }));
+        await mail.sendResetMail(req, user.email, invite.token);
+        appLog.info(`Password reset email sent to: ${req.body.email}`);
+        req.flash('login', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+    } catch (err) {
+        if (err instanceof User.NotFoundError) {
+            appLog.info(`Password reset request by non-user: ${req.body.email}`);
+            req.flash('login', 'No account with that email address exists.');
+        } else {
+            appLog.error(`Problem sending password reset email to: ${req.body.email}`);
+            req.flash('login', 'Problem sending reset.');
+        }
+    } finally {
+        res.redirect(303, '/login');
+    }
 });
 
 module.exports = router;

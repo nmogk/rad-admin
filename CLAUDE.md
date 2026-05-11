@@ -106,10 +106,11 @@ A `{{nonce}}` Handlebars helper injects the per-request CSP nonce into script ta
 
 ### Database
 
-MySQL via Knex/Bookshelf. Three tables (defined in `models/schema.js`, created by `migration.js`):
+MySQL via Knex/Objection.js. Knex binding lives in `config/objection.js` (calls `Model.knex(knex)` once on require). Models extend `objection.Model`; instances are plain JS objects (read `user.email`, not `user.get('email')`). Password hashing on the User model is implemented as `$beforeInsert`/`$beforeUpdate` hooks that bcrypt `this.password` into `this.password_digest`; `User#authenticate(plain)` resolves on match and rejects on mismatch. Four tables (defined in `models/schema.js`, created by `migration.js`):
 - **users**: email (unique), password_digest (bcrypt), name, permission (0/1/2), validated
 - **campaigns**: name, description, refs (JSON array of reference IDs)
 - **invitations**: token (PK), expires, user_id (FK) — used for password reset (1hr) and signup invites (24hr)
+- **site_content**: section_key (unique), title, content, updated_at, updated_by — editable copy for the public site backed by `routes/site.js`
 
 ### Email
 
