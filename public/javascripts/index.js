@@ -267,13 +267,18 @@ function searchInit() {
         var seed = sanitizeSeed(decodeURIComponent(queryString.seed));
         if (!seed) { return; }
         var rows = queryString.rows || '30';
+        var start = queryString.start || '0';
         document.getElementById("searchInput").value = seed;
         document.getElementById("rowsInput").value = rows;
         document.getElementById("mainDisplay").setAttribute("aria-hidden", "false");
+        // `seed` is a marker the view-model uses to build clean ?seed=&start=
+        // pagination links; refGridView strips it before sending to Solr.
         ko.applyBindings(new RefsGridViewModel({
             q: '*:*',
             sort: 'random_' + seed + ' asc',
-            rows: rows
+            rows: rows,
+            start: start,
+            seed: seed
         }), $("#mainDisplay")[0]);
         initBootstrapWidgets();
     }

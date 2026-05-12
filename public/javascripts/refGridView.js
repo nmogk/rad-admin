@@ -36,6 +36,9 @@ function RefsGridViewModel(qString) {
         solrParams.fq = 'type:"' + decodeURIComponent(String(solrParams.type).replace(/[+]/g, " ")).replace(/"/g, '\\"') + '"';
     }
     delete solrParams.type;
+    // `seed` is an index-page marker for random-mode pagination — it isn't a
+    // Solr param (sort=random_<seed> asc is what drives the ordering).
+    delete solrParams.seed;
 
     $.ajax({
         url: self.refsURI,
@@ -101,8 +104,19 @@ function RefsGridViewModel(qString) {
                     active = false;
                 }
 
-                qString.start = start;
-                var link = "?" + $.param(qString);
+                var link;
+                if (qString.seed) {
+                    // Random-mode: build a clean ?seed=…&rows=…&start=… link.
+                    // Avoids carrying q=*:* and sort=random_<seed> asc through
+                    // the URL, where $.param's re-encoding of the space inside
+                    // `sort` would otherwise break Solr's field-name parsing.
+                    link = "?seed=" + encodeURIComponent(qString.seed)
+                         + "&rows=" + encodeURIComponent(qString.rows)
+                         + "&start=" + encodeURIComponent(start);
+                } else {
+                    qString.start = start;
+                    link = "?" + $.param(qString);
+                }
                 var listItem = document.createElement("LI");
                 listItem.setAttribute("class", active ? "page-item active" : "page-item");
                 if (ariaLab) {
