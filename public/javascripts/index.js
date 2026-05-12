@@ -58,7 +58,9 @@ function rollRandom() {
     if (!seed) {
         seed = Math.random().toString(36).slice(2, 10);
     }
-    window.location.search = '?seed=' + encodeURIComponent(seed);
+    var rows = document.getElementById('rowsInput').value || '30';
+    window.location.search = '?seed=' + encodeURIComponent(seed)
+        + '&rows=' + encodeURIComponent(rows);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
