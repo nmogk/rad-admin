@@ -9,6 +9,9 @@ router.get('/', async function (req, res, next) {
   var contents = fs.readFileSync("database.json");
   var dbMeta = JSON.parse(contents);
   dbMeta.refTypes = refTypes;
+  // Forwarded to the template so the search bar can be pre-filled with the
+  // seed on reload; client JS reads ?seed= directly to drive the Solr sort.
+  dbMeta.randomSeed = typeof req.query.seed === 'string' ? req.query.seed : null;
 
   try {
     var sections = await SiteContent.query();
