@@ -97,7 +97,7 @@ router.post('/backup', async function (req, res, next) {
         return;
     }
 
-    auditLogger.info(req.user.get('email') + ' created backup(s): ' + written.join(', '));
+    auditLogger.info(req.user.email + ' created backup(s): ' + written.join(', '));
     req.flash('yay', 'Backup created: ' + written.join(', '));
     res.json({ redirect: '/database' });
 });
@@ -107,7 +107,7 @@ router.post('/recompute', async function (req, res, next) {
         var scanned = await stats.scanCore('rad');
         var result = await db.replaceStats(scanned);
         if (Object.keys(result.changes).length > 0) {
-            auditLogger.info(req.user.get('email') + ' rebuilt database stats: ' + JSON.stringify(result.changes));
+            auditLogger.info(req.user.email + ' rebuilt database stats: ' + JSON.stringify(result.changes));
         }
         res.json({
             changed: Object.keys(result.changes).length > 0,
@@ -140,7 +140,7 @@ router.delete('/backup/:filename', async function (req, res, next) {
         return;
     }
 
-    auditLogger.info(req.user.get('email') + ' deleted backup: ' + name);
+    auditLogger.info(req.user.email + ' deleted backup: ' + name);
     req.flash('yay', 'Backup deleted: ' + name);
     res.json({ redirect: '/database' });
 });

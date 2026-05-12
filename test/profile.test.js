@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
-var { mockReq, mockRes, mockUser } = require('./helpers');
+var { mockReq, mockRes, mockUser, mockQueryBuilder } = require('./helpers');
 
 var validatorStub = { validate: sinon.stub() };
 var mailStub = {
@@ -9,19 +9,13 @@ var mailStub = {
     sendEmailVerification: sinon.stub().resolves(),
     sendEmailChangeNotice: sinon.stub().resolves()
 };
-var tokensStub = { clearRelated: sinon.stub().resolves(), getToken: sinon.stub() };
-
-var fakeToken = {
-    get: sinon.stub().callsFake(function (key) {
-        if (key === 'token') return 'abc123';
-    }),
-    set: sinon.stub(),
-    save: sinon.stub().resolves()
+var tokensStub = {
+    clearRelated: sinon.stub().resolves(),
+    getToken: sinon.stub().resolves({ token: 'abc123', expires: new Date('2026-12-31') })
 };
-fakeToken.set.returns(fakeToken);
-tokensStub.getToken.resolves(fakeToken);
 
-var resetTokenStub = sinon.stub();
+var resetTokenQb;
+var resetTokenStub = { query: sinon.stub() };
 
 var profileRouter = proxyquire('../routes/profile', {
     '../config/passValidator': validatorStub,
@@ -38,9 +32,11 @@ describe('Profile Routes', function () {
         mailStub.sendEmailVerification.reset();
         mailStub.sendEmailChangeNotice.reset();
         tokensStub.getToken.resetHistory();
-        tokensStub.clearRelated.reset();
-        fakeToken.set.resetHistory();
-        fakeToken.save.resetHistory();
+        tokensStub.clearRelated.resetHistory();
+        resetTokenQb = mockQueryBuilder();
+        resetTokenQb.insertAndFetch.resolves({ token: 'abc123' });
+        resetTokenStub.query.reset();
+        resetTokenStub.query.returns(resetTokenQb);
     });
 
     describe('GET /', function () {
@@ -60,7 +56,7 @@ describe('Profile Routes', function () {
 
     describe('POST / (profile update)', function () {
 
-        it('should reject weak passwords submitted via profile update', function () {
+        it('should reject weak passwords submitted via profile update', async function () {
             validatorStub.validate.returns(false);
             var user = mockUser();
             var req = mockReq({
@@ -72,18 +68,17 @@ describe('Profile Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(profileRouter, 'post', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(validatorStub.validate.calledWith('weak')).to.be.true;
             expect(req.flash.calledOnce).to.be.true;
             expect(res.redirect.calledWith(303, '/profile')).to.be.true;
-            expect(user.set.neverCalledWith('password')).to.be.true;
+            expect(user._qb.patch.called).to.be.false;
         });
 
-        it('should accept valid passwords submitted via profile update', function () {
+        it('should accept valid passwords submitted via profile update', async function () {
             validatorStub.validate.returns(true);
             var user = mockUser();
-            user.save = sinon.stub().resolves(user);
             var req = mockReq({
                 body: { password: 'StrongPass1' },
                 user: user,
@@ -93,12 +88,13 @@ describe('Profile Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(profileRouter, 'post', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
 
-            expect(user.set.calledWith('password', 'StrongPass1')).to.be.true;
+            expect(user._qb.patch.calledOnce).to.be.true;
+            expect(user._qb.patch.firstCall.args[0]).to.deep.equal({ password: 'StrongPass1' });
         });
 
-        it('should reject invalid email format', function () {
+        it('should reject invalid email format', async function () {
             var user = mockUser();
             var req = mockReq({
                 body: { email: 'notanemail' },
@@ -109,13 +105,13 @@ describe('Profile Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(profileRouter, 'post', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(req.flash.calledWith('error', 'Please enter a valid email address.')).to.be.true;
             expect(res.redirect.calledWith(303, '/profile')).to.be.true;
         });
 
-        it('should reject email change to same address', function () {
+        it('should reject email change to same address', async function () {
             var user = mockUser({ email: 'test@example.com' });
             var req = mockReq({
                 body: { email: 'test@example.com' },
@@ -126,15 +122,14 @@ describe('Profile Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(profileRouter, 'post', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
 
             expect(req.flash.calledWith('error', 'New email is the same as current email.')).to.be.true;
             expect(res.redirect.calledWith(303, '/profile')).to.be.true;
         });
 
-        it('should set pending_email and send verification for valid new email', function (done) {
+        it('should set pending_email and send verification for valid new email', async function () {
             var user = mockUser({ email: 'old@example.com' });
-            user.save = sinon.stub().resolves(user);
             var req = mockReq({
                 body: { email: 'new@example.com' },
                 user: user,
@@ -142,17 +137,17 @@ describe('Profile Routes', function () {
                 get: sinon.stub().returns('localhost')
             });
             var res = mockRes();
-            res.redirect = sinon.stub().callsFake(function () {
-                expect(user.set.calledWith('pending_email', 'new@example.com')).to.be.true;
-                expect(mailStub.sendEmailVerification.calledOnce).to.be.true;
-                expect(mailStub.sendEmailChangeNotice.calledOnce).to.be.true;
-                expect(req.flash.calledWith('info', sinon.match('verification email'))).to.be.true;
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(profileRouter, 'post', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(user._qb.patch.calledOnce).to.be.true;
+            expect(user._qb.patch.firstCall.args[0]).to.deep.equal({ pending_email: 'new@example.com' });
+            expect(mailStub.sendEmailVerification.calledOnce).to.be.true;
+            expect(mailStub.sendEmailChangeNotice.calledOnce).to.be.true;
+            expect(req.flash.calledWith('info', sinon.match('verification email'))).to.be.true;
+            expect(res.redirect.calledWith(303, '/profile')).to.be.true;
         });
     });
 
@@ -190,25 +185,23 @@ describe('Profile Routes', function () {
             expect(res.redirect.calledWith(303, 'back')).to.be.true;
         });
 
-        it('should save password and send confirmation on success', function (done) {
+        it('should save password and send confirmation on success', async function () {
             validatorStub.validate.returns(true);
             var user = mockUser();
-            user.save = sinon.stub().resolves(user);
             var req = mockReq({
                 body: { password: 'StrongPass1', confirm: 'StrongPass1' },
                 user: user,
                 flash: sinon.stub()
             });
             var res = mockRes();
-            res.redirect = sinon.stub().callsFake(function () {
-                expect(user.set.calledWith('password', 'StrongPass1')).to.be.true;
-                expect(mailStub.sendPassChangeConfirmation.calledOnce).to.be.true;
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(profileRouter, 'post', '/password');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(user._qb.patch.calledOnce).to.be.true;
+            expect(user._qb.patch.firstCall.args[0]).to.deep.equal({ password: 'StrongPass1' });
+            expect(mailStub.sendPassChangeConfirmation.calledOnce).to.be.true;
         });
     });
 });

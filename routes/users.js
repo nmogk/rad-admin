@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var User = require('../models/user');
-var _ = require('lodash');
-var tokens = require('../models/tokens');
 var Invite = require('../models/invitations');
+var tokens = require('../models/tokens');
 var mail = require('../config/mailer');
 
 // GET users listing.
@@ -12,153 +11,127 @@ router.get('/', function (req, res, next) {
   res.render('users', req.replacements);
 });
 
-// RESTful endpoint for getting an array of users in json format 
-router.get('/all', function (req, res, next) {
-  usersJson = [];
-
-  usersPromise = User.fetchAll();
-
-  usersPromise.then(function (usersList) {
-    _.each(usersList.models, function (user) {
-      usersJson.push({
-        id: user.get("id"),
-        email: user.get("email"),
-        name: user.get("name"),
-        permission: user.get("permission"),
-        validated: user.get("validated"),
-        last_login: user.get("last_login")
-      }); // Unpack user object, dropping password_digest
-    })
-  })
-    .then(function () {
-      res.jsonp(usersJson);
-    })
-
+// RESTful endpoint for getting an array of users in json format
+router.get('/all', async function (req, res, next) {
+  try {
+    var users = await User.query();
+    var data = users.map(function (u) {
+      return {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        permission: u.permission,
+        validated: u.validated,
+        last_login: u.last_login
+      };
+    });
+    res.jsonp(data);
+  } catch (err) {
+    next(err);
+  }
 });
 
-//
-router.post('/invite', function (req, res, next) {
+router.post('/invite', async function (req, res, next) {
   if (!req.body.newUserEmail) {
     req.flash('error', 'No email specified');
     res.redirect(303, '/users');
     return;
   }
 
-  newUserPass = tokens.randomHexString();
+  var newUserPass = tokens.randomHexString();
 
-  // If invitation resends don't work, this call is likely to blame.
-  // This will fail if there is already an invite
-  newUserPromise = new User({ email: req.body.newUserEmail, password: newUserPass }).save(null, { method: "insert" });
+  try {
+    var existing = await User.query().findOne({ email: req.body.newUserEmail });
+    if (existing) {
+      req.flash('error', 'User already exists. New user not created.');
+      res.redirect(303, '/users');
+      return;
+    }
 
-  Promise.all([tokens.getToken(24), newUserPromise, tokens.clearRelated(newUserPromise)])
-  .then(function (results) {
-    var invite = results[0], user = results[1];
-    invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
+    var user = await User.query().insertAndFetch({
+      email: req.body.newUserEmail,
+      password: newUserPass
+    });
+    var tokenData = await tokens.getToken(24);
+    var invite = await Invite.query().insertAndFetch(Object.assign({}, tokenData, { user_id: user.id }));
 
-    return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
-  })
-    .catch(function (err) {
-      if (err instanceof User.NoRowsUpdatedError) { // User was not saved in database
-        req.flash('error', 'User already exists. New user not created.');
-        return;
-      }
-      if (err instanceof mail.MailError) {
-        req.flash('error', 'Invitation not sent. ' + err.message);
-        return;
-      }
+    await mail.sendInviteMail(req, user.email, invite.token);
+  } catch (err) {
+    if (err instanceof mail.MailError) {
+      req.flash('error', 'Invitation not sent. ' + err.message);
+    } else {
       console.log(err);
       req.flash('error', 'Problem creating invitation.');
-    })
-    .finally(function () { // All responses get redirected to /login to display flash message
-      res.redirect(303, '/users'); // 303 ensures that the client uses GET rather than POST.
-    });
-
+    }
+  } finally {
+    res.redirect(303, '/users');
+  }
 });
 
-// Allows the superuser to refresh an invitation, the save command should trigger an update
-// with the new password. This will essentially be a forced administrative password reset.
-router.post('/resend/:id(\\d+)', function (req, res, next) {
-  // Fetch the user from the given email. This will happen only once, and this promise will be reused
-  // If the user is not found, then it will throw a User.NotFoundError which is caught below.
-  var userPromise = new User({ id: req.params.id }).fetch()
-
-  // Wait for all the ingredients to return before using them
-  Promise.all([tokens.getToken(24), userPromise, tokens.clearRelated(userPromise)])
-    .then(function (results) {
-      var invite = results[0], user = results[1];
-      invite.set('user_id', user.id).save(null, { method: 'insert' }); // Link the token to account, then save in database
-
-      return mail.sendInviteMail(req, user.get('email'), invite.get('token'));
-    })
-    .then(function () { // Success
-      req.flash('info', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
-    })
-    .catch(function (err) {
-      if (err instanceof User.NotFoundError) { // Reset attempted with wrong account
-        req.flash('error', 'No account with that email address exists.');
-        return;
-      }
-      if (err instanceof mail.MailError) {
-        req.flash('error', 'Invitation not resent. ' + err.message);
-        return;
-      }
+// Allows the superuser to refresh an invitation. Replaces any prior token for
+// the same user (clearRelated) and issues a fresh 24-hour one.
+router.post('/resend/:id(\\d+)', async function (req, res, next) {
+  try {
+    var user = await User.query().findById(req.params.id).throwIfNotFound();
+    await tokens.clearRelated(Promise.resolve(user));
+    var tokenData = await tokens.getToken(24);
+    var invite = await Invite.query().insertAndFetch(Object.assign({}, tokenData, { user_id: user.id }));
+    await mail.sendInviteMail(req, user.email, invite.token);
+    req.flash('info', 'An e-mail has been sent to ' + req.body.email + ' with further instructions.');
+  } catch (err) {
+    if (err instanceof User.NotFoundError) {
+      req.flash('error', 'No account with that email address exists.');
+    } else if (err instanceof mail.MailError) {
+      req.flash('error', 'Invitation not resent. ' + err.message);
+    } else {
       console.log(err);
       req.flash('error', 'Problem resending invite.');
-    })
-    .finally(function () { // All responses get redirected to /login to display flash message
-      res.json({ redirect: '/users' });
-    });
+    }
+  } finally {
+    res.json({ redirect: '/users' });
+  }
 });
 
-// Updating permissions for user 
-router.post('/:id(\\d+)/:level(\\d+)', function (req, res, next) {
-  if (req.params.level < 0 || req.params.level > 2) {
+// Updating permissions for user
+router.post('/:id(\\d+)/:level(\\d+)', async function (req, res, next) {
+  var level = parseInt(req.params.level, 10);
+  if (level < 0 || level > 2) {
     req.flash('error', 'Invalid permission level');
     res.redirect(303, '/users');
     return;
   }
 
-  new User({ id: req.params.id }).fetch()
-    .then(function (user) {
-      return user
-        .set('permission', req.params.level)
-        .save();
-    })
-    .then(function (user) {
-      req.flash('yay', 'User permissions successfully updated');
-    })
-    .catch(function (err) {
-      req.flash('error', 'Problem updating user');
-    })
-    .finally(function () {
-      res.json({ redirect: '/users' });
-    });
-
+  try {
+    var n = await User.query().findById(req.params.id).patch({ permission: level });
+    if (!n) throw new Error('not found');
+    req.flash('yay', 'User permissions successfully updated');
+  } catch (err) {
+    req.flash('error', 'Problem updating user');
+  } finally {
+    res.json({ redirect: '/users' });
+  }
 });
 
 // Delete a particular user
-router.delete('/:id(\\d+)', function (req, res, next) {
+router.delete('/:id(\\d+)', async function (req, res, next) {
   var isSelf = req.user.id === parseInt(req.params.id, 10);
-  var userPromise = new User({ id: req.params.id }).fetch()
-  Promise.all([userPromise, tokens.clearRelated(userPromise)])
-    .then(function (results) {
-      return results[0].destroy();
-    })
-    .then(function (user) {
-      if (isSelf) {
-        req.logout(function (err) {
-          res.json({ redirect: '/login' });
-        });
-        return;
-      }
-      req.flash('yay', 'User successfully deleted');
-      res.json({ redirect: '/users' });
-    })
-    .catch(function (err) {
-      console.log(err);
-      req.flash('error', 'Problem deleting user');
-      res.json({ redirect: '/users' });
-    });
+  try {
+    var user = await User.query().findById(req.params.id).throwIfNotFound();
+    await tokens.clearRelated(Promise.resolve(user));
+    await user.$query().delete();
+    if (isSelf) {
+      req.logout(function (err) {
+        res.json({ redirect: '/login' });
+      });
+      return;
+    }
+    req.flash('yay', 'User successfully deleted');
+    res.json({ redirect: '/users' });
+  } catch (err) {
+    console.log(err);
+    req.flash('error', 'Problem deleting user');
+    res.json({ redirect: '/users' });
+  }
 });
 
 module.exports = router;

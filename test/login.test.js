@@ -19,14 +19,9 @@ var tokenStub = {
     clearRelated: sinon.stub()
 };
 
-// Stub User model
-var fetchStub = sinon.stub();
-var UserStub = function (attrs) {
-    this.attrs = attrs;
-    this.fetch = fetchStub;
-    this.get = function (key) { return attrs[key]; };
-    this.id = attrs.id || 1;
-};
+// Stub User model — only the GET / route is tested here, so query() is never
+// called. We still expose it (plus NotFoundError) so the route module loads.
+var UserStub = { query: sinon.stub() };
 UserStub.NotFoundError = class NotFoundError extends Error {};
 
 // Stub log4js
@@ -34,7 +29,7 @@ var log4jsStub = {
     getLogger: sinon.stub().returns({
         info: sinon.stub(),
         debug: sinon.stub(),
-        err: sinon.stub()
+        error: sinon.stub()
     })
 };
 
@@ -42,7 +37,7 @@ var loginRouter = proxyquire('../routes/login', {
     '../config/passport': passportStub,
     '../config/mailer': mailStub,
     '../models/user': UserStub,
-    '../models/invitations': function () {},
+    '../models/invitations': { query: sinon.stub() },
     '../models/tokens': tokenStub,
     'log4js': log4jsStub
 });

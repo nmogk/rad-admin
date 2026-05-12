@@ -1,42 +1,22 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
-var { mockReq, mockRes, mockUser } = require('./helpers');
+var { mockReq, mockRes, mockUser, mockQueryBuilder } = require('./helpers');
 
 var fakeUsers = [
     { id: 1, email: 'admin@test.com', name: 'Admin', permission: 2, validated: 1, last_login: '2026-04-10T12:00:00Z' },
     { id: 2, email: 'editor@test.com', name: 'Editor', permission: 0, validated: 1, last_login: null }
 ];
 
-var userModels = fakeUsers.map(function (u) {
-    return {
-        get: function (key) { return u[key]; }
-    };
-});
+var userQb;
+var inviteQb;
+var fetchedUser;
+var savedUser;
 
-var destroyStub = sinon.stub().resolves();
-var fetchedUser = {
-    id: 5,
-    get: sinon.stub().returns('test@example.com'),
-    set: sinon.stub().returnsThis(),
-    save: sinon.stub().resolves(),
-    destroy: destroyStub
-};
-
-var savedUser = { id: 9, get: sinon.stub().returns('new@example.com') };
-var saveInsertStub = sinon.stub().resolves(savedUser);
-
-var UserStub = function (attrs) {
-    // /invite uses `new User({email, password}).save(null, {method: "insert"})`;
-    // every other route fetches by id.
-    if (attrs && attrs.password) {
-        return { save: saveInsertStub };
-    }
-    return { fetch: sinon.stub().resolves(fetchedUser) };
-};
-UserStub.fetchAll = sinon.stub().resolves({ models: userModels });
-UserStub.NoRowsUpdatedError = class NoRowsUpdatedError extends Error {};
+var UserStub = { query: sinon.stub() };
 UserStub.NotFoundError = class NotFoundError extends Error {};
+
+var InviteStub = { query: sinon.stub() };
 
 class MailErrorStub extends Error {
     constructor(message, cause) { super(message); this.name = 'MailError'; this.cause = cause; }
@@ -45,30 +25,40 @@ var mailStub = {
     sendInviteMail: sinon.stub().resolves(),
     MailError: MailErrorStub
 };
+
 var tokensStub = {
-    getToken: sinon.stub().resolves({ get: sinon.stub(), set: sinon.stub().returnsThis(), save: sinon.stub().resolves() }),
+    getToken: sinon.stub().resolves({ token: 'invite-token-abc', expires: new Date('2026-12-31') }),
     clearRelated: sinon.stub().resolves(),
     randomHexString: sinon.stub().returns('abc123')
 };
-var inviteStub = function () {};
 
 var usersRouter = proxyquire('../routes/users', {
     '../models/user': UserStub,
     '../config/mailer': mailStub,
     '../models/tokens': tokensStub,
-    '../models/invitations': inviteStub
+    '../models/invitations': InviteStub
 });
 
 describe('Users Routes', function () {
 
     beforeEach(function () {
-        destroyStub.resetHistory();
-        mailStub.sendInviteMail = sinon.stub().resolves();
-        saveInsertStub.resetHistory();
-        saveInsertStub.resolves(savedUser);
-    });
+        userQb = mockQueryBuilder();
+        inviteQb = mockQueryBuilder();
+        fetchedUser = mockUser({ id: 5, email: 'test@example.com' });
+        savedUser = mockUser({ id: 9, email: 'new@example.com' });
 
-    function flush() { return new Promise(function (r) { setImmediate(r); }); }
+        UserStub.query.reset();
+        UserStub.query.returns(userQb);
+        InviteStub.query.reset();
+        InviteStub.query.returns(inviteQb);
+
+        // GET /all default: User.query() yields the fake user list.
+        userQb.resolves(fakeUsers);
+
+        mailStub.sendInviteMail = sinon.stub().resolves();
+        tokensStub.getToken.resetHistory();
+        tokensStub.clearRelated.resetHistory();
+    });
 
     describe('GET /', function () {
 
@@ -88,27 +78,29 @@ describe('Users Routes', function () {
 
     describe('GET /all', function () {
 
-        it('should return all users as JSON with last_login field', function (done) {
+        it('should return all users as JSON with last_login field', async function () {
             var req = mockReq();
             var res = mockRes();
-            res.jsonp = sinon.stub().callsFake(function (data) {
-                expect(data).to.have.lengthOf(2);
-                expect(data[0]).to.have.property('last_login', '2026-04-10T12:00:00Z');
-                expect(data[1]).to.have.property('last_login', null);
-                expect(data[0]).to.have.property('email', 'admin@test.com');
-                expect(data[0]).to.have.property('permission', 2);
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(usersRouter, 'get', '/all');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(res._json).to.have.lengthOf(2);
+            expect(res._json[0]).to.have.property('last_login', '2026-04-10T12:00:00Z');
+            expect(res._json[1]).to.have.property('last_login', null);
+            expect(res._json[0]).to.have.property('email', 'admin@test.com');
+            expect(res._json[0]).to.have.property('permission', 2);
         });
     });
 
     describe('POST /invite', function () {
 
         it('should flash the SES detail and not say "resending" when mail send fails', async function () {
+            // findOne yields null (no existing user); insertAndFetch yields the new user.
+            userQb.resolves(null);
+            userQb.insertAndFetch.resolves(savedUser);
+            inviteQb.insertAndFetch.resolves({ token: 'invite-token-abc' });
             mailStub.sendInviteMail = sinon.stub().rejects(
                 new MailErrorStub('Email address is not verified with the sending service. ' +
                     'Email address is not verified. The following identities failed the check in region US-EAST-1: invitee@unverified.test')
@@ -123,8 +115,7 @@ describe('Users Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(usersRouter, 'post', '/invite');
-            handler(req, res, next);
-            await flush(); await flush(); await flush();
+            await handler(req, res, next);
 
             var flashCall = req.flash.getCalls().find(function (c) { return c.args[0] === 'error'; });
             expect(flashCall, 'an error flash should be set').to.exist;
@@ -134,7 +125,8 @@ describe('Users Routes', function () {
         });
 
         it('should flash a generic invitation message for non-mail failures', async function () {
-            saveInsertStub.rejects(new Error('db blew up'));
+            userQb.resolves(null);
+            userQb.insertAndFetch.rejects(new Error('db blew up'));
             var req = mockReq({
                 method: 'POST',
                 body: { newUserEmail: 'invitee@example.com' },
@@ -145,8 +137,7 @@ describe('Users Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(usersRouter, 'post', '/invite');
-            handler(req, res, next);
-            await flush(); await flush(); await flush();
+            await handler(req, res, next);
 
             var flashCall = req.flash.getCalls().find(function (c) { return c.args[0] === 'error'; });
             expect(flashCall, 'an error flash should be set').to.exist;
@@ -157,6 +148,8 @@ describe('Users Routes', function () {
     describe('POST /resend/:id', function () {
 
         it('should flash the SES detail when mail send fails', async function () {
+            userQb.resolves(fetchedUser);
+            inviteQb.insertAndFetch.resolves({ token: 'invite-token-abc' });
             mailStub.sendInviteMail = sinon.stub().rejects(
                 new MailErrorStub('Email address is not verified with the sending service. ' +
                     'Email address is not verified.')
@@ -172,8 +165,7 @@ describe('Users Routes', function () {
             var next = sinon.spy();
 
             var handler = findHandler(usersRouter, 'post', '/resend/:id(\\d+)');
-            handler(req, res, next);
-            await flush(); await flush(); await flush();
+            await handler(req, res, next);
 
             var flashCall = req.flash.getCalls().find(function (c) { return c.args[0] === 'error'; });
             expect(flashCall, 'an error flash should be set').to.exist;
@@ -185,6 +177,7 @@ describe('Users Routes', function () {
     describe('DELETE /:id', function () {
 
         it('should call req.logout on self-delete', function (done) {
+            userQb.resolves(fetchedUser);
             var logoutStub = sinon.stub().callsFake(function (cb) { cb(); });
             var user = mockUser({ id: 5, permission: 2 });
             var req = mockReq({
@@ -206,6 +199,7 @@ describe('Users Routes', function () {
         });
 
         it('should not logout when deleting a different user', function (done) {
+            userQb.resolves(fetchedUser);
             var logoutStub = sinon.stub();
             var user = mockUser({ id: 99, permission: 2 });
             var req = mockReq({

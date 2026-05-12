@@ -1,7 +1,6 @@
 require('dotenv').config();
 var knex = require('./config/database');
 var Schema = require('./models/schema');
-var sequence = require('when/sequence');
 var _ = require('lodash');
 var User = require('./models/user');
 
@@ -43,25 +42,26 @@ function createTable(tableName) {
     });
   });
 }
-function createTables () {
-  var tables = [];
-  var tableNames = _.keys(Schema);
-  tables = _.map(tableNames, function (tableName) {
-    return function () {
-      return createTable(tableName);
-    };
-  });
-  return sequence(tables);
+
+async function createTables() {
+  for (var tableName of _.keys(Schema)) {
+    await createTable(tableName);
+  }
 }
+
 createTables()
-.then(function () {
-  return new User({email: process.env.BOOTSTRAP_ADMIN, password: process.env.BOOTSTRAP_PASS, permission: 2, validated: 1})
-  .save(null, { method: "insert" });
-})
-.then(function() {
-  console.log('Tables created!!');
-  process.exit(0);
-})
-.catch(function (error) {
-  throw error;
-});
+  .then(function () {
+    return User.query().insert({
+      email: process.env.BOOTSTRAP_ADMIN,
+      password: process.env.BOOTSTRAP_PASS,
+      permission: 2,
+      validated: 1
+    });
+  })
+  .then(function () {
+    console.log('Tables created!!');
+    process.exit(0);
+  })
+  .catch(function (error) {
+    throw error;
+  });

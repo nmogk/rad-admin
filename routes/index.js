@@ -5,23 +5,23 @@ var SiteContent = require('../models/site-content');
 var refTypes = require('../config/refTypes');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', async function (req, res, next) {
   var contents = fs.readFileSync("database.json");
   var dbMeta = JSON.parse(contents);
   dbMeta.refTypes = refTypes;
+  // Forwarded to the template so the search bar can be pre-filled with the
+  // seed on reload; client JS reads ?seed= directly to drive the Solr sort.
+  dbMeta.randomSeed = typeof req.query.seed === 'string' ? req.query.seed : null;
 
-  SiteContent.fetchAll()
-  .then(function (sections) {
-    sections.models.forEach(function (section) {
-      dbMeta[section.get('section_key')] = section.get('content');
+  try {
+    var sections = await SiteContent.query();
+    sections.forEach(function (section) {
+      dbMeta[section.section_key] = section.content;
     });
-  })
-  .catch(function (err) {
+  } catch (err) {
     // If site_content table doesn't exist or is empty, fall back to partials
-  })
-  .finally(function () {
-    res.render('index', dbMeta);
-  });
+  }
+  res.render('index', dbMeta);
 });
 
 router.get('/aggregator.html', function(req, res, next) {

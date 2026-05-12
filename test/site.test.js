@@ -1,33 +1,15 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
-var { mockReq, mockRes, mockUser } = require('./helpers');
+var { mockReq, mockRes, mockUser, mockQueryBuilder } = require('./helpers');
 
 var fakeSections = [
     { section_key: 'backstory', title: 'Story', content: '<p>Hello</p>', updated_at: '2026-04-10T12:00:00Z', updated_by: 'admin@test.com' },
     { section_key: 'search_help', title: 'Help', content: '<p>Search</p>', updated_at: null, updated_by: null }
 ];
 
-var sectionModels = fakeSections.map(function (s) {
-    return {
-        get: function (key) { return s[key]; }
-    };
-});
-
-var fetchAllStub = sinon.stub().resolves({ models: sectionModels });
-var fetchStub = sinon.stub();
-var saveStub = sinon.stub().resolves();
-
-var SiteContentStub = function (attrs) {
-    return {
-        attrs: attrs,
-        fetch: fetchStub,
-        save: saveStub,
-        set: sinon.stub(),
-        get: function (key) { return attrs[key]; }
-    };
-};
-SiteContentStub.fetchAll = fetchAllStub;
+var siteQb;
+var SiteContentStub = { query: sinon.stub() };
 
 var log4jsStub = {
     getLogger: sinon.stub().returns({
@@ -48,46 +30,43 @@ var siteRouter = proxyquire('../routes/site', {
 describe('Site Routes', function () {
 
     beforeEach(function () {
-        fetchAllStub.resolves({ models: sectionModels });
-        fetchStub.reset();
-        saveStub.reset();
+        siteQb = mockQueryBuilder();
+        siteQb.resolves(fakeSections);
+        SiteContentStub.query.reset();
+        SiteContentStub.query.returns(siteQb);
         fsStub.readFileSync.resetHistory();
         fsStub.readFileSync.returns('<p>From file</p>');
     });
 
     describe('GET /', function () {
 
-        it('should render site view with sections data', function (done) {
+        it('should render site view with sections data', async function () {
             var user = mockUser({ permission: 1 });
             var req = mockReq({ user: user, replacements: {} });
             var res = mockRes();
-            res.render = sinon.stub().callsFake(function (view, data) {
-                expect(view).to.equal('site');
-                expect(data.sections).to.have.property('backstory');
-                expect(data.sections.backstory.content).to.equal('<p>Hello</p>');
-                expect(data.sectionsJson).to.be.a('string');
-                expect(data.sitActive).to.equal(1);
-                expect(data.editable).to.be.true;
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(siteRouter, 'get', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(res._rendered).to.equal('site');
+            expect(res._renderedData.sections).to.have.property('backstory');
+            expect(res._renderedData.sections.backstory.content).to.equal('<p>Hello</p>');
+            expect(res._renderedData.sectionsJson).to.be.a('string');
+            expect(res._renderedData.sitActive).to.equal(1);
+            expect(res._renderedData.editable).to.be.true;
         });
 
-        it('should set editable=false for permission 0', function (done) {
+        it('should set editable=false for permission 0', async function () {
             var user = mockUser({ permission: 0 });
             var req = mockReq({ user: user, replacements: {} });
             var res = mockRes();
-            res.render = sinon.stub().callsFake(function (view, data) {
-                expect(data.editable).to.be.false;
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(siteRouter, 'get', '/');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(res._renderedData.editable).to.be.false;
         });
     });
 
@@ -129,13 +108,10 @@ describe('Site Routes', function () {
             expect(req.flash.calledWith('error', sinon.match('Invalid'))).to.be.true;
         });
 
-        it('should update existing section and return redirect', function (done) {
-            var existingSection = {
-                set: sinon.stub(),
-                save: sinon.stub().resolves(),
-                get: function (key) { return 'backstory'; }
-            };
-            fetchStub.resolves(existingSection);
+        it('should update existing section and return redirect', async function () {
+            var existingSection = mockUser({}); // a stand-in plain object with $query
+            existingSection.section_key = 'backstory';
+            siteQb.resolves(existingSection);
 
             var user = mockUser({ permission: 1, email: 'editor@test.com' });
             var req = mockReq({
@@ -145,21 +121,19 @@ describe('Site Routes', function () {
                 flash: sinon.stub()
             });
             var res = mockRes();
-            res.json = sinon.stub().callsFake(function (data) {
-                expect(existingSection.set.calledWith('content', '<p>Updated</p>')).to.be.true;
-                expect(existingSection.set.calledWith('title', 'New Title')).to.be.true;
-                expect(existingSection.save.calledOnce).to.be.true;
-                expect(data.redirect).to.equal('/site');
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(siteRouter, 'post', '/:key');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(existingSection._qb.patch.calledOnce).to.be.true;
+            var patchArgs = existingSection._qb.patch.firstCall.args[0];
+            expect(patchArgs).to.include({ title: 'New Title', content: '<p>Updated</p>', updated_by: 'editor@test.com' });
+            expect(res._json.redirect).to.equal('/site');
         });
 
-        it('should create new section if not found', function (done) {
-            fetchStub.resolves(null);
+        it('should create new section if not found', async function () {
+            siteQb.resolves(null);
 
             var user = mockUser({ permission: 2, email: 'admin@test.com' });
             var req = mockReq({
@@ -169,15 +143,14 @@ describe('Site Routes', function () {
                 flash: sinon.stub()
             });
             var res = mockRes();
-            res.json = sinon.stub().callsFake(function (data) {
-                expect(data.redirect).to.equal('/site');
-                expect(req.flash.calledWith('yay', sinon.match('updated'))).to.be.true;
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(siteRouter, 'post', '/:key');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(siteQb.insert.calledOnce).to.be.true;
+            expect(res._json.redirect).to.equal('/site');
+            expect(req.flash.calledWith('yay', sinon.match('updated'))).to.be.true;
         });
     });
 
@@ -215,13 +188,10 @@ describe('Site Routes', function () {
             expect(fsStub.readFileSync.called).to.be.false;
         });
 
-        it('should read the partial file and write its content to the existing row', function (done) {
-            var existing = {
-                set: sinon.stub(),
-                save: sinon.stub().resolves(),
-                get: function (key) { return 'backstory'; }
-            };
-            fetchStub.resolves(existing);
+        it('should read the partial file and write its content to the existing row', async function () {
+            var existing = mockUser({});
+            existing.section_key = 'backstory';
+            siteQb.resolves(existing);
 
             var user = mockUser({ permission: 1, email: 'editor@test.com' });
             var req = mockReq({
@@ -229,24 +199,23 @@ describe('Site Routes', function () {
                 params: { key: 'backstory' }
             });
             var res = mockRes();
-            res.json = sinon.stub().callsFake(function (data) {
-                expect(fsStub.readFileSync.calledOnce).to.be.true;
-                expect(fsStub.readFileSync.firstCall.args[0]).to.match(/backstoryContents\.hbs$/);
-                expect(existing.set.calledWith('content', '<p>From file</p>')).to.be.true;
-                expect(existing.set.calledWith('updated_by', 'editor@test.com')).to.be.true;
-                expect(existing.save.calledOnce).to.be.true;
-                expect(data.content).to.equal('<p>From file</p>');
-                expect(data.updated_by).to.equal('editor@test.com');
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(siteRouter, 'post', '/:key/reset');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(fsStub.readFileSync.calledOnce).to.be.true;
+            expect(fsStub.readFileSync.firstCall.args[0]).to.match(/backstoryContents\.hbs$/);
+            expect(existing._qb.patch.calledOnce).to.be.true;
+            var patchArgs = existing._qb.patch.firstCall.args[0];
+            expect(patchArgs.content).to.equal('<p>From file</p>');
+            expect(patchArgs.updated_by).to.equal('editor@test.com');
+            expect(res._json.content).to.equal('<p>From file</p>');
+            expect(res._json.updated_by).to.equal('editor@test.com');
         });
 
-        it('should insert a new row when the section does not exist', function (done) {
-            fetchStub.resolves(null);
+        it('should insert a new row when the section does not exist', async function () {
+            siteQb.resolves(null);
 
             var user = mockUser({ permission: 2, email: 'admin@test.com' });
             var req = mockReq({
@@ -254,14 +223,13 @@ describe('Site Routes', function () {
                 params: { key: 'search_help' }
             });
             var res = mockRes();
-            res.json = sinon.stub().callsFake(function (data) {
-                expect(data.content).to.equal('<p>From file</p>');
-                done();
-            });
             var next = sinon.spy();
 
             var handler = findHandler(siteRouter, 'post', '/:key/reset');
-            handler(req, res, next);
+            await handler(req, res, next);
+
+            expect(siteQb.insert.calledOnce).to.be.true;
+            expect(res._json.content).to.equal('<p>From file</p>');
         });
 
         it('should 500 if the source file cannot be read', function () {

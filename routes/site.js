@@ -17,32 +17,31 @@ var FILE_BY_KEY = {
     'search_area': path.join(__dirname, '..', 'views', 'partials', 'searchArea.hbs')
 };
 
-router.get('/', function(req, res, next) {
-    SiteContent.fetchAll()
-    .then(function (sections) {
+router.get('/', async function (req, res, next) {
+    try {
+        var sections = await SiteContent.query();
         var sectionsData = {};
-        sections.models.forEach(function (section) {
-            sectionsData[section.get('section_key')] = {
-                section_key: section.get('section_key'),
-                title: section.get('title'),
-                content: section.get('content'),
-                updated_at: section.get('updated_at'),
-                updated_by: section.get('updated_by')
+        sections.forEach(function (section) {
+            sectionsData[section.section_key] = {
+                section_key: section.section_key,
+                title: section.title,
+                content: section.content,
+                updated_at: section.updated_at,
+                updated_by: section.updated_by
             };
         });
         req.replacements.sections = sectionsData;
         req.replacements.sectionsJson = JSON.stringify(sectionsData);
         req.replacements.sitActive = 1;
-        req.replacements.editable = req.user.get('permission') >= 1;
+        req.replacements.editable = req.user.permission >= 1;
         res.render('site', req.replacements);
-    })
-    .catch(function (err) {
+    } catch (err) {
         next(err);
-    });
+    }
 });
 
-router.post('/:key', function(req, res, next) {
-    if (req.user.get('permission') < 1) {
+router.post('/:key', async function (req, res, next) {
+    if (req.user.permission < 1) {
         req.flash('error', 'You do not have permission to edit site content.');
         res.status(403).json({ redirect: '/site' });
         return;
@@ -55,38 +54,36 @@ router.post('/:key', function(req, res, next) {
         return;
     }
 
-    new SiteContent({ section_key: key }).fetch({ require: false })
-    .then(function (existing) {
+    try {
+        var existing = await SiteContent.query().findOne({ section_key: key });
         if (existing) {
-            existing.set('title', req.body.title || null);
-            existing.set('content', req.body.content);
-            existing.set('updated_at', new Date());
-            existing.set('updated_by', req.user.get('email'));
-            return existing.save();
+            await existing.$query().patch({
+                title: req.body.title || null,
+                content: req.body.content,
+                updated_at: new Date(),
+                updated_by: req.user.email
+            });
         } else {
-            return new SiteContent({
+            await SiteContent.query().insert({
                 section_key: key,
                 title: req.body.title || null,
                 content: req.body.content,
                 updated_at: new Date(),
-                updated_by: req.user.get('email')
-            }).save(null, { method: 'insert' });
+                updated_by: req.user.email
+            });
         }
-    })
-    .then(function () {
-        auditLogger.info(req.user.get('email') + ' edited site content: ' + key);
+        auditLogger.info(req.user.email + ' edited site content: ' + key);
         req.flash('yay', 'Site content updated successfully.');
         res.json({ redirect: '/site' });
-    })
-    .catch(function (err) {
+    } catch (err) {
         console.log(err);
         req.flash('error', 'Problem saving site content.');
         res.json({ redirect: '/site' });
-    });
+    }
 });
 
-router.post('/:key/reset', function(req, res, next) {
-    if (req.user.get('permission') < 1) {
+router.post('/:key/reset', async function (req, res, next) {
+    if (req.user.permission < 1) {
         res.status(403).json({ error: 'You do not have permission to edit site content.' });
         return;
     }
@@ -107,35 +104,33 @@ router.post('/:key/reset', function(req, res, next) {
     }
 
     var now = new Date();
-    var email = req.user.get('email');
+    var email = req.user.email;
 
-    new SiteContent({ section_key: key }).fetch({ require: false })
-    .then(function (existing) {
+    try {
+        var existing = await SiteContent.query().findOne({ section_key: key });
         if (existing) {
-            existing.set('content', content);
-            existing.set('updated_at', now);
-            existing.set('updated_by', email);
-            return existing.save();
+            await existing.$query().patch({
+                content: content,
+                updated_at: now,
+                updated_by: email
+            });
         } else {
-            return new SiteContent({
+            await SiteContent.query().insert({
                 section_key: key,
                 title: null,
                 content: content,
                 updated_at: now,
                 updated_by: email
-            }).save(null, { method: 'insert' });
+            });
         }
-    })
-    .then(function () {
         auditLogger.info(email + ' reset site content from file: ' + key);
         res.json({ content: content, updated_at: now, updated_by: email });
-    })
-    .catch(function (err) {
-        // Surface the underlying DB / bookshelf error so the client alert
-        // includes something diagnostic instead of just "Problem saving".
+    } catch (err) {
+        // Surface the underlying DB error so the client alert includes
+        // something diagnostic instead of just "Problem saving".
         console.log(err);
         res.status(500).json({ error: 'Problem saving site content: ' + (err && err.message ? err.message : err) });
-    });
+    }
 });
 
 module.exports = router;

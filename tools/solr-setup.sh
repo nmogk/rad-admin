@@ -129,6 +129,27 @@ curl -sf -X POST -H 'Content-type:application/json' \
 }' > /dev/null
 echo "  OK"
 
+# RandomSortField produces a different ordering per seed encoded into the
+# field name (sort=random_<seed> asc). The dynamic field lets any seed string
+# be used without pre-declaring it. Used by the "Learn something new" feature
+# on the public index page.
+echo "Adding random sort field type..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/rad/schema" -d '{
+  "add-field-type": {
+    "name": "random",
+    "class": "solr.RandomSortField",
+    "indexed": true
+  },
+  "add-dynamic-field": {
+    "name": "random_*",
+    "type": "random",
+    "indexed": true,
+    "stored": false
+  }
+}' > /dev/null
+echo "  OK"
+
 echo "Adding reference fields and copy fields..."
 curl -sf -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/schema" -d '{

@@ -31,6 +31,52 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /**
+ * Normalises a user-supplied or generated seed into a Solr-field-name-safe
+ * suffix: lowercase, non-alphanumerics collapsed to underscores, trimmed and
+ * capped. So "Darwin evolution" -> "darwin_evolution", which Solr then uses
+ * as the seed for sort=random_darwin_evolution.
+ */
+function sanitizeSeed(raw) {
+    "use strict";
+    return String(raw == null ? '' : raw)
+        .replace(/\+/g, ' ')
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .toLowerCase()
+        .slice(0, 32);
+}
+
+/**
+ * Die-button handler. Reads the search bar (or generates a fresh seed if it's
+ * empty) and navigates to /?seed=<value>; searchInit then runs the random
+ * Solr query on reload.
+ */
+function rollRandom() {
+    "use strict";
+    var raw = document.getElementById('searchInput').value;
+    var seed = sanitizeSeed(raw);
+    if (!seed) {
+        seed = Math.random().toString(36).slice(2, 10);
+    }
+    var rows = document.getElementById('rowsInput').value || '30';
+    window.location.search = '?seed=' + encodeURIComponent(seed)
+        + '&rows=' + encodeURIComponent(rows);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('randomButton');
+    if (btn) {
+        btn.addEventListener('click', rollRandom);
+    }
+    // The die-button tooltip is on the page from load (not added by a later
+    // applyBindings), so initialise tooltip widgets here rather than relying
+    // on initBootstrapWidgets() from inside searchInit.
+    if (typeof initBootstrapWidgets === 'function') {
+        initBootstrapWidgets();
+    }
+});
+
+/**
  * References are stored as objects whose fields are knockout observables. This function gets the
  * values of a subset of those fields in to a regular object for easier manipulation.
  */
@@ -196,7 +242,7 @@ function searchInit() {
     "use strict";
     // Create an object which contains the query string as keys/values
     var queryString = parseQuery();
-    
+
     if (queryString.boost !== undefined) {
         document.getElementById("boostCheck").checked = true;
     }
@@ -211,6 +257,29 @@ function searchInit() {
         document.getElementById("searchInput").value = decodeURIComponent(queryString.q.replace(/[+]/g, "%20")); // Put query back in search bar, unescape special + encoding
         document.getElementById("rowsInput").value = queryString.rows; // Put row setting back in search bar
         ko.applyBindings(new RefsGridViewModel(queryString), $("#mainDisplay")[0]);
+        initBootstrapWidgets();
+        return;
+    }
+
+    // Random-mode: ?seed= present and no explicit q. Drive the same grid view
+    // model with q=*:* and a sort param that Solr's RandomSortField shuffles by.
+    if (queryString.seed !== undefined) {
+        var seed = sanitizeSeed(decodeURIComponent(queryString.seed));
+        if (!seed) { return; }
+        var rows = queryString.rows || '30';
+        var start = queryString.start || '0';
+        document.getElementById("searchInput").value = seed;
+        document.getElementById("rowsInput").value = rows;
+        document.getElementById("mainDisplay").setAttribute("aria-hidden", "false");
+        // `seed` is a marker the view-model uses to build clean ?seed=&start=
+        // pagination links; refGridView strips it before sending to Solr.
+        ko.applyBindings(new RefsGridViewModel({
+            q: '*:*',
+            sort: 'random_' + seed + ' asc',
+            rows: rows,
+            start: start,
+            seed: seed
+        }), $("#mainDisplay")[0]);
         initBootstrapWidgets();
     }
 }
