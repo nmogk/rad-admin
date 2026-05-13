@@ -29,7 +29,7 @@ var sourcesRouter = proxyquire('../routes/sources', {
     '../server/solr-client': solrStub,
     'log4js': log4jsStub,
     '../config/solr-proxy': proxyquire('../config/solr-proxy', {
-        'http-proxy': fakeProxy
+        'httpxy': fakeProxy
     })
 });
 

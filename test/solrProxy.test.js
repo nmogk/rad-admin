@@ -3,7 +3,7 @@ var sinon = require('sinon');
 var { mockReq, mockRes } = require('./helpers');
 
 // We need to require solr-proxy carefully since it creates a proxy server on load.
-// Use proxyquire to stub http-proxy so no real server is created.
+// Use proxyquire to stub httpxy so no real server is created.
 var proxyquire = require('proxyquire').noCallThru();
 
 var webStub = sinon.stub();
@@ -16,7 +16,7 @@ var log4jsStub = {
 };
 
 var solrProxy = proxyquire('../config/solr-proxy', {
-    'http-proxy': fakeProxy,
+    'httpxy': fakeProxy,
     'log4js': log4jsStub
 });
 

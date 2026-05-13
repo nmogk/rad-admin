@@ -1,4 +1,4 @@
-var proxy = require('http-proxy');
+var proxy = require('httpxy');
 var log4js = require('log4js');
 var appLog = log4js.getLogger('default');
 
