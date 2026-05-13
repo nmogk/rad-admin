@@ -34,8 +34,15 @@ function sanitize(s) {
 }
 
 async function sourceExists(sourceName) {
-    var query = 'q=name:"' + sourceName.replace(/"/g, '\\"') + '"&rows=1';
-    var obj = await sourceClient.get('select', query);
+    // Source names contain spaces and other characters Node's http rejects in
+    // request paths (ERR_UNESCAPED_CHARACTERS). Build the query through
+    // URLSearchParams so the value gets percent-encoded; the surrounding Solr
+    // syntax (name:"…") stays literal in the encoded form.
+    var params = new URLSearchParams({
+        q: 'name:"' + String(sourceName).replace(/"/g, '\\"') + '"',
+        rows: '1'
+    });
+    var obj = await sourceClient.get('select', params.toString());
     return !!(obj.response && obj.response.numFound > 0);
 }
 

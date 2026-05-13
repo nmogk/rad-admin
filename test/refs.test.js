@@ -972,7 +972,9 @@ describe('Refs Routes', function () {
             await handler(req, res, sinon.spy());
 
             var sourceQuery = sourceClientStub.get.firstCall.args[1];
-            expect(sourceQuery).to.include('name:"Nature"');
+            // sourceExists now URL-encodes the query string, so decode before
+            // asserting on the Solr-syntax shape rather than the wire form.
+            expect(new URLSearchParams(sourceQuery).get('q')).to.equal('name:"Nature"');
             var doc = solrClientStub.add.firstCall.args[0];
             expect(doc.source).to.equal('Nature');
         });
