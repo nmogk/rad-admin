@@ -74,7 +74,35 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof initBootstrapWidgets === 'function') {
         initBootstrapWidgets();
     }
+    // Type filter is a Bootstrap-dropdown checkbox group; the button label
+    // summarises the selection so the collapsed control reads like a select.
+    var typeOptions = document.querySelectorAll('input.type-option');
+    Array.prototype.forEach.call(typeOptions, function (cb) {
+        cb.addEventListener('change', updateTypeButtonLabel);
+    });
+    updateTypeButtonLabel();
 });
+
+/**
+ * Reflects the current type checkbox state into the dropdown's button label
+ * so the collapsed control communicates the selection without opening it.
+ */
+function updateTypeButtonLabel() {
+    "use strict";
+    var btn = document.getElementById('typeInputButton');
+    if (!btn) { return; }
+    var checked = Array.prototype.filter.call(
+        document.querySelectorAll('input.type-option'),
+        function (cb) { return cb.checked; }
+    );
+    if (checked.length === 0) {
+        btn.textContent = 'Any type';
+    } else if (checked.length === 1) {
+        btn.textContent = checked[0].parentNode.textContent.trim();
+    } else {
+        btn.textContent = checked.length + ' types selected';
+    }
+}
 
 /**
  * References are stored as objects whose fields are knockout observables. This function gets the
@@ -248,19 +276,18 @@ function searchInit() {
     }
 
     if (queryString.type !== undefined) {
-        // typeInput is a multi-select on the index page, so a URL like
-        // ?type=technical&type=review can carry several values. parseQuery
-        // only keeps the last (regex overwrites the key), so re-read the raw
-        // search via URLSearchParams to recover the full set, then mark each
-        // matching option selected. Overwrite queryString.type with the array
-        // so RefsGridViewModel builds the right multi-clause fq.
+        // The type filter is a Bootstrap-dropdown checkbox group, so the URL
+        // can carry several `type=` values. parseQuery only keeps the last
+        // (regex overwrites the key), so re-read the raw search via
+        // URLSearchParams to recover the full set, check each matching box,
+        // refresh the dropdown button label, and overwrite queryString.type
+        // with the array so RefsGridViewModel builds the right multi-clause fq.
         var rawTypes = new URLSearchParams(window.location.search).getAll('type');
-        var typeSelect = document.getElementById("typeInput");
-        if (typeSelect) {
-            Array.prototype.forEach.call(typeSelect.options, function (opt) {
-                opt.selected = rawTypes.indexOf(opt.value) !== -1;
-            });
-        }
+        Array.prototype.forEach.call(
+            document.querySelectorAll('input.type-option'),
+            function (cb) { cb.checked = rawTypes.indexOf(cb.value) !== -1; }
+        );
+        updateTypeButtonLabel();
         queryString.type = rawTypes.length > 1 ? rawTypes : (rawTypes[0] || queryString.type);
     }
 
