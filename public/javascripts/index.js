@@ -248,7 +248,20 @@ function searchInit() {
     }
 
     if (queryString.type !== undefined) {
-        document.getElementById("typeInput").value = decodeURIComponent(queryString.type.replace(/[+]/g, "%20"));
+        // typeInput is a multi-select on the index page, so a URL like
+        // ?type=technical&type=review can carry several values. parseQuery
+        // only keeps the last (regex overwrites the key), so re-read the raw
+        // search via URLSearchParams to recover the full set, then mark each
+        // matching option selected. Overwrite queryString.type with the array
+        // so RefsGridViewModel builds the right multi-clause fq.
+        var rawTypes = new URLSearchParams(window.location.search).getAll('type');
+        var typeSelect = document.getElementById("typeInput");
+        if (typeSelect) {
+            Array.prototype.forEach.call(typeSelect.options, function (opt) {
+                opt.selected = rawTypes.indexOf(opt.value) !== -1;
+            });
+        }
+        queryString.type = rawTypes.length > 1 ? rawTypes : (rawTypes[0] || queryString.type);
     }
 
     if (queryString.q !== undefined) {

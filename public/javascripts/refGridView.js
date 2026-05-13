@@ -29,11 +29,21 @@ function RefsGridViewModel(qString) {
     qString.rows = parseInt(qString.rows) || 10; // This default value needs to be the same as specified in solrconfig.xml or things will get weird.
 
     // Translate the user-facing `type=…` URL param into a Solr fq filter so it
-    // narrows results without affecting the relevance score (#19). Strip it
-    // from qString so the Solr request doesn't see a stray top-level `type`.
+    // narrows results without affecting the relevance score (#19). The index
+    // page's type select is `multiple`, so qString.type can be a string (one
+    // pick) or an array (many) — collapse to an array and OR the clauses
+    // inside a single fq so any selected type matches. Strip type from qString
+    // afterwards so the Solr request doesn't see a stray top-level `type`.
     var solrParams = $.extend({}, qString);
-    if (solrParams.type) {
-        solrParams.fq = 'type:"' + decodeURIComponent(String(solrParams.type).replace(/[+]/g, " ")).replace(/"/g, '\\"') + '"';
+    var types = Array.isArray(solrParams.type)
+        ? solrParams.type
+        : (solrParams.type ? [solrParams.type] : []);
+    if (types.length > 0) {
+        var clauses = types.map(function (t) {
+            var decoded = decodeURIComponent(String(t).replace(/[+]/g, " ")).replace(/"/g, '\\"');
+            return 'type:"' + decoded + '"';
+        });
+        solrParams.fq = clauses.length === 1 ? clauses[0] : '(' + clauses.join(' OR ') + ')';
     }
     delete solrParams.type;
     // `seed` is an index-page marker for random-mode pagination — it isn't a
@@ -115,7 +125,11 @@ function RefsGridViewModel(qString) {
                          + "&start=" + encodeURIComponent(start);
                 } else {
                     qString.start = start;
-                    link = "?" + $.param(qString);
+                    // `true` selects jQuery's "traditional" encoding so an
+                    // array value (e.g. type=['technical','review']) serialises
+                    // to `type=technical&type=review` rather than `type[]=…`,
+                    // matching the natural form-submit shape.
+                    link = "?" + $.param(qString, true);
                 }
                 var listItem = document.createElement("LI");
                 listItem.setAttribute("class", active ? "page-item active" : "page-item");

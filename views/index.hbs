@@ -23,8 +23,7 @@
             <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
             <label for="typeInput" class="col-sm-1 col-form-label text-sm-end">Ref Type (beta):</label>
             <div class="col-sm-2">
-              <select id="typeInput" class="form-control" name="type">
-                <option value="">Any type</option>
+              <select id="typeInput" class="form-control" name="type" multiple size="4">
                 {{#each refTypes}}
                 <option value="{{value}}">{{label}}</option>
                 {{/each}}
