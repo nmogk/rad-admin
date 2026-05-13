@@ -4,9 +4,10 @@ var favicon = require('serve-favicon');
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
 var hbs = require('hbs');
-var flash = require('connect-flash');
+var flash = require('./server/flash');
 var session = require('express-session');
 var { ConnectSessionKnexStore } = require('connect-session-knex');
+var { createProxyServer } = require('httpxy');
 var { expressCspHeader, NONCE, INLINE, SELF, STRICT_DYNAMIC, EVAL, NONE} = require('express-csp-header');
 var { doubleCsrf } = require('csrf-csrf');
 var passport = require('./config/passport');
@@ -19,7 +20,6 @@ var queryLog = new rollers.RollingFileStream('logs/queries.log', 1073741824, 5);
 var appLog = log4js.getLogger('default')
 
 var proxyLogic = require('./config/solr-proxy');
-var { createProxyMiddleware } = require('http-proxy-middleware');
 
 const logExcludes = /fonts|stylesheets|javascripts|manifest|favicon|apple-touch-icon/
 const validPaths = /public|solr|tracker|private|login|logout|reset|signup|profile|refs|sources|campaigns|site|users|aggregator|database/
@@ -172,7 +172,8 @@ app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b
 
 // Proxy set up
 if (process.env.PROXY_URL) {
-    app.use('/tracker', createProxyMiddleware({target:process.env.PROXY_URL, prependPath:false, changeOrigin:false, autoRewrite:true}));
+    var trackerProxy = createProxyServer({target: process.env.PROXY_URL, prependPath: false, changeOrigin: false, autoRewrite: true});
+    app.use('/tracker', function (req, res) { trackerProxy.web(req, res); });
 }
 
 // Private directory is for scripts that will only be transferred if the user is logged in.

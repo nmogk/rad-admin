@@ -46,7 +46,7 @@ var refsRouter = proxyquire('../routes/refs', {
     '../server/database-json': dbStub,
     'log4js': log4jsStub,
     '../config/solr-proxy': proxyquire('../config/solr-proxy', {
-        'http-proxy': fakeProxy
+        'httpxy': fakeProxy
     })
 });
 
@@ -383,7 +383,7 @@ describe('Refs Routes', function () {
         it('should accept a known type and forward it on the doc', async function () {
             var req = mockReq({
                 method: 'POST',
-                body: { title: 'Typed', type: 'technical articles' },
+                body: { title: 'Typed', type: 'technical' },
                 user: mockUser(),
                 flash: sinon.stub()
             });
@@ -397,7 +397,7 @@ describe('Refs Routes', function () {
 
             expect(res.status.calledWith(400)).to.be.false;
             expect(solrClientStub.add.calledOnce).to.be.true;
-            expect(solrClientStub.add.firstCall.args[0].type).to.equal('technical articles');
+            expect(solrClientStub.add.firstCall.args[0].type).to.equal('technical');
         });
 
         it('should reject an unknown type with 400 and not call Solr', async function () {
@@ -462,7 +462,7 @@ describe('Refs Routes', function () {
                 method: 'POST',
                 body: {
                     title: 'Review of Foo',
-                    type: 'reviews',
+                    type: 'review',
                     rev_author: 'Reviewed Person',
                     rev_title: 'The Reviewed Work',
                     rev_source: 'https://example.com/foo',
@@ -972,7 +972,9 @@ describe('Refs Routes', function () {
             await handler(req, res, sinon.spy());
 
             var sourceQuery = sourceClientStub.get.firstCall.args[1];
-            expect(sourceQuery).to.include('name:"Nature"');
+            // sourceExists now URL-encodes the query string, so decode before
+            // asserting on the Solr-syntax shape rather than the wire form.
+            expect(new URLSearchParams(sourceQuery).get('q')).to.equal('name:"Nature"');
             var doc = solrClientStub.add.firstCall.args[0];
             expect(doc.source).to.equal('Nature');
         });
