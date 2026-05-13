@@ -21,11 +21,11 @@
           <div class="row mb-3">
             <label for="rowsInput" class="col-sm-2 col-form-label text-sm-end">Results per page:</label>
             <div class="col-sm-2"><input id="rowsInput" class="form-control" type="number" min="1" max="1000" value="30" name="rows"></div>
-            <label for="typeInputButton" class="col-sm-1 col-form-label text-sm-end">Ref Type (beta):</label>
+            <label for="typeInputButton" class="col-sm-1 col-form-label text-sm-end">Ref Type: (beta)</label>
             <div class="col-sm-2">
               <div class="dropdown">
                 <button id="typeInputButton" type="button" class="form-control dropdown-toggle text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Any type</button>
-                <ul class="dropdown-menu w-100" aria-labelledby="typeInputButton">
+                <ul class="dropdown-menu" style="min-width: 100%;" aria-labelledby="typeInputButton">
                   {{#each refTypes}}
                   <li><label class="dropdown-item d-flex align-items-center gap-2 mb-0"><input class="form-check-input m-0 type-option" type="checkbox" name="type" value="{{value}}"> {{label}}</label></li>
                   {{/each}}
