@@ -5,8 +5,12 @@
 // validates against this list and the templates iterate over it, so no
 // other file needs editing.
 module.exports = [
-    { value: 'technical articles', label: 'Technical Articles' },
-    { value: 'media',              label: 'Media' },
-    { value: 'reviews',            label: 'Reviews' },
-    { value: 'popular articles',   label: 'Popular Articles' }
+    { value: 'technical',  label: 'Technical Articles' },
+    { value: 'semi',       label: 'Semi-technical Articles' },
+    { value: 'popular',    label: 'Popular Articles' },
+    { value: 'book',       label: 'Books' },
+    { value: 'review',     label: 'Reviews' },
+    { value: 'curriculum', label: 'Curricula' },
+    { value: 'media',      label: 'Media' },
+    { value: 'software',   label: 'Software' }
 ];
