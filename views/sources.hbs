@@ -50,7 +50,7 @@
           </div>
 
           {{! Results group }}
-          <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true" aria-live="assertive">
+          <div class="accordion" id="accordion" role="tablist" aria-multiselectable="false" aria-live="assertive">
 
             <!-- ko foreach: sources -->
             <div class="card">
@@ -68,10 +68,10 @@
                       {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: deleteSource"><span class="bi bi-trash3"></span> Delete source</a></li>{{/if}}
                     </ul>
                   </div>
-                  <a class="stretched-link" data-bs-toggle="collapse" data-bs-parent="#accordion" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
+                  <a class="stretched-link" data-bs-toggle="collapse" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                 </div>
               </div>
-              <div class="collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
                 <div class="card-body">
                   <div class="row">
                     <div class="col-sm-4"><h4>Address</h4><span data-bind="textPretty: address"></span></div>

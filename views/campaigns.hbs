@@ -27,7 +27,7 @@
                 <!-- /ko -->
             </div>
 
-            <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="accordion" id="accordion" role="tablist" aria-multiselectable="false">
                 <!-- ko foreach: campaigns -->
                 <div class="card">
                     <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
@@ -45,10 +45,10 @@
                                     {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: deleteCampaign"><span class="bi bi-trash3"></span> Delete campaign</a></li>{{/if}}
                                 </ul>
                             </div>
-                            <a class="stretched-link" data-bs-toggle="collapse" data-bs-parent="#accordion" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
+                            <a class="stretched-link" data-bs-toggle="collapse" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                         </div>
                     </div>
-                    <div class="collapse" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+                    <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
                         <div class="card-body">
                             <h4>Description</h4>
                             <p data-bind="textPretty: description" style="white-space: pre-wrap"></p>
