@@ -74,10 +74,10 @@ function PeriodicalViewModel(data) {
         var last = completed[completed.length - 1];
         var range = '';
         if (first && last && first !== last) {
-            range = first.volNoLabel() + (first.year() ? ' ' + first.year() : '') +
-                ' – ' + last.volNoLabel() + (last.year() ? ' ' + last.year() : '');
+            range = first.volNoLabel() + (first.year() ? ' (' + first.year() + ')' : '') +
+                ' – ' + last.volNoLabel() + (last.year() ? ' (' + last.year() + ')' : '');
         } else if (first) {
-            range = first.volNoLabel() + (first.year() ? ' ' + first.year() : '');
+            range = first.volNoLabel() + (first.year() ? ' (' + first.year() + ')' : '');
         }
         var parts = [];
         if (range) { parts.push(range); }
