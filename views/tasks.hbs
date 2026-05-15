@@ -61,29 +61,40 @@
                             <!-- ko if: visibleIssues().length === 0 -->
                             <p class="text-muted"><em>No issues to show.</em></p>
                             <!-- /ko -->
+                            <!-- ko if: visibleIssues().length > 0 -->
+                            <div class="row text-muted small fw-bold border-bottom mb-1">
+                                <div class="col-sm-2">Vol/No</div>
+                                <div class="col-sm-2">Date</div>
+                                <div class="col-sm-4">Website</div>
+                                <div class="col-sm-3">Editor</div>
+                                <div class="col-sm-1 text-center">Done</div>
+                            </div>
+                            <!-- /ko -->
                             <!-- ko foreach: visibleIssues -->
                             <div class="row align-items-center py-1 border-bottom">
                                 <div class="col-sm-2"><span data-bind="text: volNoLabel"></span></div>
                                 <div class="col-sm-2"><span data-bind="text: dt"></span></div>
-                                <div class="col-sm-3"><!-- ko if: link --><a data-bind="attr: {href: link}, text: link" target="_blank" rel="noopener"></a><!-- /ko --></div>
-                                <div class="col-sm-2"><span data-bind="text: editorLabel, css: {'text-muted': !editor()}"></span></div>
-                                <div class="col-sm-1"><input type="checkbox" data-bind="checked: completed, click: $root.toggleIssueComplete" aria-label="Completed"></div>
-                                <div class="col-sm-2 text-end dropdown">
-                                    <button class="btn btn-link btn-sm" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
-                                        <span class="bi bi-three-dots-vertical"></span>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="issue operations">
-                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.enterReferences"><span class="bi bi-pencil-square"></span> Enter references</a></li>
-                                        <!-- ko if: !editor() -->
-                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.claimIssue"><span class="bi bi-flag"></span> Claim</a></li>
-                                        <!-- /ko -->
-                                        <!-- ko if: editor() -->
-                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.releaseIssue"><span class="bi bi-flag-fill"></span> Release</a></li>
-                                        <!-- /ko -->
-                                        {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.assignIssue"><span class="bi bi-person-plus"></span> Assign...</a></li>{{/if}}
-                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.editIssue"><span class="bi bi-pencil"></span> Edit</a></li>
-                                        {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.deleteIssue"><span class="bi bi-trash3"></span> Delete issue</a></li>{{/if}}
-                                    </ul>
+                                <div class="col-sm-4 text-truncate"><!-- ko if: link --><a data-bind="attr: {href: link}, text: link" target="_blank" rel="noopener"></a><!-- /ko --></div>
+                                <div class="col-sm-3"><span data-bind="text: editorLabel, css: {'text-muted': !editor()}"></span></div>
+                                <div class="col-sm-1 d-flex align-items-center justify-content-between">
+                                    <input type="checkbox" data-bind="checked: completed, click: $root.toggleIssueComplete" aria-label="Completed">
+                                    <div class="dropdown">
+                                        <button class="btn btn-link btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
+                                            <span class="bi bi-three-dots-vertical"></span>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="issue operations">
+                                            <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.enterReferences"><span class="bi bi-pencil-square"></span> Enter references</a></li>
+                                            <!-- ko if: !editor() -->
+                                            <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.claimIssue"><span class="bi bi-flag"></span> Claim</a></li>
+                                            <!-- /ko -->
+                                            <!-- ko if: editor() -->
+                                            <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.releaseIssue"><span class="bi bi-flag-fill"></span> Release</a></li>
+                                            <!-- /ko -->
+                                            {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.assignIssue"><span class="bi bi-person-plus"></span> Assign...</a></li>{{/if}}
+                                            <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.editIssue"><span class="bi bi-pencil"></span> Edit</a></li>
+                                            {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.deleteIssue"><span class="bi bi-trash3"></span> Delete issue</a></li>{{/if}}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                             <!-- /ko -->
