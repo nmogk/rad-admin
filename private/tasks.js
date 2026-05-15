@@ -232,19 +232,29 @@ function attachGridActions(grid) {
         });
     };
 
-    grid.toggleIssueComplete = function (issue) {
-        // Knockout's `checked` binding flips the value before the click handler
-        // runs, so we send the post-flip state. Returning true preserves the
-        // checkbox toggle in the DOM.
-        var newState = !issue.completed();
+    grid.toggleIssueComplete = function (issue, event) {
+        // Per HTML spec the checkbox's .checked is already toggled when the
+        // click event fires, so event.target.checked is the new state. Don't
+        // derive from `!issue.completed()` — the observable still holds the
+        // old value (KO's checked binding updates it later from the change
+        // event), and that race has bitten us. Use the DOM as the source of
+        // truth on the way out, and use the server response on the way back
+        // in so the observable matches what was actually persisted.
+        var newState = !!(event && event.target && event.target.checked);
         $.ajax({
             url: '/tasks/issues/' + issue.id() + '/complete',
             contentType: 'application/json',
             type: 'POST',
             data: JSON.stringify({ completed: newState }),
-            error: function () {
-                issue.completed(!newState); // revert UI on failure
-                alert('Could not update completion state.');
+            success: function (data) {
+                if (typeof data.completed === 'boolean') { issue.completed(data.completed); }
+            },
+            error: function (jqXHR) {
+                if (event && event.target) { event.target.checked = !newState; }
+                issue.completed(!newState);
+                var msg = 'Could not update completion state.';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+                alert(msg);
             }
         });
         return true;
@@ -376,16 +386,22 @@ function attachGridActions(grid) {
         });
     };
 
-    grid.toggleGeneralComplete = function (general) {
-        var newState = !general.completed();
+    grid.toggleGeneralComplete = function (general, event) {
+        var newState = !!(event && event.target && event.target.checked);
         $.ajax({
             url: '/tasks/general/' + general.id() + '/complete',
             contentType: 'application/json',
             type: 'POST',
             data: JSON.stringify({ completed: newState }),
-            error: function () {
+            success: function (data) {
+                if (typeof data.completed === 'boolean') { general.completed(data.completed); }
+            },
+            error: function (jqXHR) {
+                if (event && event.target) { event.target.checked = !newState; }
                 general.completed(!newState);
-                alert('Could not update completion state.');
+                var msg = 'Could not update completion state.';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
+                alert(msg);
             }
         });
         return true;
