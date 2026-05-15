@@ -97,6 +97,12 @@ Add entries for the following values:
 node migration.js
 node tools/seedSiteContent.js
 ```
+
+### incremental migration: add Tasks tables (issue #145)
+Idempotent — only creates tables that don't already exist. Safe to run on a populated DB.
+```
+node migration-add-tasks.js
+```
 ### configure iptables/firewall
 
 Open ports 80, and 443 through lightsail (or other relevant) interface

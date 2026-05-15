@@ -1,0 +1,18 @@
+<div class="row">
+    <div class="col-sm-6 mb-3">
+        <label for="issueVolumeField">Volume</label>
+        <input class="form-control" type="text" name="issueVolumeField" id="issueVolumeField" maxlength="50" data-bind="textInput: volume">
+    </div>
+    <div class="col-sm-6 mb-3">
+        <label for="issueNumberField">Number</label>
+        <input class="form-control" type="text" name="issueNumberField" id="issueNumberField" maxlength="50" data-bind="textInput: number">
+    </div>
+</div>
+<div class="mb-3">
+    <label>Date</label>
+    <div data-bind="datePicker: dt"></div>
+</div>
+<div class="mb-3">
+    <label for="issueLinkField">Link</label>
+    <input class="form-control" type="url" name="issueLinkField" id="issueLinkField" data-bind="textInput: link" placeholder="https://...">
+</div>

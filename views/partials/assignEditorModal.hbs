@@ -1,0 +1,23 @@
+<div class="modal fade" id="assignEditorModal" role="dialog" tabindex=0>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Assign Editor</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="assignForm" data-bind="submit: $data.submitAssign">
+                <div class="modal-body">
+                    <div class="alert alert-danger" style="display:none" data-bind="visible: assignError, text: assignError"></div>
+                    <div class="mb-3">
+                        <label for="assignEditorSelect">Editor</label>
+                        <select class="form-control" id="assignEditorSelect" data-bind="options: assignableEditors, optionsText: 'name', optionsValue: 'id', value: assignSelectedId, optionsCaption: 'Select an editor...'"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info">Assign</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

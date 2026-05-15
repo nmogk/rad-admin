@@ -1,0 +1,21 @@
+<div class="modal fade" id="newIssueModal" role="dialog" tabindex=0>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Add Issue: <span data-bind="text: $root.activePeriodicalName"></span></h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-bind="click: revert"></button>
+            </div>
+            <form id="issueInput" data-bind="submit: $data.newIssueHandler">
+                <div class="modal-body">
+                    <div class="alert alert-success" style="display:none" data-bind="visible: formSuccess, text: formSuccess"></div>
+                    <div class="alert alert-danger" style="display:none" data-bind="visible: formError, text: formError"></div>
+                    {{> issueFormFields}}
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-bind="click: revert">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

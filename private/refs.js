@@ -218,7 +218,17 @@ function searchInit() {
     }
 
     var blankRefViewModel = new RefViewModel({});
-    if (localStorage['refsEditor']) {
+    var taskPrefill = null;
+    try { taskPrefill = sessionStorage.getItem('refsPrefill'); } catch (e) {}
+    if (taskPrefill) {
+        try { sessionStorage.removeItem('refsPrefill'); } catch (e) {}
+        try {
+            var parsed = JSON.parse(taskPrefill);
+            blankRefViewModel.update(parsed);
+            // Defer modal show until bindings are applied below.
+            setTimeout(function () { bsModalShow('#newRefModal', { backdrop: 'static' }); }, 0);
+        } catch (e) { /* malformed prefill — ignore */ }
+    } else if (localStorage['refsEditor']) {
         blankRefViewModel.update(localStorage['refsEditor']);
     }
     // Subscribe to source/publisher field changes for autocomplete

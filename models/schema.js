@@ -27,6 +27,32 @@ var schema = {
         content: {type: 'longtext', nullable: true},
         updated_at: {type: 'dateTime', nullable: true},
         updated_by: {type: 'string', maxlength: 254, nullable: true}
+    },
+    periodicals: {
+        id: {type: 'increments', nullable: false, primary: true},
+        name: {type: 'string', maxlength: 255, nullable: false},
+        publisher_name: {type: 'string', maxlength: 255, nullable: false},
+        updated_at: {type: 'dateTime', nullable: true}
+    },
+    issue_todos: {
+        id: {type: 'increments', nullable: false, primary: true},
+        periodical_id: {type: 'integer', unsigned: true, nullable: false, references: 'periodicals.id'},
+        volume: {type: 'string', maxlength: 50, nullable: true},
+        number: {type: 'string', maxlength: 50, nullable: true},
+        dt: {type: 'string', maxlength: 32, nullable: true},
+        link: {type: 'string', maxlength: 2083, nullable: true},
+        editor_id: {type: 'integer', unsigned: true, nullable: true, references: 'users.id'},
+        completed: {type: 'boolean', defaultTo: 0},
+        updated_at: {type: 'dateTime', nullable: true}
+    },
+    general_todos: {
+        id: {type: 'increments', nullable: false, primary: true},
+        description: {type: 'text', nullable: false},
+        dt: {type: 'string', maxlength: 32, nullable: true},
+        link: {type: 'string', maxlength: 2083, nullable: true},
+        editor_id: {type: 'integer', unsigned: true, nullable: true, references: 'users.id'},
+        completed: {type: 'boolean', defaultTo: 0},
+        updated_at: {type: 'dateTime', nullable: true}
     }
 
   };

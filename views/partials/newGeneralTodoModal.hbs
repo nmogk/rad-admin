@@ -1,0 +1,21 @@
+<div class="modal fade" id="newGeneralTodoModal" role="dialog" tabindex=0>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Add New Task</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-bind="click: revert"></button>
+            </div>
+            <form id="generalInput" data-bind="submit: $data.newGeneralHandler">
+                <div class="modal-body">
+                    <div class="alert alert-success" style="display:none" data-bind="visible: formSuccess, text: formSuccess"></div>
+                    <div class="alert alert-danger" style="display:none" data-bind="visible: formError, text: formError"></div>
+                    {{> generalFormFields}}
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-bind="click: revert">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
