@@ -108,11 +108,10 @@
             <h3 class="mt-5">General Tasks</h3>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-12 col-sm-5"><h4>Description</h4></div>
+                    <div class="col-12 col-sm-6"><h4>Description</h4></div>
                     <div class="col-12 col-sm-2"><h4>Date</h4></div>
-                    <div class="col-12 col-sm-2"><h4>Editor</h4></div>
-                    <div class="col-12 col-sm-1"><h4>Done</h4></div>
-                    <div class="col-12 col-sm-2"></div>
+                    <div class="col-12 col-sm-3"><h4>Editor</h4></div>
+                    <div class="col-12 col-sm-1 text-center"><h4>Done</h4></div>
                 </div>
                 <hr>
                 <!-- ko if: generals().length === 0 -->
@@ -125,25 +124,27 @@
                 <div class="card">
                     <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
                         <div class="row position-relative align-items-center">
-                            <div class="col-12 col-sm-5"><h6><span data-bind="textPretty: descriptionPreview">Description</span></h6></div>
+                            <div class="col-12 col-sm-6"><h6><span data-bind="textPretty: descriptionPreview">Description</span></h6></div>
                             <div class="col-12 col-sm-2"><h6><span data-bind="text: dt"></span></h6></div>
-                            <div class="col-12 col-sm-2"><h6><span data-bind="text: editorLabel, css: {'text-muted': !editor()}"></span></h6></div>
-                            <div class="col-12 col-sm-1"><input type="checkbox" data-bind="checked: completed, click: $root.toggleGeneralComplete" aria-label="Completed"></div>
-                            <div class="col-12 col-sm-2 dropdown text-end">
-                                <button class="btn btn-link position-relative z-2" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
-                                    <span class="bi bi-three-dots-vertical"></span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="task operations">
-                                    <!-- ko if: !editor() -->
-                                    <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.claimGeneral"><span class="bi bi-flag"></span> Claim</a></li>
-                                    <!-- /ko -->
-                                    <!-- ko if: editor() -->
-                                    <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.releaseGeneral"><span class="bi bi-flag-fill"></span> Release</a></li>
-                                    <!-- /ko -->
-                                    {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.assignGeneral"><span class="bi bi-person-plus"></span> Assign...</a></li>{{/if}}
-                                    <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.editGeneral"><span class="bi bi-pencil"></span> Edit</a></li>
-                                    {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.deleteGeneral"><span class="bi bi-trash3"></span> Delete task</a></li>{{/if}}
-                                </ul>
+                            <div class="col-12 col-sm-3"><h6><span data-bind="text: editorLabel, css: {'text-muted': !editor()}"></span></h6></div>
+                            <div class="col-12 col-sm-1 d-flex align-items-center justify-content-between position-relative z-2">
+                                <input type="checkbox" data-bind="checked: completed, click: $root.toggleGeneralComplete" aria-label="Completed">
+                                <div class="dropdown">
+                                    <button class="btn btn-link btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #000000;">
+                                        <span class="bi bi-three-dots-vertical"></span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" role="menu" aria-label="task operations">
+                                        <!-- ko if: !editor() -->
+                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.claimGeneral"><span class="bi bi-flag"></span> Claim</a></li>
+                                        <!-- /ko -->
+                                        <!-- ko if: editor() -->
+                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.releaseGeneral"><span class="bi bi-flag-fill"></span> Release</a></li>
+                                        <!-- /ko -->
+                                        {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.assignGeneral"><span class="bi bi-person-plus"></span> Assign...</a></li>{{/if}}
+                                        <li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.editGeneral"><span class="bi bi-pencil"></span> Edit</a></li>
+                                        {{#if deletable}}<li role="presentation"><a class="dropdown-item" role="menuitem" href="#" data-bind="click: $root.deleteGeneral"><span class="bi bi-trash3"></span> Delete task</a></li>{{/if}}
+                                    </ul>
+                                </div>
                             </div>
                             <a class="stretched-link" data-bs-toggle="collapse" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                         </div>
