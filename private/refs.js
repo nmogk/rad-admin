@@ -358,7 +358,7 @@ function lookupPublishers(value) {
 
 function selectSource(name) {
     // Find the active ref view model by checking which modal is visible
-    var modal = $('.modal.in');
+    var modal = $('.modal.show');
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);
         if (ctx && ctx.source) {
@@ -372,7 +372,7 @@ function selectSource(name) {
 }
 
 function selectPublisher(name) {
-    var modal = $('.modal.in');
+    var modal = $('.modal.show');
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);
         if (ctx && ctx.publisher) {
@@ -427,7 +427,7 @@ function createPublisherFromRef() {
 // Publishers and sources share the sources core, so creating either is the
 // same action — only the source of the pre-filled name changes.
 function openSourceCreatorFromField(fieldName) {
-    var modal = $('.modal.in');
+    var modal = $('.modal.show');
     var name = '';
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);
