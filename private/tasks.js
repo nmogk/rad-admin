@@ -188,10 +188,25 @@ function attachGridActions(grid) {
     };
 
     grid.openPublisher = function (periodical) {
+        // Mirrors RefViewModel.goSource on the public index page: look up the
+        // source row by name and open its website in a new tab. (#152)
         var name = periodical.publisher_name();
         if (!name) { alert('No publisher set on this periodical.'); return; }
-        var encoded = encodeURIComponent('"' + name + '"');
-        window.open('/sources?rows=1&q=name:' + encoded, '_blank');
+        $.ajax({
+            url: '/solr/source/select?',
+            dataType: 'json',
+            data: $.param({ q: 'name:"' + name + '"' }),
+            success: function (data) {
+                var src = data.response.docs[0];
+                if (!src) { alert('Publisher not found!'); return; }
+                // website is single-valued in the source schema, but guard for
+                // legacy multi-valued shapes that might still be in the index.
+                var site = Array.isArray(src.website) ? src.website[0] : src.website;
+                if (site) { window.open('http://' + site, '_blank'); }
+                else { alert('Publisher does not have a website to go to!'); }
+            },
+            error: function () { alert('Unable to look up publisher at this time!'); }
+        });
     };
 
     grid.editPeriodical = function (periodical) {
