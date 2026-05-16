@@ -15,7 +15,7 @@
         <!-- ko foreach: window.RAD.citations.styles -->
         <tr><td colspan="2"><h5 data-bind="text: label + ' Style'"></h5></td></tr>
         <tr data-bind="style: { borderBottom: $index() < window.RAD.citations.styles.length - 1 ? '1px solid gray' : '' }">
-          <td><p data-bind="html: window.RAD.citations.format(id, $parent), attr: { id: id + '-citation' }"></p></td>
+          <td><p data-bind="html: window.RAD.citations.format(id, $parent, $parent.citationSource && $parent.citationSource()), attr: { id: id + '-citation' }"></p></td>
           <td><button class="copy" data-bind="attr: { 'data-clipboard-target': '#' + id + '-citation', 'aria-label': 'Copy ' + label + ' formatted citation to clipboard' }">
               <span class="bi bi-clipboard-plus" alt="Copy to clipboard"></span>
           </button></td>

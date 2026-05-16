@@ -20,6 +20,10 @@ function RefViewModel(data) {
     self.year = ko.observable();
     self.colId = undefined;
     self.ariaLab = undefined;
+    // Populated lazily by generateCitation() in index.js when the citation
+    // modal opens against a book/website ref (#144). Null when no enrichment
+    // has been fetched — citations.js then falls back to the raw publisher.
+    self.citationSource = ko.observable(null);
 
     self.pageTitle = ko.pureComputed(function () {
         return (/(DVD|CD|cassette)/i.test(this.reference()||"") ? "Run Time" : "Page")
