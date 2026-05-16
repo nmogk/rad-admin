@@ -24,6 +24,13 @@ function GeneralTodoViewModel(data) {
         return e && e.name ? e.name : 'Unassigned';
     });
 
+    self.isMine = ko.pureComputed(function () {
+        var uid = window.currentUserId;
+        if (!uid) { return false; }
+        var e = self.editor();
+        return !!(e && e.id === uid);
+    });
+
     this.cache = function () {};
     this.update(data || {});
 }

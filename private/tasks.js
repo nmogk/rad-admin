@@ -352,7 +352,7 @@ function attachGridActions(grid) {
             success: function (data) {
                 t.vm.editor(data.editor);
                 bsModalHide('#assignEditorModal');
-                grid.resortPeriodicals();
+                if (t.kind === 'issue') { grid.resortPeriodicals(); } else { grid.resortGenerals(); }
             },
             error: function (jqXHR) {
                 var msg = 'Could not assign editor.';
@@ -426,7 +426,7 @@ function attachGridActions(grid) {
         $.ajax({
             url: '/tasks/general/' + general.id() + '/claim',
             type: 'POST',
-            success: function (data) { general.editor(data.editor); },
+            success: function (data) { general.editor(data.editor); grid.resortGenerals(); },
             error: function () { alert('Could not claim task.'); }
         });
     };
@@ -435,7 +435,7 @@ function attachGridActions(grid) {
         $.ajax({
             url: '/tasks/general/' + general.id() + '/release',
             type: 'POST',
-            success: function () { general.editor(null); },
+            success: function () { general.editor(null); grid.resortGenerals(); },
             error: function (jqXHR) {
                 var msg = 'Could not release task.';
                 if (jqXHR.responseJSON && jqXHR.responseJSON.error) { msg = jqXHR.responseJSON.error; }
@@ -486,6 +486,11 @@ function tasksInit() {
     if (pEl) { try { rawP = JSON.parse(pEl.textContent) || []; } catch (e) { rawP = []; } }
     var gEl = document.getElementById('generalsData');
     if (gEl) { try { rawG = JSON.parse(gEl.textContent) || []; } catch (e) { rawG = []; } }
+    // currentUserId drives the user-assigned-first sort and the "yours"
+    // highlighting on rows / cards. Set as a global before constructing
+    // the grid so VM `isMine` computeds resolve correctly. (#148)
+    var uEl = document.getElementById('currentUserId');
+    if (uEl) { try { window.currentUserId = JSON.parse(uEl.textContent); } catch (e) {} }
 
     var grid = new TasksGridViewModel(rawP, rawG);
     attachGridActions(grid);

@@ -63,6 +63,12 @@ function PeriodicalViewModel(data) {
         return self.outstandingCount() > 0;
     });
 
+    // True iff at least one outstanding issue is assigned to the current
+    // editor — drives the "you" cue on the periodical card. (#148)
+    self.hasUserOutstanding = ko.pureComputed(function () {
+        return self.issues().some(function (i) { return !i.completed() && i.isMine(); });
+    });
+
     // Header summary: "Vol. 1(1) 1990 – Vol. 30(4) 2025 · 120 issues · 8 outstanding"
     self.summary = ko.pureComputed(function () {
         var sorted = self.sortedIssues();

@@ -28,6 +28,15 @@ function IssueTodoViewModel(data) {
         return e && e.name ? e.name : 'Unassigned';
     });
 
+    // Highlights rows the current editor owns. window.currentUserId is set
+    // by private/tasks.js from the page-render JSON island. (#148)
+    self.isMine = ko.pureComputed(function () {
+        var uid = window.currentUserId;
+        if (!uid) { return false; }
+        var e = self.editor();
+        return !!(e && e.id === uid);
+    });
+
     // Stable sort key: pad numeric portions of vol/no so "10" sorts after "9".
     self.sortKey = ko.pureComputed(function () {
         function pad(s) { return s ? String(s).replace(/(\d+)/g, function (m) { return ('00000000' + m).slice(-8); }) : ''; }

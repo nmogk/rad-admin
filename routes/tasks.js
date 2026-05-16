@@ -25,6 +25,13 @@ function hasOutstanding(periodical) {
     return (periodical.issues || []).some(function (i) { return !i.completed; });
 }
 
+function userHasOutstanding(periodical, userId) {
+    if (!userId) return false;
+    return (periodical.issues || []).some(function (i) {
+        return !i.completed && i.editor && i.editor.id === userId;
+    });
+}
+
 function shapeIssue(i) {
     return {
         id: i.id,
@@ -63,8 +70,13 @@ function shapePeriodical(p) {
 
 router.get('/', async function (req, res, next) {
     try {
+        var uid = req.user.id;
         var periodicals = await Periodical.query().withGraphFetched('issues.[editor]');
+        // Sort: user-assigned (with outstanding) → has-outstanding → effective updated_at
         periodicals.sort(function (a, b) {
+            var aMine = userHasOutstanding(a, uid) ? 1 : 0;
+            var bMine = userHasOutstanding(b, uid) ? 1 : 0;
+            if (aMine !== bMine) return bMine - aMine;
             var aOut = hasOutstanding(a) ? 1 : 0;
             var bOut = hasOutstanding(b) ? 1 : 0;
             if (aOut !== bOut) return bOut - aOut;
@@ -75,11 +87,25 @@ router.get('/', async function (req, res, next) {
             if (!bT) return -1;
             return new Date(bT) - new Date(aT);
         });
-        var generals = await GeneralTodo.query().withGraphFetched('editor').orderBy('completed').orderBy('updated_at', 'desc');
+        var generals = await GeneralTodo.query().withGraphFetched('editor');
+        // Sort: user-assigned-and-open → completed (incomplete first) → updated_at desc
+        generals.sort(function (a, b) {
+            var aMine = (!a.completed && a.editor && a.editor.id === uid) ? 1 : 0;
+            var bMine = (!b.completed && b.editor && b.editor.id === uid) ? 1 : 0;
+            if (aMine !== bMine) return bMine - aMine;
+            var aDone = a.completed ? 1 : 0;
+            var bDone = b.completed ? 1 : 0;
+            if (aDone !== bDone) return aDone - bDone;
+            if (!a.updated_at && !b.updated_at) return 0;
+            if (!a.updated_at) return 1;
+            if (!b.updated_at) return -1;
+            return new Date(b.updated_at) - new Date(a.updated_at);
+        });
 
         res.render('tasks', Object.assign({}, req.replacements, {
             periodicals: periodicals.map(shapePeriodical),
             generals: generals.map(shapeGeneral),
+            currentUserId: uid,
             tskActive: 1
         }));
     } catch (err) {

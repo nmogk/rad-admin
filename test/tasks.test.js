@@ -91,6 +91,58 @@ describe('Tasks Routes', function () {
             // among outstanding, C (max updated_at = newest) ahead of B.
             expect(rendered.map(function (p) { return p.name; })).to.deep.equal(['C', 'B', 'A']);
             expect(res._renderedData.tskActive).to.equal(1);
+            expect(res._renderedData.currentUserId).to.equal(1);
+        });
+
+        it('sorts periodicals with current-user outstanding issues ahead of others (#148)', async function () {
+            var t1 = '2025-01-01T00:00:00Z';
+            var t2 = '2025-06-01T00:00:00Z';
+            var t3 = '2025-12-01T00:00:00Z';
+            // A: outstanding, no editor. B: outstanding, current user (id=42).
+            // C: outstanding, other editor, but newest updated_at.
+            var periodicals = [
+                { id: 1, name: 'A', publisher_name: 'P', updated_at: t3,
+                  issues: [{ id: 11, completed: 0, updated_at: t3, editor: null }] },
+                { id: 2, name: 'B', publisher_name: 'P', updated_at: t1,
+                  issues: [{ id: 21, completed: 0, updated_at: t1, editor: { id: 42, name: 'Me' } }] },
+                { id: 3, name: 'C', publisher_name: 'P', updated_at: t2,
+                  issues: [{ id: 31, completed: 0, updated_at: t2, editor: { id: 99, name: 'Other' } }] }
+            ];
+            var pQb1 = mockQueryBuilder(); pQb1.resolves(periodicals);
+            var gQb1 = mockQueryBuilder(); gQb1.resolves([]);
+            PeriodicalStub.query.returns(pQb1);
+            GeneralTodoStub.query.returns(gQb1);
+
+            var req = mockReq({ user: mockUser({ id: 42 }), replacements: {} });
+            var res = mockRes();
+            var handler = findHandler(tasksRouter, 'get', '/');
+            await handler(req, res, sinon.spy());
+
+            // B should be first (current user assigned), then A and C by updated_at desc.
+            expect(res._renderedData.periodicals.map(function (p) { return p.name; })).to.deep.equal(['B', 'A', 'C']);
+        });
+
+        it('sorts general tasks with current-user assignments ahead, completed last (#148)', async function () {
+            var t1 = '2025-01-01T00:00:00Z';
+            var t2 = '2025-06-01T00:00:00Z';
+            var t3 = '2025-12-01T00:00:00Z';
+            var generals = [
+                { id: 1, description: 'X', completed: 0, updated_at: t3, editor: { id: 99, name: 'Other' } },
+                { id: 2, description: 'Y', completed: 1, updated_at: t3, editor: { id: 42, name: 'Me' } }, // completed → not "mine and open"
+                { id: 3, description: 'Z', completed: 0, updated_at: t1, editor: { id: 42, name: 'Me' } }
+            ];
+            var pQb1 = mockQueryBuilder(); pQb1.resolves([]);
+            var gQb1 = mockQueryBuilder(); gQb1.resolves(generals);
+            PeriodicalStub.query.returns(pQb1);
+            GeneralTodoStub.query.returns(gQb1);
+
+            var req = mockReq({ user: mockUser({ id: 42 }), replacements: {} });
+            var res = mockRes();
+            var handler = findHandler(tasksRouter, 'get', '/');
+            await handler(req, res, sinon.spy());
+
+            // Z (mine + open) → X (open, not mine) → Y (completed, even though mine)
+            expect(res._renderedData.generals.map(function (g) { return g.description; })).to.deep.equal(['Z', 'X', 'Y']);
         });
     });
 

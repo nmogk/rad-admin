@@ -5,6 +5,14 @@
 
 {{#> layout title="Tasks" nav=1 tskActive=1}}
 
+    {{#*inline "header-block"}}
+        <style>
+          /* Soft yellow tint on rows / periodical cards owned by the current
+             editor — matches the ref-edit-flash palette. (#148) */
+          .task-mine { background-color: #fff8e1; }
+        </style>
+    {{/inline}}
+
     {{#*inline "search-area"}}
         <p class="text-body-secondary">Track outstanding data-entry work. Periodicals group their issues; general tasks are freeform jobs. Editors can claim, complete, edit, and add tasks. Delete and reassignment require delete permission.</p>
 
@@ -34,9 +42,9 @@
             <div class="accordion" id="periodicalsAccordion" role="tablist" aria-multiselectable="false">
                 <!-- ko foreach: periodicals -->
                 <div class="card">
-                    <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
+                    <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}, css: {'task-mine': hasUserOutstanding}">
                         <div class="row position-relative">
-                            <div class="col-12 col-sm-3"><h6><span data-bind="textPretty: name">Name</span></h6></div>
+                            <div class="col-12 col-sm-3"><h6><!-- ko if: hasUserOutstanding --><span class="bi bi-person-fill text-primary me-1" title="You have outstanding issues here" aria-label="You have outstanding issues here"></span><!-- /ko --><span data-bind="textPretty: name">Name</span></h6></div>
                             <div class="col-12 col-sm-3"><h6><span data-bind="textPretty: publisher_name">Publisher</span></h6></div>
                             <div class="col-12 col-sm-5"><h6><span data-bind="text: summary"></span></h6></div>
                             <div class="col-12 col-sm-1 dropdown">
@@ -71,7 +79,7 @@
                             </div>
                             <!-- /ko -->
                             <!-- ko foreach: visibleIssues -->
-                            <div class="row align-items-center py-1 border-bottom">
+                            <div class="row align-items-center py-1 border-bottom" data-bind="css: {'task-mine': isMine}">
                                 <div class="col-sm-2"><span data-bind="text: volNoLabel"></span></div>
                                 <div class="col-sm-2"><span data-bind="text: dt"></span></div>
                                 <div class="col-sm-4 text-truncate"><!-- ko if: link --><a data-bind="attr: {href: link}, text: link" target="_blank" rel="noopener"></a><!-- /ko --></div>
@@ -122,7 +130,7 @@
             <div class="accordion" id="generalAccordion" role="tablist" aria-multiselectable="false">
                 <!-- ko foreach: generals -->
                 <div class="card">
-                    <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}">
+                    <div class="card-header" tabindex=0 role="tab" data-bind="attr: {id: ariaLab}, css: {'task-mine': isMine}">
                         <div class="row position-relative align-items-center">
                             <div class="col-12 col-sm-6"><h6><span data-bind="textPretty: descriptionPreview">Description</span></h6></div>
                             <div class="col-12 col-sm-2"><h6><span data-bind="text: dt"></span></h6></div>
@@ -186,6 +194,7 @@
         <script nonce="{{nonce}}" src="private/tasksGridView.js"></script>
         <script nonce="{{nonce}}" type="application/json" id="periodicalsData">{{json periodicals}}</script>
         <script nonce="{{nonce}}" type="application/json" id="generalsData">{{json generals}}</script>
+        <script nonce="{{nonce}}" type="application/json" id="currentUserId">{{json currentUserId}}</script>
         <script nonce="{{nonce}}" src="private/tasks.js"></script>
     {{/inline}}
 
