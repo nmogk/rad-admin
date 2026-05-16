@@ -218,7 +218,17 @@ function searchInit() {
     }
 
     var blankRefViewModel = new RefViewModel({});
-    if (localStorage['refsEditor']) {
+    var taskPrefill = null;
+    try { taskPrefill = sessionStorage.getItem('refsPrefill'); } catch (e) {}
+    if (taskPrefill) {
+        try { sessionStorage.removeItem('refsPrefill'); } catch (e) {}
+        try {
+            var parsed = JSON.parse(taskPrefill);
+            blankRefViewModel.update(parsed);
+            // Defer modal show until bindings are applied below.
+            setTimeout(function () { bsModalShow('#newRefModal', { backdrop: 'static' }); }, 0);
+        } catch (e) { /* malformed prefill — ignore */ }
+    } else if (localStorage['refsEditor']) {
         blankRefViewModel.update(localStorage['refsEditor']);
     }
     // Subscribe to source/publisher field changes for autocomplete
@@ -348,7 +358,7 @@ function lookupPublishers(value) {
 
 function selectSource(name) {
     // Find the active ref view model by checking which modal is visible
-    var modal = $('.modal.in');
+    var modal = $('.modal.show');
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);
         if (ctx && ctx.source) {
@@ -362,7 +372,7 @@ function selectSource(name) {
 }
 
 function selectPublisher(name) {
-    var modal = $('.modal.in');
+    var modal = $('.modal.show');
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);
         if (ctx && ctx.publisher) {
@@ -417,7 +427,7 @@ function createPublisherFromRef() {
 // Publishers and sources share the sources core, so creating either is the
 // same action — only the source of the pre-filled name changes.
 function openSourceCreatorFromField(fieldName) {
-    var modal = $('.modal.in');
+    var modal = $('.modal.show');
     var name = '';
     if (modal.length) {
         var ctx = ko.dataFor(modal.find('form')[0]);

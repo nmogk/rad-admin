@@ -271,6 +271,14 @@ ko.bindingHandlers.datePicker = {
             return { precision: 'unknown', year: '', month: '', date: '', raw: val };
         }
 
+        // Set while a user-driven DOM event is propagating into the observable.
+        // Without this, picking a precision on an empty field writes null, the
+        // subscribe below re-runs readValue, parseISO(null) defaults to 'date',
+        // and the dropdown snaps back to "Full Date" — requiring a second click
+        // (with a year typed in between) to switch precision. (#145 follow-up
+        // to #134.)
+        var writingFromUI = false;
+
         function writeValue() {
             var p = precisionSelect.value;
             var val = '';
@@ -281,13 +289,17 @@ ko.bindingHandlers.datePicker = {
             } else {
                 val = dateInput.value; // yyyy-MM-dd
             }
+            writingFromUI = true;
             observable(val || null);
+            writingFromUI = false;
         }
 
         function writeRawValue() {
             // In non-standard mode, observable holds the raw text verbatim so
             // unchanged legacy values round-trip cleanly through edit + save.
+            writingFromUI = true;
             observable(rawInput.value || null);
+            writingFromUI = false;
         }
 
         function readValue() {
@@ -341,6 +353,7 @@ ko.bindingHandlers.datePicker = {
 
         // --- Subscribe to external changes (revert, update) ---
         var sub = observable.subscribe(function () {
+            if (writingFromUI) { return; }
             readValue();
         });
 
