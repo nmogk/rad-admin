@@ -71,7 +71,7 @@ Routes in `routes/` are mounted in `app.js`. Key pattern: `req.replacements` is 
 
 ### Solr Integration
 
-The full-text fields on the rad core (`author`, `title`, `reference`, `abstract`, `rev_author`, `rev_title`, `rev_source`) use a custom field type `text_html_safe` defined in `tools/solr-setup.sh`. It's a clone of `text_general` with `solr.HTMLStripCharFilterFactory` prepended to the analyzer chain so docs imported with literal entities (`mendel&apos;s`) tokenize the same way as a user query (`mendel's`). `_text_` (the catch-all copyField destination) still uses stock `text_general` — see issue #118 follow-up notes.
+The full-text fields on the rad core (`author`, `title`, `reference`, `abstract`, `rev_author`, `rev_title`, `rev_source`) use a custom field type `text_html_safe` defined in `tools/solr-setup.sh`. It's a clone of `text_general` with `solr.HTMLStripCharFilterFactory` prepended to the analyzer chain so docs imported with literal entities (`mendel&apos;s`) tokenize the same way as a user query (`mendel's`). `_text_` (the catch-all copyField destination) is also `text_html_safe` so unqualified queries hitting `df=_text_` see the same stripping (#118 follow-up).
 
 Optional `type` field (`string`, single-valued, not in `_text_`) categorises refs for the public dropdown filter (issue #19). Allowed values live in `config/refTypes.js` — server validates POST bodies against the list, both `routes/refs.js` and `routes/index.js` pass it as render context for the templates' selects, and the public form's `type` URL param gets translated to a Solr `fq=type:"…"` filter in `public/javascripts/refGridView.js` so it doesn't perturb relevance scoring.
 

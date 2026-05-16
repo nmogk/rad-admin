@@ -129,12 +129,31 @@ curl -sf -X POST -H 'Content-type:application/json' \
 }' > /dev/null
 echo "  OK"
 
+# _text_ is the catch-all copyField destination — what unqualified queries
+# hit via df=_text_. The _default configset declares it as text_general, so
+# without this replace the per-field HTML stripping wouldn't apply when the
+# same content is matched through the catch-all. Switching it to
+# text_html_safe makes the analyzer chain consistent across both paths.
+# Existing docs need to be reindexed for the new analyzer to take effect.
+echo "Replacing _text_ with text_html_safe..."
+curl -sf -X POST -H 'Content-type:application/json' \
+  "$SOLR_URL/solr/rad/schema" -d '{
+  "replace-field": {
+    "name": "_text_",
+    "type": "text_html_safe",
+    "indexed": true,
+    "stored": false,
+    "multiValued": true
+  }
+}' > /dev/null
+echo "  OK"
+
 # RandomSortField produces a different ordering per seed encoded into the
 # field name (sort=random_<seed> asc). The dynamic field lets any seed string
 # be used without pre-declaring it. Used by the "Learn something new" feature
 # on the public index page.
 echo "Adding random sort field type..."
-curl -sf -X POST -H 'Content-type:application/json' \
+curl -s -X POST -H 'Content-type:application/json' \
   "$SOLR_URL/solr/rad/schema" -d '{
   "add-field-type": {
     "name": "random",
