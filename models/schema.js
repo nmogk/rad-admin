@@ -32,6 +32,7 @@ var schema = {
         id: {type: 'increments', nullable: false, primary: true},
         name: {type: 'string', maxlength: 255, nullable: false},
         publisher_name: {type: 'string', maxlength: 255, nullable: false},
+        type: {type: 'string', maxlength: 50, nullable: true},
         updated_at: {type: 'dateTime', nullable: true}
     },
     issue_todos: {

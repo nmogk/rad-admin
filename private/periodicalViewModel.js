@@ -5,6 +5,7 @@ function PeriodicalViewModel(data) {
     self.id = ko.observable();
     self.name = ko.observable();
     self.publisher_name = ko.observable();
+    self.type = ko.observable('');
     self.updated_at = ko.observable();
     self.issues = ko.observableArray([]);
     self.showCompleted = ko.observable(false);
@@ -110,6 +111,7 @@ ko.utils.extend(PeriodicalViewModel.prototype, {
         this.id(data.id);
         this.name(data.name);
         this.publisher_name(data.publisher_name);
+        this.type(data.type || '');
         this.updated_at(data.updated_at);
         var issues = (data.issues || []).map(function (raw) {
             return raw instanceof IssueTodoViewModel ? raw : new IssueTodoViewModel(raw);
@@ -129,6 +131,7 @@ ko.utils.extend(PeriodicalViewModel.prototype, {
         this.id(null);
         this.name('');
         this.publisher_name('');
+        this.type('');
         this.issues([]);
     }
 });

@@ -103,6 +103,12 @@ Idempotent — only creates tables that don't already exist. Safe to run on a po
 ```
 node migration-add-tasks.js
 ```
+
+### incremental migration: add periodicals.type column (issue #147)
+Idempotent. Run after `migration-add-tasks.js` on already-deployed instances.
+```
+node migration-add-periodical-type.js
+```
 ### configure iptables/firewall
 
 Open ports 80, and 443 through lightsail (or other relevant) interface

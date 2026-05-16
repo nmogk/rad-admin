@@ -6,8 +6,10 @@ var Periodical = require('../models/periodical');
 var IssueTodo = require('../models/issue-todo');
 var GeneralTodo = require('../models/general-todo');
 var User = require('../models/user');
+var refTypes = require('../config/refTypes');
 
 var DATE_RGX = /^\d{4}(-\d{2}(-\d{2})?)?$/;
+var validRefTypes = refTypes.map(function (t) { return t.value; });
 
 function maxTime(a, b) {
     if (!a) return b;
@@ -63,6 +65,7 @@ function shapePeriodical(p) {
         id: p.id,
         name: p.name,
         publisher_name: p.publisher_name,
+        type: p.type || '',
         updated_at: p.updated_at,
         issues: (p.issues || []).map(shapeIssue)
     };
@@ -106,6 +109,7 @@ router.get('/', async function (req, res, next) {
             periodicals: periodicals.map(shapePeriodical),
             generals: generals.map(shapeGeneral),
             currentUserId: uid,
+            refTypes: refTypes,
             tskActive: 1
         }));
     } catch (err) {
@@ -132,14 +136,25 @@ router.get('/users.json', async function (req, res) {
 router.post('/periodicals/new', async function (req, res) {
     var name = (req.body.name || '').trim();
     var publisher = (req.body.publisher_name || '').trim();
+    var type = (req.body.type || '').trim();
     if (!name) { res.status(400).json({ error: 'Periodical name is required.' }); return; }
     if (!publisher) { res.status(400).json({ error: 'Publisher name is required.' }); return; }
+    if (type && validRefTypes.indexOf(type) === -1) {
+        res.status(400).json({ error: 'Invalid reference type.' }); return;
+    }
 
     try {
-        var saved = await Periodical.query().insertAndFetch({ name: name, publisher_name: publisher });
+        var saved = await Periodical.query().insertAndFetch({
+            name: name,
+            publisher_name: publisher,
+            type: type || null
+        });
         auditLogger.info(req.user.email + " created periodical: " + JSON.stringify({ id: saved.id, name: saved.name }));
         req.flash('yay', 'Periodical created.');
-        res.json({ redirect: '/tasks', periodical: { id: saved.id, name: saved.name, publisher_name: saved.publisher_name } });
+        res.json({
+            redirect: '/tasks',
+            periodical: { id: saved.id, name: saved.name, publisher_name: saved.publisher_name, type: saved.type || '' }
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'A problem occurred saving the periodical.' });
@@ -149,17 +164,22 @@ router.post('/periodicals/new', async function (req, res) {
 router.post('/periodicals/:id(\\d+)', async function (req, res) {
     var name = (req.body.name || '').trim();
     var publisher = (req.body.publisher_name || '').trim();
+    var type = (req.body.type || '').trim();
     if (!name) { res.status(400).json({ error: 'Periodical name is required.' }); return; }
     if (!publisher) { res.status(400).json({ error: 'Publisher name is required.' }); return; }
+    if (type && validRefTypes.indexOf(type) === -1) {
+        res.status(400).json({ error: 'Invalid reference type.' }); return;
+    }
 
     try {
         var periodical = await Periodical.query().findById(req.params.id).throwIfNotFound();
         var oldName = periodical.name;
         var oldPublisher = periodical.publisher_name;
-        await periodical.$query().patch({ name: name, publisher_name: publisher });
+        var oldType = periodical.type;
+        await periodical.$query().patch({ name: name, publisher_name: publisher, type: type || null });
         auditLogger.info(req.user.email + " edited periodical " + req.params.id +
-            ":\nOriginal: " + JSON.stringify({ name: oldName, publisher_name: oldPublisher }) +
-            "\nUpdated: " + JSON.stringify({ name: name, publisher_name: publisher }));
+            ":\nOriginal: " + JSON.stringify({ name: oldName, publisher_name: oldPublisher, type: oldType }) +
+            "\nUpdated: " + JSON.stringify({ name: name, publisher_name: publisher, type: type || null }));
         req.flash('yay', 'Periodical updated.');
         res.json({ redirect: '/tasks' });
     } catch (err) {

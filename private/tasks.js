@@ -18,7 +18,7 @@ PeriodicalViewModel.prototype.newPeriodicalHandler = function () {
         url: '/tasks/periodicals/new',
         contentType: 'application/json',
         type: 'POST',
-        data: JSON.stringify({ name: self.name(), publisher_name: self.publisher_name() }),
+        data: JSON.stringify({ name: self.name(), publisher_name: self.publisher_name(), type: self.type() || null }),
         success: function (data) {
             self.commit();
             self.blank();
@@ -41,7 +41,7 @@ PeriodicalViewModel.prototype.submitEdits = function () {
         url: '/tasks/periodicals/' + self.id(),
         contentType: 'application/json',
         type: 'POST',
-        data: JSON.stringify({ name: self.name(), publisher_name: self.publisher_name() }),
+        data: JSON.stringify({ name: self.name(), publisher_name: self.publisher_name(), type: self.type() || null }),
         success: function (data) {
             self.commit();
             bsModalHide('#editPeriodicalModal');
@@ -282,7 +282,8 @@ function attachGridActions(grid) {
             publisher: periodical.publisher_name(),
             source: periodical.publisher_name(),
             reference: periodical.name() + ' ' + issue.volNoLabel(),
-            dt: issue.dt()
+            dt: issue.dt(),
+            type: periodical.type() || ''
         };
         try {
             sessionStorage.setItem('refsPrefill', JSON.stringify(prefill));

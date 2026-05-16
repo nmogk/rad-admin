@@ -14,3 +14,13 @@
     </ul>
     <!-- /ko -->
 </div>
+<div class="mb-3">
+    <label for="periodicalTypeField">Reference type</label>
+    <select class="form-control" name="periodicalTypeField" id="periodicalTypeField" data-bind="value: type">
+        <option value="">(none)</option>
+        {{#each refTypes}}
+        <option value="{{value}}">{{label}}</option>
+        {{/each}}
+    </select>
+    <small class="form-text text-muted">Used to pre-fill the Type when adding references from this periodical's issues.</small>
+</div>

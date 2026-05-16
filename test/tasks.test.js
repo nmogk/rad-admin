@@ -187,14 +187,57 @@ describe('Tasks Routes', function () {
         });
 
         it('saves and returns redirect+periodical', async function () {
-            pQb.insertAndFetch.resolves({ id: 7, name: 'N', publisher_name: 'P' });
+            pQb.insertAndFetch.resolves({ id: 7, name: 'N', publisher_name: 'P', type: null });
             var req = mockReq({ method: 'POST', body: { name: 'N', publisher_name: 'P' }, user: mockUser(), flash: sinon.stub() });
             var res = mockRes();
             var handler = findHandler(tasksRouter, 'post', '/periodicals/new');
             await handler(req, res, sinon.spy());
             expect(res._json.redirect).to.equal('/tasks');
-            expect(res._json.periodical).to.deep.equal({ id: 7, name: 'N', publisher_name: 'P' });
+            expect(res._json.periodical).to.deep.equal({ id: 7, name: 'N', publisher_name: 'P', type: '' });
             expect(auditLoggerStub.info.firstCall.args[0]).to.include('created periodical');
+        });
+
+        it('persists a valid reference type (#147)', async function () {
+            pQb.insertAndFetch.resolves({ id: 8, name: 'N', publisher_name: 'P', type: 'book' });
+            var req = mockReq({ method: 'POST', body: { name: 'N', publisher_name: 'P', type: 'book' }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(tasksRouter, 'post', '/periodicals/new');
+            await handler(req, res, sinon.spy());
+            expect(pQb.insertAndFetch.firstCall.args[0]).to.include({ type: 'book' });
+            expect(res._json.periodical.type).to.equal('book');
+        });
+
+        it('rejects an unknown reference type (#147)', async function () {
+            var req = mockReq({ method: 'POST', body: { name: 'N', publisher_name: 'P', type: 'bogus' }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(tasksRouter, 'post', '/periodicals/new');
+            await handler(req, res, sinon.spy());
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(pQb.insertAndFetch.called).to.be.false;
+        });
+    });
+
+    describe('POST /periodicals/:id (edit)', function () {
+        it('persists a valid reference type on edit (#147)', async function () {
+            var p = makeRow({ id: 5, name: 'N', publisher_name: 'P', type: null });
+            pQb.resolves(p);
+            var req = mockReq({ method: 'POST', params: { id: '5' }, body: { name: 'N', publisher_name: 'P', type: 'review' }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(tasksRouter, 'post', '/periodicals/:id(\\d+)');
+            await handler(req, res, sinon.spy());
+            expect(p._qb.patch.firstCall.args[0]).to.include({ type: 'review' });
+            expect(res._json.redirect).to.equal('/tasks');
+        });
+
+        it('rejects an unknown reference type on edit (#147)', async function () {
+            var p = makeRow({ id: 5, name: 'N', publisher_name: 'P' });
+            pQb.resolves(p);
+            var req = mockReq({ method: 'POST', params: { id: '5' }, body: { name: 'N', publisher_name: 'P', type: 'bogus' }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(tasksRouter, 'post', '/periodicals/:id(\\d+)');
+            await handler(req, res, sinon.spy());
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(p._qb.patch.called).to.be.false;
         });
     });
 
