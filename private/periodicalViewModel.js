@@ -15,8 +15,15 @@ function PeriodicalViewModel(data) {
     // Suggestion state for the publisher autocomplete in the periodical form.
     self.publisherSuggestions = ko.observableArray([]);
     self._publisherTimer = null;
+    // Set true while update()/revert() write a programmatic value into
+    // publisher_name. Without this guard the subscriber below schedules an
+    // autocomplete lookup at page-load time that then matches the just-loaded
+    // name, leaving the dropdown pre-populated when the edit modal later
+    // opens — even though the user hasn't typed.
+    self._suppressPublisherLookup = false;
 
     self.publisher_name.subscribe(function (v) {
+        if (self._suppressPublisherLookup) { return; }
         if (!v || v.length < 2) { self.publisherSuggestions([]); return; }
         if (self._publisherTimer) { clearTimeout(self._publisherTimer); }
         self._publisherTimer = setTimeout(function () {
@@ -110,7 +117,10 @@ ko.utils.extend(PeriodicalViewModel.prototype, {
     update: function (data) {
         this.id(data.id);
         this.name(data.name);
+        this._suppressPublisherLookup = true;
         this.publisher_name(data.publisher_name);
+        this._suppressPublisherLookup = false;
+        this.publisherSuggestions([]);
         this.type(data.type || '');
         this.updated_at(data.updated_at);
         var issues = (data.issues || []).map(function (raw) {

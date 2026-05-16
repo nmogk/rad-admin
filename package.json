@@ -1,6 +1,6 @@
 {
   "name": "radadmin",
-  "version": "0.7.0-preview",
+  "version": "0.8.0",
   "description": "A management application for a Solr search database with support for managing editors. Made for the Research Assistance Database at http://rad.creationeducation.org.",
   "private": true,
   "homepage": "https://github.com/nmogk/rad-admin",
