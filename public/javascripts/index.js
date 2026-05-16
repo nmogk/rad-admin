@@ -227,6 +227,7 @@ RefViewModel.prototype.generateCitation = function () {
         ? window.RAD.citations._internals.inferType(unpackRef(this))
         : '';
     var publisher = this.publisher && this.publisher();
+    console.log('[citation] inferred=' + inferred + ' publisher=' + JSON.stringify(publisher) + ' type=' + JSON.stringify(this.type && this.type()));
     if ((inferred === 'book' || inferred === 'website') && publisher) {
         var self = this;
         // Hit the catch-all _text_ field (no `name:` qualifier) the same
