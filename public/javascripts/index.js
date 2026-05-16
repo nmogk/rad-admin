@@ -220,24 +220,32 @@ RefViewModel.prototype.generateCitation = function () {
 
     // Book / website citations benefit from the full source row (address,
     // website). Kick off a lookup in the background — the modal binding on
-    // citationSource() will re-render in place when it arrives. Failure is
-    // silent: format() falls back to the raw publisher field. (#144)
-    var inferred = window.RAD.citations.format && window.RAD.citations._internals
+    // citationSource() will re-render in place when it arrives. Failures
+    // warn to the console and let format() fall back to the raw publisher
+    // field; the citation still renders with whatever info is on the ref. (#144)
+    var inferred = window.RAD.citations._internals
         ? window.RAD.citations._internals.inferType(unpackRef(this))
         : '';
     var publisher = this.publisher && this.publisher();
     if ((inferred === 'book' || inferred === 'website') && publisher) {
         var self = this;
+        // Hit the catch-all _text_ field (no `name:` qualifier) the same
+        // way RefViewModel.goSource does — Solr's relevance scoring picks
+        // the closest match even when name punctuation/spacing differs.
         $.ajax({
             url: "/solr/source/select?",
             dataType: "json",
-            data: $.param({ q: 'name:"' + publisher.replace(/"/g, '\\"') + '"', rows: 1 }),
+            data: $.param({ q: publisher, rows: 1 }),
             success: function (data) {
                 var src = data && data.response && data.response.docs && data.response.docs[0];
-                if (src) self.citationSource(src);
+                if (src) {
+                    self.citationSource(src);
+                } else {
+                    console.warn('Citation enrichment: no source matched publisher "' + publisher + '" (citation will fall back to publisher field only).');
+                }
             },
-            error: function () {
-                // Leave citationSource null — the formatters degrade gracefully.
+            error: function (jqXHR) {
+                console.warn('Citation enrichment: source lookup failed (' + jqXHR.status + ') for publisher "' + publisher + '".');
             }
         });
     }
