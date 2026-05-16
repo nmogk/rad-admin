@@ -13,9 +13,12 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link {{#if refActive}}active{{/if}}" href="/refs">References</a></li>
         <li class="nav-item"><a class="nav-link {{#if srcActive}}active{{/if}}" href="/sources">Sources</a></li>
+        <li class="nav-separator" role="separator"></li>
         <li class="nav-item"><a class="nav-link {{#if tskActive}}active{{/if}}" href="/tasks">Tasks</a></li>
         <li class="nav-item"><a class="nav-link {{#if cmpActive}}active{{/if}}" href="/campaigns">Campaigns</a></li>
+        <li class="nav-separator" role="separator"></li>
         <li class="nav-item"><a class="nav-link {{#if sitActive}}active{{/if}}" href="/site">Website</a></li>
+        {{#if users}}<li class="nav-separator" role="separator"></li>{{/if}}
         {{#if users}}<li class="nav-item"><a class="nav-link {{#if dbActive}}active{{/if}}" href="/database">Database</a></li>{{/if}}
         {{#if users}}<li class="nav-item"><a class="nav-link {{#if useActive}}active{{/if}}" href="/users">Users</a></li>{{/if}}
       </ul>

@@ -69,6 +69,20 @@ https://cloudfour.com/thinks/the-hidden-power-of-handlebars-partials/#fnref-4803
     /* Spelling suggestions and pagination sit immediately under the last
        result card with no breathing room; nudge them down. */
     #spellingSuggestions, #pages { margin-top: 1rem; }
+    /* Subtle dividers between navbar groups (issue #151). The navbar uses
+       navbar-expand-md, so above the md breakpoint items lay out in a row
+       and the separator renders as a short vertical bar; below md the
+       collapsed menu stacks vertically and the separator renders as a
+       short horizontal bar. Built as a pseudo-element so the <li> itself
+       carries no visible box and the bar can be sized independently of
+       the surrounding nav-link padding. */
+    .nav-separator { display: flex; justify-content: center; padding: 0.25rem 0; }
+    .nav-separator::before { content: ""; display: block;
+        background-color: rgba(255, 255, 255, 0.3); width: 50%; height: 1px; }
+    @media (min-width: 768px) {
+        .nav-separator { align-items: center; padding: 0 0.5rem; }
+        .nav-separator::before { width: 1px; height: 1.25rem; }
+    }
 </style>
   {{#if nav}}<style>body { padding-top: 60px; }</style>{{/if}}
   <script nonce="{{nonce}}" src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
