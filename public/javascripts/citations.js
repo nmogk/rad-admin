@@ -508,7 +508,7 @@
             return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {issueFormat: {volTag: ''} })]);
         }
         if (model.citationType === 'proceedings') {
-            return joinSentences([authors, year, title, 'In ' + periodicalBody(model, { pagePrefix: ', pp. ', issueFormat: { volTag: 'Vol. ' } })]);
+            return joinSentences([authors, year, title, 'In ' + periodicalBody(model, { pageSep: ', pp. ', issueFormat: { volTag: 'Vol. ' } })]);
         }
 
         // periodical / journal
@@ -521,15 +521,15 @@
         var titleQ = quote(model.title);
 
         if (model.citationType === 'book') {
-            return joinSentences([authors, year, italic(title), bookPublisher(model)]);
+            return joinSentences([authors, year, italic(model.title), bookPublisher(model)]);
         }
         if (model.citationType === 'website') {
             return joinSentences([authors, year, titleQ, websiteTail(model)]);
         }
         if (model.citationType === 'review') {
-            return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {issueFormat: {volTag: ''} })].filter(function (s) { return s !== '.'; }));
+            return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {pageSep: ": ", issueFormat: {volTag: ''} })].filter(function (s) { return s !== '.'; }));
         }
-        return joinSentences([authors, year, titleQ, periodicalBody(model, {issueFormat: {volTag: ''} })].filter(function (s) { return s && s !== '.'; }));
+        return joinSentences([authors, year, titleQ, periodicalBody(model, {pageSep: ": ", issueFormat: {volTag: ''} })].filter(function (s) { return s && s !== '.'; }));
     }
 
     function joc(model) {
