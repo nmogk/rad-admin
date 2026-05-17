@@ -447,7 +447,7 @@
         var issueTag = opts.issueTag || 'no. ';
         var issueSep = opts.issueSep || ', ';
         if (model.volume && model.issue) return volTag + model.volume + issueSep + issueTag + model.issue;
-        return volTag + model.volume || issueTag + model.issue;
+        return model.volume? volTag + model.volume : issueTag + model.issue;
     }
 
     // Periodical reference body: italic reference, optional vol(issue), optional :page.
@@ -529,6 +529,10 @@
         if (model.citationType === 'review') {
             return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {pageSep: ": ", issueFormat: {volTag: ''} })].filter(function (s) { return s !== '.'; }));
         }
+        if (model.citationType === 'proceedings') {
+            return joinSentences([authors, year, title, 'In ' + periodicalBody(model, { pageSep: ', ', issueFormat: { volTag: 'Vol. ' } })]);
+        }
+
         return joinSentences([authors, year, titleQ, periodicalBody(model, {pageSep: ": ", issueFormat: {volTag: ''} })].filter(function (s) { return s && s !== '.'; }));
     }
 
@@ -538,7 +542,7 @@
         var year = escape(model.year);
 
         if (model.citationType === 'book') {
-            return joinNonEmpty([authors, title, bookPublisher(model), year], ', ') + '.';
+            return joinNonEmpty([authors, italic(model.title), bookPublisher(model), year], ', ') + '.';
         }
         if (model.citationType === 'website') {
             return joinNonEmpty([authors, title, websiteTail(model), year], ', ') + '.';
