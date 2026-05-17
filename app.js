@@ -54,6 +54,13 @@ morgan.token('statusColor', (req, res, args) => {
 
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`)); // log every request to the console
 
+// Mount the Solr proxy and public static files ahead of the session/auth
+// stack: neither needs cookies, sessions, Passport, or flash, and parking
+// them here keeps every public read from paying a MySQL session lookup +
+// Passport deserialization round-trip.
+app.use('/solr/*', proxyLogic);
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIESECRET)); // read cookies (needed for auth + CSRF)
@@ -149,8 +156,6 @@ hbs.registerHelper('json', function (value) {
 
 // routes ======================================================================
 
-app.use('/solr/*', proxyLogic);
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
 app.use(flashMessageCenter);
 
