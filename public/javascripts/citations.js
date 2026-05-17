@@ -443,9 +443,9 @@
     function volumeIssueSeparated(model, opts) {
         opts = opts || {};
         if (!model.volume && !model.issue) return '';
-        volTag = opts.volTag ? opts.volTag : '';
-        issueTag = opts.issueTag ? opts.issueTag : 'no. ';
-        issueSep = opts.issueSep ? opts.issueSep : ', ';
+        var volTag = opts.volTag || '';
+        var issueTag = opts.issueTag || 'no. ';
+        var issueSep = opts.issueSep || ', ';
         if (model.volume && model.issue) return volTag + model.volume + issueSep + issueTag + model.issue;
         return volTag + model.volume || issueTag + model.issue;
     }
