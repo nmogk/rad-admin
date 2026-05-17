@@ -220,18 +220,28 @@ describe('server/log-stats', function () {
             expect(s.histogramCounts[1]).to.equal(0);
         });
 
-        it('puts visitors with >10 queries into the 10+ bin', async function () {
+        it('puts visitors with 10+ queries into the trailing bin', async function () {
             var t = isoDaysAgo(0);
-            fakeFiles['access.log'] = morganLine(t, '1.1.1.1', 'GET', '200', '/');
+            fakeFiles['access.log'] = [
+                morganLine(t, '1.1.1.1', 'GET', '200', '/'),
+                morganLine(t, '1.1.1.2', 'GET', '200', '/')
+            ].join('\n');
             var lines = [];
             for (var i = 0; i < 15; i++) {
                 lines.push(morganLine(t, '1.1.1.1', 'GET', '200', '/?q=q' + i));
             }
+            // 1.1.1.2 sits exactly at the cap — verifies the cap is inclusive
+            // (10 is no longer a separate bin from 10+).
+            for (var j = 0; j < 10; j++) {
+                lines.push(morganLine(t, '1.1.1.2', 'GET', '200', '/?q=z' + j));
+            }
             fakeFiles['queries.log'] = lines.join('\n');
 
             var s = await logStats.getStats();
-            expect(s.histogramCounts[11]).to.equal(1);
-            for (var b = 0; b < 11; b++) expect(s.histogramCounts[b]).to.equal(0);
+            expect(s.histogramBins).to.have.lengthOf(11);
+            expect(s.histogramBins[10]).to.equal('10+');
+            expect(s.histogramCounts[10]).to.equal(2);
+            for (var b = 0; b < 10; b++) expect(s.histogramCounts[b]).to.equal(0);
         });
 
         it('returns the most recent 50 queries with q= decoded, newest first', async function () {

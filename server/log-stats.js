@@ -13,6 +13,8 @@ var DAYS = 365;
 var DAY_MS = 86400000;
 var CACHE_TTL_MS = 5 * 60 * 1000;
 var MAX_RECENT_QUERIES = 50;
+// Visitors with HISTOGRAM_CAP or more queries collapse into the trailing
+// 'N+' bin (so the last two columns aren't routinely both single-digit).
 var HISTOGRAM_CAP = 10;
 
 // Morgan format (app.js:55,158): `:date[iso] :remote-addr :method :statusColor
@@ -80,7 +82,7 @@ function decodeQ(url) {
 }
 
 function binIndex(count) {
-    if (count > HISTOGRAM_CAP) return HISTOGRAM_CAP + 1;
+    if (count >= HISTOGRAM_CAP) return HISTOGRAM_CAP;
     return count;
 }
 
@@ -175,7 +177,7 @@ async function compute() {
     recentQueries = recentQueries.slice(0, MAX_RECENT_QUERIES);
 
     var histogramBins = [];
-    for (var b = 0; b <= HISTOGRAM_CAP; b++) histogramBins.push(String(b));
+    for (var b = 0; b < HISTOGRAM_CAP; b++) histogramBins.push(String(b));
     histogramBins.push(HISTOGRAM_CAP + '+');
     var histogramCounts = new Array(histogramBins.length).fill(0);
     publicVisitors.forEach(function (ip) {
