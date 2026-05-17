@@ -21,8 +21,7 @@ var appLog = log4js.getLogger('default')
 
 var proxyLogic = require('./config/solr-proxy');
 
-const logExcludes = /fonts|stylesheets|javascripts|manifest|favicon|apple-touch-icon/
-const validPaths = /public|solr|tracker|private|login|logout|reset|signup|profile|refs|sources|campaigns|site|users|aggregator|database/
+var logFilters = require('./server/log-filters');
 
 var app = express();
 
@@ -157,15 +156,15 @@ app.use(flashMessageCenter);
 
 // The position of these logs should not pick up requests to URLs that need to be re-queried as https or calls to the SOLR proxy
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: function(req, res){return req.path.search(logExcludes) >= 0 || (req.path !== '/' && req.path.search(validPaths) < 0) || (req.path === '/' && req.method === 'POST')},
+    skip: logFilters.accessLogSkip,
     stream: accessLog
 })); // Log legitimate requests to a file - Unlogged in attempts to read protected files should show up here
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: function(req, res){return (req.path === '/' && req.method === 'GET') || req.path.search(logExcludes) === 1 || req.path.search(validPaths) === 1},
+    skip: logFilters.botLogSkip,
     stream: botLog
 })); // And random bot attacks to a separate file
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: function(req, res){return req.originalUrl.search(/\/\?q=/) !== 0},
+    skip: logFilters.queryLogSkip,
     stream: queryLog
 }));
 

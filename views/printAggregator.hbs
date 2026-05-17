@@ -81,6 +81,8 @@
     {{/inline}}
 
     {{#*inline "scripts-block"}}
+        <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+        <script nonce="{{nonce}}" src="javascripts/humanparser.js"></script>
         <script nonce="{{nonce}}" src="javascripts/citations.js"></script>
         <script nonce="{{nonce}}">
             var store = 'printRefs';
@@ -117,22 +119,57 @@
                 if(localStorage[store]){
                     var refsArray = JSON.parse(localStorage[store]);
                     for (var i = 0; refsArray && i < refsArray.length; i++) {
+                        // Each saved ref carries its own citationSource observable
+                        // so per-ref source lookups can re-render in place once
+                        // the AJAX returns. (#144)
+                        refsArray[i].citationSource = ko.observable(null);
                         self.refs.push(refsArray[i]);
                     }
                 }
 
-                // Called from the per-ref binding; reads selectedStyle so the
-                // computed re-runs when the picker changes.
+                // Called from the per-ref binding; reads selectedStyle and the
+                // ref's citationSource so the computed re-runs when either
+                // changes (picker click, or source enrichment arriving).
                 self.formatCitation = function (ref) {
-                    return window.RAD.citations.format(self.selectedStyle(), ref);
+                    var src = ref.citationSource ? ref.citationSource() : null;
+                    return window.RAD.citations.format(self.selectedStyle(), ref, src);
                 };
 
                 // Remove an individual entry from the print list by ID.
-                // Updates the localStorage list
+                // Updates the localStorage list. The citationSource observable
+                // is dropped from the JSON so we don't persist KO machinery.
                 self.removeOne = function (ref) {
                     self.refs.remove(ref);
-                    localStorage[store] = JSON.stringify(self.refs())
+                    localStorage[store] = JSON.stringify(self.refs().map(function (r) {
+                        var copy = {}; for (var k in r) { if (k !== 'citationSource') copy[k] = r[k]; }
+                        return copy;
+                    }));
                 }
+
+                // Fire one source lookup per book/website ref so each row gets
+                // the full publisher address (or website URL) on the aggregator
+                // page the same way the per-result modal does. (#144)
+                self.refs().forEach(function (ref) {
+                    if (!window.RAD.citations._internals) return;
+                    var inferred = window.RAD.citations._internals.inferType(ref);
+                    if ((inferred !== 'book' && inferred !== 'website') || !ref.publisher) return;
+                    $.ajax({
+                        url: '/solr/source/select?',
+                        dataType: 'json',
+                        data: $.param({ q: ref.publisher, rows: 1 }),
+                        success: function (data) {
+                            var src = data && data.response && data.response.docs && data.response.docs[0];
+                            if (src) {
+                                ref.citationSource(src);
+                            } else {
+                                console.warn('Aggregator: no source matched publisher "' + ref.publisher + '".');
+                            }
+                        },
+                        error: function (jqXHR) {
+                            console.warn('Aggregator: source lookup failed (' + jqXHR.status + ') for "' + ref.publisher + '".');
+                        }
+                    });
+                });
             }
 
             if(typeof(Storage) !== "undefined" ){

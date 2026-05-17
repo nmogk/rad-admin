@@ -110,7 +110,7 @@ function updateTypeButtonLabel() {
  */
 function unpackRef(ref) {
     "use strict";
-    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year(), rev_author: ref.rev_author() || '', rev_title: ref.rev_title() || '', rev_date: ref.rev_date() || '', rev_source: ref.rev_source() || ''};
+    return {author: ref.author(), title: ref.title(), reference: ref.reference(), page: ref.page(), source: ref.source(), publisher: ref.publisher(), date: ref.date(), "abstract": ref.abst(), year: ref.year(), type: (ref.type && ref.type()) || '', rev_author: ref.rev_author() || '', rev_title: ref.rev_title() || '', rev_date: ref.rev_date() || '', rev_source: ref.rev_source() || ''};
 }
 
 
@@ -209,12 +209,46 @@ RefViewModel.prototype.generateCitation = function () {
         ko.cleanNode(modal);
         modal.innerHTML = citationModalTemplate;
     }
+    // Reset enrichment so a previous open's source data doesn't bleed through.
+    this.citationSource(null);
     ko.applyBindings(this, modal);
     initBootstrapWidgets(modal);
     new ClipboardJS('.copy', {
         container: document.getElementById('#citationModal')
     });
     bsModalShow("#citationModal");
+
+    // Book / website citations benefit from the full source row (address,
+    // website). Kick off a lookup in the background — the modal binding on
+    // citationSource() will re-render in place when it arrives. Failures
+    // warn to the console and let format() fall back to the raw publisher
+    // field; the citation still renders with whatever info is on the ref. (#144)
+    var inferred = window.RAD.citations._internals
+        ? window.RAD.citations._internals.inferType(unpackRef(this))
+        : '';
+    var publisher = this.publisher && this.publisher();
+    if ((inferred === 'book' || inferred === 'website') && publisher) {
+        var self = this;
+        // Hit the catch-all _text_ field (no `name:` qualifier) the same
+        // way RefViewModel.goSource does — Solr's relevance scoring picks
+        // the closest match even when name punctuation/spacing differs.
+        $.ajax({
+            url: "/solr/source/select?",
+            dataType: "json",
+            data: $.param({ q: publisher, rows: 1 }),
+            success: function (data) {
+                var src = data && data.response && data.response.docs && data.response.docs[0];
+                if (src) {
+                    self.citationSource(src);
+                } else {
+                    console.warn('Citation enrichment: no source matched publisher "' + publisher + '" (citation will fall back to publisher field only).');
+                }
+            },
+            error: function (jqXHR) {
+                console.warn('Citation enrichment: source lookup failed (' + jqXHR.status + ') for publisher "' + publisher + '".');
+            }
+        });
+    }
 };
 
 // Adds reference information to localStorage so that it can be printed nicely
