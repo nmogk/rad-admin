@@ -162,6 +162,16 @@ describe('Citation pipeline (#144)', function () {
             expect(out.length).to.equal(1);
             expect(out[0].last).to.equal('Smith');
         });
+
+        it('does not leak trailing commas into humanparser, reducing initials correctly for middle authors', function () {
+            // Regression: "A, B, and C" — the split on " and " leaves the
+            // first chunk as "A, B,". A trailing comma makes humanparser
+            // switch to last-name-first mode and the first name disappears.
+            var out = _i.parseAuthors('William Waisgerger, George F. Howe, and Emmett L. Williams');
+            expect(out.length).to.equal(3);
+            expect(out[1].last).to.equal('Howe');
+            expect(out[1].initials).to.equal('G. F.');
+        });
     });
 
     describe('romanToArabic', function () {

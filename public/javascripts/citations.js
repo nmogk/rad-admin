@@ -283,7 +283,13 @@
             }
         });
 
-        return out.map(function (n) { return n.trim(); }).filter(Boolean);
+        // Strip stray leading/trailing commas and semicolons that the split
+        // can leave behind (e.g. "A, B, and C" → first chunk is "A, B,").
+        // Without this, humanparser sees the comma and mis-classifies the
+        // piece as last-name-first format, dropping the first name. (#144)
+        return out.map(function (n) {
+            return n.replace(/^[,;\s]+|[,;\s]+$/g, '');
+        }).filter(Boolean);
     }
 
     function getHumanparser() {
