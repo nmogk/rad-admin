@@ -271,11 +271,63 @@ describe('Citation pipeline (#144)', function () {
             expect(html).to.not.match(/Vol\.\s*34/);
         });
 
-        it('journal CRSQ shows vol(issue) suffix and the stripped page', function () {
+        it('journal CRSQ shows the separated vol/issue form and the stripped page', function () {
             var html = citations.format('crsq', journalRef);
-            expect(html).to.contain('34(2)');
+            // CRSQ moved from "34(2)" to "34, no. 2" — covered by the
+            // volumeIssueSeparated branch with volTag:'' and the default
+            // issueTag:'no. '.
+            expect(html).to.contain('34, no. 2');
             expect(html).to.contain('12-20');
             expect(html).to.not.contain('pp. 12-20'); // prefix stripped
+        });
+
+        it('CRSQ uses tight initials (J.M. not J. M.)', function () {
+            var html = citations.format('crsq', journalRef);
+            expect(html).to.contain('J.M.');
+            expect(html).to.contain('R.T.');
+        });
+
+        it('CRSQ website prepends "Retrieved from"', function () {
+            var html = citations.format('crsq', {
+                type: 'media', author: 'Smith, J. M.', title: 'Some Post',
+                year: '2024', publisher: 'creationeducation.org'
+            });
+            expect(html).to.contain('Retrieved from creationeducation.org');
+        });
+
+        it('CRSQ proceedings prepends "In " and uses Vol. tag', function () {
+            var html = citations.format('crsq', {
+                type: 'semi', author: 'Smith, J. M.', title: 'A Paper',
+                year: '2019', reference: 'Proceedings of the ICC, Vol. 8, No. 1',
+                page: '45-60'
+            });
+            expect(html).to.contain('In <i>Proceedings of the ICC</i>');
+            expect(html).to.contain('Vol. 8');
+        });
+
+        it('ARJ proceedings renders without throwing (regression: undefined `title`)', function () {
+            // Before the fix, the ARJ proceedings branch referenced `title`
+            // when only `titleQ` was in scope — every proceedings citation
+            // threw ReferenceError. Asserting the call doesn't throw AND
+            // the quoted title shows up.
+            var proc = {
+                type: 'semi', author: 'Smith, J. M.', title: 'A Paper',
+                year: '2019', reference: 'Proceedings of the ICC, Vol. 8, No. 1',
+                page: '45-60'
+            };
+            var html;
+            expect(function () { html = citations.format('arj', proc); }).to.not.throw();
+            expect(html).to.contain('&quot;A Paper.&quot;');
+            expect(html).to.contain('In ');
+        });
+
+        it('CRSQ and ARJ italicize book titles', function () {
+            expect(citations.format('crsq', bookRef)).to.contain('<i>The Origin Question</i>');
+            expect(citations.format('arj', bookRef)).to.contain('<i>The Origin Question</i>');
+        });
+
+        it('JoC italicizes book titles', function () {
+            expect(citations.format('joc', bookRef)).to.contain('<i>The Origin Question</i>');
         });
 
         it('does not emit trailing punctuation around empty fields', function () {

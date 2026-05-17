@@ -530,7 +530,7 @@
             return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {pageSep: ": ", issueFormat: {volTag: ''} })].filter(function (s) { return s !== '.'; }));
         }
         if (model.citationType === 'proceedings') {
-            return joinSentences([authors, year, title, 'In ' + periodicalBody(model, { pageSep: ', ', issueFormat: { volTag: 'Vol. ' } })]);
+            return joinSentences([authors, year, titleQ, 'In ' + periodicalBody(model, { pageSep: ', ', issueFormat: { volTag: 'Vol. ' } })]);
         }
 
         return joinSentences([authors, year, titleQ, periodicalBody(model, {pageSep: ": ", issueFormat: {volTag: ''} })].filter(function (s) { return s && s !== '.'; }));
