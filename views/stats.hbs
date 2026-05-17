@@ -1,0 +1,70 @@
+{{#> layout title="Statistics" nav=1 statActive=1}}
+
+    {{#*inline "header-block"}}
+    <style>
+        .stat-card { text-align: center; padding: 1.5rem 1rem; }
+        .stat-card .stat-value { font-size: 2.5rem; font-weight: 600; line-height: 1; }
+        .stat-card .stat-label { color: #777; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; margin-top: 0.5rem; }
+        .chart-wrap { background: #fff; padding: 1rem; border: 1px solid #ddd; border-radius: 0.25rem; margin-bottom: 1.5rem; }
+        .chart-wrap h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+        .recent-queries-table { font-size: 0.9rem; }
+        .recent-queries-table td.q { word-break: break-word; }
+        .recent-queries-table td.t { color: #777; white-space: nowrap; width: 1%; }
+    </style>
+    {{/inline}}
+
+    {{#*inline "search-area"}}
+    <p class="text-body-secondary">Public-site activity over the last 365 days, derived on demand from the access and query logs. Counts refresh every five minutes.</p>
+    {{/inline}}
+
+    {{#*inline "results-area"}}
+    <div id="mainDisplay" role="main">
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="card stat-card">
+                    <div class="stat-value" id="aggregatorTotal">0</div>
+                    <div class="stat-label">Aggregator page views</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card stat-card">
+                    <div class="stat-value" id="randomTotal">0</div>
+                    <div class="stat-label">Random feature uses</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-wrap">
+            <h2>Daily activity</h2>
+            <canvas id="timeSeriesChart" height="120"></canvas>
+        </div>
+
+        <div class="chart-wrap">
+            <h2>Queries per visitor</h2>
+            <canvas id="histogramChart" height="120"></canvas>
+        </div>
+
+        <div class="chart-wrap">
+            <h2>Last 50 queries</h2>
+            <table class="table table-sm recent-queries-table">
+                <thead>
+                    <tr><th>When (UTC)</th><th>Query</th></tr>
+                </thead>
+                <tbody id="recentQueriesBody"></tbody>
+            </table>
+            <p id="recentQueriesEmpty" class="text-body-secondary" style="display:none">No queries recorded in the last 365 days.</p>
+        </div>
+
+    </div>
+    {{/inline}}
+
+    {{#*inline "scripts-block"}}
+    <script nonce="{{nonce}}">
+        var statsData = {{{statsJson}}};
+    </script>
+    <script nonce="{{nonce}}" src="javascripts/chart.umd.min.js"></script>
+    <script nonce="{{nonce}}" src="private/stats.js"></script>
+    {{/inline}}
+
+{{/layout}}
