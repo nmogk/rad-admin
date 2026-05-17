@@ -132,26 +132,35 @@ app.use(expressCspHeader({
     }
 }));
 
-app.use(function (request, response, next){
-    hbs.registerHelper('nonce', function(opts){
-        return request.nonce;
-    });
-    // Generate (or reuse, when overwrite:false) a CSRF token for this request
-    // and expose it to templates via both res.locals (auto-merged) and a
-    // `{{csrf}}` helper that emits the hidden form input.
-    var token = generateCsrfToken(request, response);
-    response.locals.csrfToken = token;
-    hbs.registerHelper('csrf', function () {
-        return new hbs.SafeString('<input type="hidden" name="_csrf" value="' + token + '">');
-    });
-    next();
-})
-
+// Helpers are registered once at startup. The previous implementation
+// re-registered `nonce` and `csrf` inside a per-request middleware, which
+// mutated the global hbs singleton on every request — under concurrency
+// that lets one request's token end up in another request's HTML. Now the
+// helpers read per-request state from the render context: Express merges
+// res.locals into the template's root data, so `options.data.root.nonce`
+// / `.csrfToken` resolve to whatever the request middleware below set.
+hbs.registerHelper('nonce', function (options) {
+    return options.data.root.nonce || '';
+});
+hbs.registerHelper('csrf', function (options) {
+    var token = options.data.root.csrfToken || '';
+    return new hbs.SafeString('<input type="hidden" name="_csrf" value="' + token + '">');
+});
 // Serialise a value for embedding in a <script type="application/json"> tag.
 // Escapes `</` so a literal `</script>` in the data can't break out.
 hbs.registerHelper('json', function (value) {
     var s = JSON.stringify(value === undefined ? null : value);
     return new hbs.SafeString(s.replace(/</g, '\\u003c'));
+});
+
+// Per-request: surface the CSP nonce and a CSRF token via res.locals so the
+// helpers above (and templates that reference {{csrfToken}} directly) can
+// pick them up. generateCsrfToken reuses the cookie when one exists, so the
+// HMAC cost is bounded.
+app.use(function (request, response, next) {
+    response.locals.nonce = request.nonce;
+    response.locals.csrfToken = generateCsrfToken(request, response);
+    next();
 });
 
 // routes ======================================================================
