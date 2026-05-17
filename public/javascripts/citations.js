@@ -93,7 +93,13 @@
             return p !== undefined && p !== null && String(p).length > 0;
         }).map(function (p) { return String(p).replace(/\.+\s*$/, ''); });
         if (!nonEmpty.length) return '';
-        return nonEmpty.join('. ') + '.';
+        var result = nonEmpty.join('. ') + '.';
+        // `quote()` produces `&quot;Title.&quot;` — the segment is already
+        // self-terminated, but the trailing-period strip above can't see
+        // past the closing `&quot;` to drop the inner period, so the join
+        // adds a second one and we end up with `&quot;.&quot;. `. Collapse
+        // those down so MLA/Chicago don't double-punctuate the title.
+        return result.replace(/(\.&quot;)\.(\s|$)/g, '$1$2');
     }
 
     function italic(s) {
@@ -401,16 +407,25 @@
     // "Smith, J. M., R. T. Jones, and K. Brown" — the comma-inverted form
     // used by most academic styles in this corpus. Single-author refs lose
     // the trailing "and"; an unknown author renders as "Unknown".
-    function formatAuthorsList(authors) {
+    //
+    // opts.tightInitials: when true, collapse the inter-initial space so
+    // "J. M." renders as "J.M." for styles that prefer the tight form.
+    function formatAuthorsList(authors, opts) {
         if (!authors || !authors.length) return '';
+        opts = opts || {};
+        function fmtInitials(s) {
+            if (!s) return '';
+            return opts.tightInitials ? s.replace(/\.\s+(?=[A-Z]\.)/g, '.') : s;
+        }
         var parts = authors.map(function (a, i) {
             if (a.last === 'Unknown' && !a.initials) return 'Unknown';
+            var initials = fmtInitials(a.initials);
             // First author inverted: "Smith, J. M."
             // Subsequent authors natural: "J. M. Smith"
             if (i === 0) {
-                return joinNonEmpty([a.last + (a.initials ? ',' : ''), a.initials], ' ');
+                return joinNonEmpty([a.last + (initials ? ',' : ''), initials], ' ');
             }
-            return joinNonEmpty([a.initials, a.last], ' ') || a.full;
+            return joinNonEmpty([initials, a.last], ' ') || a.full;
         });
         if (parts.length === 1) return parts[0];
         if (parts.length === 2) return parts[0] + ' and ' + parts[1];
@@ -424,11 +439,22 @@
         return model.volume || model.issue;
     }
 
+    // Renders the periodical "Reference vol(issue)" tail, omitting absent pieces.
+    function volumeIssueSeparated(model, opts) {
+        opts = opts || {};
+        if (!model.volume && !model.issue) return '';
+        volTag = opts.volTag || '';
+        issueTag = opts.issueTag || 'no. ';
+        issueSep = opts.issueSep || ', ';
+        if (model.volume && model.issue) return volTag + model.volume + issueSep + issueTag + model.issue;
+        return volTag + model.volume || issueTag + model.issue;
+    }
+
     // Periodical reference body: italic reference, optional vol(issue), optional :page.
     function periodicalBody(model, opts) {
         opts = opts || {};
         var refItalic = italic(model.reference);
-        var vi = volumeIssueSuffix(model);
+        var vi = opts.issueFormat ? volumeIssueSeparated(model, opts.issueFormat) : volumeIssueSuffix(model);
         var head = joinNonEmpty([refItalic, vi ? escape(vi) : ''], ' ');
         var page = model.page ? escape(model.page) : '';
         if (!head) return page ? (opts.pagePrefix || '') + page : '';
@@ -468,21 +494,25 @@
     // ============================================================
 
     function crsq(model) {
-        var authors = formatAuthorsList(model.authors);
+        var authors = formatAuthorsList(model.authors, { tightInitials: true });
         var year = escape(model.year);
         var title = escape(model.title);
 
         if (model.citationType === 'book') {
-            return joinSentences([authors, year, title, bookPublisher(model)]);
+            return joinSentences([authors, year, italic(title), bookPublisher(model)]);
         }
         if (model.citationType === 'website') {
-            return joinSentences([authors, year, title, websiteTail(model)]);
+            return joinSentences([authors, year, title, 'Retrieved from ' + websiteTail(model)]);
         }
         if (model.citationType === 'review') {
-            return joinSentences([authors, year, reviewTitle(model), periodicalBody(model)]);
+            return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {issueFormat: {volTag: ''} })]);
         }
-        // periodical / journal / proceedings
-        return joinSentences([authors, year, title, periodicalBody(model)]);
+        if (model.citationType === 'proceedings') {
+            return joinSentences([authors, year, title, 'In ' + periodicalBody(model, { pagePrefix: ', pp. ', issueFormat: { volTag: 'Vol. ' } })]);
+        }
+
+        // periodical / journal
+        return joinSentences([authors, year, title, periodicalBody(model, {issueFormat: {volTag: ''} })]);
     }
 
     function arj(model) {
@@ -491,15 +521,15 @@
         var titleQ = quote(model.title);
 
         if (model.citationType === 'book') {
-            return joinNonEmpty([authors, year, titleQ, bookPublisher(model)], ' ') + (titleQ ? '' : '.');
+            return joinSentences([authors, year, italic(title), bookPublisher(model)]);
         }
         if (model.citationType === 'website') {
-            return joinNonEmpty([authors, year, titleQ, websiteTail(model)], ' ');
+            return joinSentences([authors, year, titleQ, websiteTail(model)]);
         }
         if (model.citationType === 'review') {
-            return joinNonEmpty([authors + '.', year + '.', reviewTitle(model) + '.', periodicalBody(model) + '.'].filter(function (s) { return s !== '.'; }), ' ');
+            return joinSentences([authors, year, reviewTitle(model), periodicalBody(model, {issueFormat: {volTag: ''} })].filter(function (s) { return s !== '.'; }));
         }
-        return joinNonEmpty([authors + '.', year + '.', titleQ, periodicalBody(model) + '.'].filter(function (s) { return s && s !== '.'; }), ' ');
+        return joinSentences([authors, year, titleQ, periodicalBody(model, {issueFormat: {volTag: ''} })].filter(function (s) { return s && s !== '.'; }));
     }
 
     function joc(model) {

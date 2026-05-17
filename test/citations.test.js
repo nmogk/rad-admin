@@ -222,6 +222,22 @@ describe('Citation pipeline (#144)', function () {
         it('renders Unknown when input was blank', function () {
             expect(_i.formatAuthorsList(_i.parseAuthors(''))).to.equal('Unknown');
         });
+
+        it('collapses inter-initial spaces when tightInitials is set', function () {
+            var single = _i.formatAuthorsList(_i.parseAuthors('Smith, J. M.'), { tightInitials: true });
+            expect(single).to.equal('Smith, J.M.');
+
+            var many = _i.formatAuthorsList(
+                _i.parseAuthors('William Waisgerger, George F. Howe, and Emmett L. Williams'),
+                { tightInitials: true }
+            );
+            expect(many).to.equal('Waisgerger, W., G.F. Howe, and E.L. Williams');
+        });
+
+        it('leaves spaces alone by default', function () {
+            var out = _i.formatAuthorsList(_i.parseAuthors('Smith, J. M.'));
+            expect(out).to.equal('Smith, J. M.');
+        });
     });
 
     describe('format() — end-to-end style smoke tests', function () {
@@ -271,6 +287,19 @@ describe('Citation pipeline (#144)', function () {
 
         it('returns "" for an unknown style id', function () {
             expect(citations.format('nope', journalRef)).to.equal('');
+        });
+
+        it('MLA/Chicago do not double-punctuate after a quoted title', function () {
+            // Regression: `"Title."` ends with `.&quot;` and joinSentences
+            // can't see past the closing entity to suppress the join period,
+            // so the output used to be `"Title.". Journal` instead of
+            // `"Title." Journal`.
+            var html = citations.format('mla', journalRef);
+            expect(html).to.not.contain('&quot;.');
+            expect(html).to.contain('&quot;');
+
+            var chi = citations.format('chicago', journalRef);
+            expect(chi).to.not.contain('&quot;.');
         });
     });
 });
