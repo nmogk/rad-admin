@@ -168,19 +168,47 @@ app.use(function (request, response, next) {
 app.use(forceSsl);
 app.use(flashMessageCenter);
 
-// The position of these logs should not pick up requests to URLs that need to be re-queried as https or calls to the SOLR proxy
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: logFilters.accessLogSkip,
-    stream: accessLog
-})); // Log legitimate requests to a file - Unlogged in attempts to read protected files should show up here
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: logFilters.botLogSkip,
-    stream: botLog
-})); // And random bot attacks to a separate file
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: logFilters.queryLogSkip,
-    stream: queryLog
-}));
+// File-bound request logs. Mounted below forceSsl + the /solr/* proxy so
+// HTTPS redirects and Solr proxy traffic don't end up in these files (the
+// console Morgan above still catches them). A single middleware formats
+// the line once and fans it out to whichever rolling streams accept it,
+// replacing three separate Morgan instances that each ran the same format
+// pipeline independently.
+var fileLogStreams = [
+    { stream: accessLog, skip: logFilters.accessLogSkip }, // legitimate requests against known routes
+    { stream: botLog,    skip: logFilters.botLogSkip },    // probes against unknown paths / unusual verbs
+    { stream: queryLog,  skip: logFilters.queryLogSkip }   // home-page search interactions
+];
+
+app.use(function fileRequestLogger(req, res, next) {
+    var startNs = process.hrtime.bigint();
+    var emitted = false;
+    function emit() {
+        if (emitted) return;
+        emitted = true;
+        var destinations = [];
+        for (var i = 0; i < fileLogStreams.length; i++) {
+            if (!fileLogStreams[i].skip(req)) destinations.push(fileLogStreams[i].stream);
+        }
+        if (destinations.length === 0) return;
+
+        var elapsedMs = Number(process.hrtime.bigint() - startNs) / 1e6;
+        var status = res.statusCode;
+        var color = status >= 500 ? 31 : status >= 400 ? 33 : status >= 300 ? 36 : status >= 200 ? 32 : 0;
+        var len = res.getHeader('content-length');
+        var line = new Date().toISOString()
+            + ' ' + (req.ip || '-')
+            + ' \x1b[33m' + req.method + '\x1b[0m'
+            + ' \x1b[' + color + 'm' + status + '\x1b[0m'
+            + ' \x1b[36m' + (req.originalUrl || req.url) + '\x1b[0m'
+            + ' ' + elapsedMs.toFixed(3) + ' ms - len|' + (len == null ? '-' : len)
+            + '\n';
+        for (var j = 0; j < destinations.length; j++) destinations[j].write(line);
+    }
+    res.on('finish', emit);
+    res.on('close', emit);
+    next();
+});
 
 
 // Proxy set up
