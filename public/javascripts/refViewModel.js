@@ -55,8 +55,16 @@ function RefViewModel(data) {
             data: $.param({ q: 'id:' + self.id(), fl: 'abstract', rows: 1 })
         }).then(function (data) {
             var doc = data && data.response && data.response.docs && data.response.docs[0];
-            self.abst(htmlDecode(doc && doc.abstract));
+            var raw = doc && doc.abstract;
+            self.abst(htmlDecode(raw));
             self._abstractLoaded = true;
+            // Seed cache.latestData so revert() (the Cancel button on the
+            // admin edit modal) doesn't snap the abstract back to empty.
+            // cache.latestData was captured at construct time from the
+            // list-query response, which excluded abstract.
+            if (self.cache && self.cache.latestData) {
+                self.cache.latestData.abstract = raw;
+            }
         }, function () {
             // Allow retry on the next user gesture by clearing the cache.
             self._abstractPromise = null;
