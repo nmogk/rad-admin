@@ -254,46 +254,73 @@ RefViewModel.prototype.generateCitation = function () {
 // Adds reference information to localStorage so that it can be printed nicely
 // This merely aggregates the references and opens the printAggregator page
 RefViewModel.prototype.downloadCitation = function () {
-    if (Storage !== undefined) {
+    if (Storage === undefined) {
+        alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
+        return;
+    }
+    var self = this;
+    // Pre-open the printer window synchronously inside the click handler so
+    // popup blockers don't reject a delayed window.open after the abstract
+    // fetch resolves. Navigate to the aggregator once localStorage is ready.
+    var printer = window.open("about:blank", "printer");
+    self.ensureAbstract().always(function () {
         var store = "printRefs";
-        var toAdd = [unpackRef(this)]; // If no current list (empty storage or something other than an array) this will be added
+        var toAdd = [unpackRef(self)];
         var rawStore = localStorage[store];
 
         if (rawStore) {
-            var stored = JSON.parse(localStorage[store]);
-            if (Object.prototype.toString.call(stored) === "[object Array]") { // Parse and add new reference
-                stored.push(unpackRef(this));
+            var stored = JSON.parse(rawStore);
+            if (Object.prototype.toString.call(stored) === "[object Array]") {
+                stored.push(unpackRef(self));
                 toAdd = stored;
             }
         }
 
         localStorage[store] = JSON.stringify(toAdd);
-        window.open("aggregator.html", "printer");
-    } else {
-        alert("HTML5 storage must be available for the print function to work. Try a newer browser.");
-    }
+        if (printer) {
+            try { printer.location.href = "aggregator.html"; } catch (e) {}
+        }
+    });
 };
 
 // Allows the user to download the entire displayed list of references as CSV
 RefsGridViewModel.prototype.downloadList = function () {
-    var visibleList = [];
+    var self = this;
 
-    this.refs().forEach(function (ref) {
-        visibleList.push(unpackRef(ref));
-    });
-
-    var csv = convertArrayOfObjectsToCSV({
-        data: visibleList
-    });
-    if (csv === null) {
-        return;
+    function buildCsv() {
+        var visibleList = self.refs().map(unpackRef);
+        var csv = convertArrayOfObjectsToCSV({ data: visibleList });
+        if (csv === null) { return; }
+        var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        saveAs(blob, "references_CER.csv");
     }
 
-    var filename = "references_CER.csv"; // Default filename
+    // The list query omits `abstract` (refGridView.js fl=…). Pull missing
+    // abstracts for the visible page in one round trip so the CSV still
+    // carries them, instead of N per-row lazy fetches.
+    var pending = self.refs().filter(function (r) { return !r._abstractLoaded; });
+    if (pending.length === 0) { buildCsv(); return; }
 
-    var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
-    saveAs(blob, filename);
-
+    var ids = pending.map(function (r) { return r.id(); });
+    $.ajax({
+        url: '/solr/rad/refs?',
+        dataType: 'json',
+        data: $.param({ q: 'id:(' + ids.join(' OR ') + ')', fl: 'id,abstract', rows: ids.length })
+    }).then(function (data) {
+        var byId = {};
+        ((data && data.response && data.response.docs) || []).forEach(function (doc) {
+            byId[doc.id] = doc.abstract;
+        });
+        pending.forEach(function (r) {
+            r.abst(htmlDecode(byId[r.id()]));
+            r._abstractLoaded = true;
+        });
+        buildCsv();
+    }, function () {
+        // On Solr failure, still emit the CSV — just without abstracts for
+        // un-expanded rows.
+        buildCsv();
+    });
 };
 
 /**

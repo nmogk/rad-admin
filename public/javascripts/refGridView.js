@@ -50,6 +50,16 @@ function RefsGridViewModel(qString) {
     // Solr param (sort=random_<seed> asc is what drives the ordering).
     delete solrParams.seed;
 
+    // Restrict returned fields: the abstract is by far the largest stored
+    // field and is only rendered when a row is expanded, so we omit it from
+    // the list response and lazy-load on accordion expand
+    // (RefViewModel.ensureAbstract) / CSV download. Honour an explicit `fl`
+    // from the URL so debug / power-user calls can still ask for the full
+    // doc shape.
+    if (!solrParams.fl) {
+        solrParams.fl = 'id,author,title,dt,reference,source,publisher,page,type,rev_author,rev_title,rev_source,rev_date,year';
+    }
+
     $.ajax({
         url: self.refsURI,
         dataType: "json",

@@ -93,7 +93,7 @@
                   <a class="stretched-link" data-bs-toggle="collapse" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                 </div>
               </div>
-              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}, event: { 'show.bs.collapse': ensureAbstract }" role="tabpanel">
                 <div class="card-body">
                   <div class="row">
                     <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
