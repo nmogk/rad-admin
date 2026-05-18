@@ -303,6 +303,20 @@ RefViewModel.prototype.downloadCitation = function () {
     });
 };
 
+// FileSaver + Blob polyfill are lazy-loaded — keep the bundle promise
+// so a second CSV click reuses the first load.
+var _csvBundlePromise = null;
+function loadCsvBundle() {
+    if (_csvBundlePromise) return _csvBundlePromise;
+    _csvBundlePromise = loadScript('/javascripts/Blob.js')
+        .then(function () { return loadScript('/javascripts/FileSaver.min.js'); })
+        .catch(function (err) {
+            _csvBundlePromise = null;
+            throw err;
+        });
+    return _csvBundlePromise;
+}
+
 // Allows the user to download the entire displayed list of references as CSV
 RefsGridViewModel.prototype.downloadList = function () {
     var self = this;
@@ -311,8 +325,13 @@ RefsGridViewModel.prototype.downloadList = function () {
         var visibleList = self.refs().map(unpackRef);
         var csv = convertArrayOfObjectsToCSV({ data: visibleList });
         if (csv === null) { return; }
-        var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-        saveAs(blob, "references_CER.csv");
+        loadCsvBundle().then(function () {
+            var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            saveAs(blob, "references_CER.csv");
+        }).catch(function (err) {
+            console.error('CSV polyfills failed to load:', err);
+            alert('Unable to load CSV download support. Please try again.');
+        });
     }
 
     // The list query omits `abstract` (refGridView.js fl=…). Pull missing

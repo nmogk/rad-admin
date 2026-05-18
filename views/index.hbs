@@ -154,8 +154,9 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script nonce="{{nonce}}" src="javascripts/FileSaver.min.js"></script>
-        <script nonce="{{nonce}}" src="javascripts/Blob.js"></script>
+        {{!-- FileSaver.min.js + Blob.js (~9 KB raw) are pulled in on
+              demand by index.js when the user clicks the CSV download
+              button — they aren't needed for the initial render. --}}
         <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
         <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
         <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
