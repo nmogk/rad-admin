@@ -1,3 +1,4 @@
+var http = require('http');
 var proxy = require('httpxy');
 var log4js = require('log4js');
 var appLog = log4js.getLogger('default');
@@ -13,7 +14,24 @@ var proxyOptions = {
   }
 };
 
-var proxyServer = proxy.createProxyServer({target: proxyOptions.backend});
+// Dedicated keep-alive agent for the Node↔Solr hop. httpxy's defaults
+// already enable keep-alive on its shared agent, but it also forwards the
+// incoming `Connection` header verbatim — so a browser sending
+// `Connection: close` (e.g. on page unload) makes Solr tear down the
+// socket we'd otherwise return to the pool. Override the outgoing
+// Connection header below to detach the upstream socket lifecycle from
+// whatever the browser sent.
+var solrAgent = new http.Agent({
+    keepAlive: true,
+    maxSockets: 256,
+    maxFreeSockets: 64
+});
+
+var proxyServer = proxy.createProxyServer({
+    target: proxyOptions.backend,
+    agent: solrAgent,
+    headers: { connection: 'keep-alive' }
+});
 
 /*
  * Returns true if the request satisfies the following conditions:
