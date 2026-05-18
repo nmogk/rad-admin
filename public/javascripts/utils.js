@@ -105,6 +105,29 @@ function confirmDialog(opts, onConfirm) {
     bsModalShow(modalEl);
 }
 
+// Cached <script src=…> loader for lazy-loading on demand. Returns a
+// Promise that resolves once the script has executed; concurrent / repeat
+// calls share the same load. A failed load is evicted from the cache so
+// the caller can retry on the next user gesture. CSP `strict-dynamic` on
+// `script-src` means dynamically inserted scripts inherit trust from the
+// nonce'd scripts that created them, so no nonce attribute is needed.
+var _scriptLoadPromises = {};
+function loadScript(src) {
+    if (_scriptLoadPromises[src]) return _scriptLoadPromises[src];
+    _scriptLoadPromises[src] = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.async = false;
+        s.onload = function () { resolve(); };
+        s.onerror = function () {
+            delete _scriptLoadPromises[src];
+            reject(new Error('Failed to load ' + src));
+        };
+        document.head.appendChild(s);
+    });
+    return _scriptLoadPromises[src];
+}
+
 /**
  * Custom binding which supplies a default value (em dash) for observables with undefined values
  */
