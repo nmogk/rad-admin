@@ -66,7 +66,12 @@ app.use(compression());
 // them here keeps every public read from paying a MySQL session lookup +
 // Passport deserialization round-trip.
 app.use('/solr/*', proxyLogic);
-app.use(express.static(path.join(__dirname, 'public')));
+// maxAge sets the Cache-Control: max-age on static assets so repeat
+// visitors don't refetch them. ETag/Last-Modified are on by default, so
+// even when the TTL expires we get cheap 304s. 1d is a conservative
+// floor (no hashed filenames yet); a deploy that changes a file may
+// take up to a day to propagate.
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -226,7 +231,7 @@ if (process.env.PROXY_URL) {
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
-app.use('/private', express.static(path.join(__dirname, 'private')));
+app.use('/private', express.static(path.join(__dirname, 'private'), { maxAge: '1d' }));
 
 // Mount CSRF validation just before route handlers so the Solr proxy
 // (GET-only) and the /tracker reverse proxy above are not subject to it.
