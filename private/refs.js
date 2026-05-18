@@ -55,41 +55,48 @@ var editRefModalSnapshot = null;
  * ref item.
  */
 RefViewModel.prototype.editRef = function () {
-    formError('');
-    sourceSuggestions([]);
-    sourceNotFound(false);
-    publisherSuggestions([]);
-    publisherNotFound(false);
+    var self = this;
+    // The list query (refGridView.js fl=…) omits `abstract` to keep the
+    // initial payload small, so the abstract textarea would render empty
+    // unless we hydrate before binding the modal. ensureAbstract is a
+    // no-op when the doc already has it.
+    self.ensureAbstract().always(function () {
+        formError('');
+        sourceSuggestions([]);
+        sourceNotFound(false);
+        publisherSuggestions([]);
+        publisherNotFound(false);
 
-    var modal = $("#editRefModal")[0];
-    if (editRefModalSnapshot === null) {
-        editRefModalSnapshot = modal.innerHTML;
-    } else {
-        ko.cleanNode(modal);
-        modal.innerHTML = editRefModalSnapshot;
-    }
+        var modal = $("#editRefModal")[0];
+        if (editRefModalSnapshot === null) {
+            editRefModalSnapshot = modal.innerHTML;
+        } else {
+            ko.cleanNode(modal);
+            modal.innerHTML = editRefModalSnapshot;
+        }
 
-    // Subscriptions on observables are NOT cleaned by ko.cleanNode (it only
-    // unwinds DOM bindings), so without explicit disposal each editRef would
-    // stack another lookup-on-keystroke handler on top of the previous ones.
-    if (this._editSubs) {
-        this._editSubs.forEach(function (s) { s.dispose(); });
-    }
-    this._editSubs = [
-        this.source.subscribe(lookupSources),
-        this.publisher.subscribe(lookupPublishers)
-    ];
+        // Subscriptions on observables are NOT cleaned by ko.cleanNode (it only
+        // unwinds DOM bindings), so without explicit disposal each editRef would
+        // stack another lookup-on-keystroke handler on top of the previous ones.
+        if (self._editSubs) {
+            self._editSubs.forEach(function (s) { s.dispose(); });
+        }
+        self._editSubs = [
+            self.source.subscribe(lookupSources),
+            self.publisher.subscribe(lookupPublishers)
+        ];
 
-    // Live computed of problematic chars currently in the form. Note: chars
-    // that htmlDecode silently drops on the way from Solr to the observable
-    // (NBSP, zero-width, etc.) won't appear here - the search button is the
-    // canonical source for "this record contains invisibles."
-    attachOddCharReport(this);
-    ko.applyBindings(this, modal);
-    // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
-    // state. Re-init so the info icons keep working after edit-open.
-    initBootstrapWidgets("#editRefModal");
-    bsModalShow("#editRefModal", { backdrop: 'static' });
+        // Live computed of problematic chars currently in the form. Note: chars
+        // that htmlDecode silently drops on the way from Solr to the observable
+        // (NBSP, zero-width, etc.) won't appear here - the search button is the
+        // canonical source for "this record contains invisibles."
+        attachOddCharReport(self);
+        ko.applyBindings(self, modal);
+        // ko.cleanNode invokes jQuery.cleanData, which strips Bootstrap popover
+        // state. Re-init so the info icons keep working after edit-open.
+        initBootstrapWidgets("#editRefModal");
+        bsModalShow("#editRefModal", { backdrop: 'static' });
+    });
 }
 
 RefViewModel.prototype.submitEdits = function () {
