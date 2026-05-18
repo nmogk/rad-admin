@@ -14,7 +14,7 @@ router.get('/', async function (req, res, next) {
   dbMeta.randomSeed = typeof req.query.seed === 'string' ? req.query.seed : null;
 
   try {
-    var sections = await SiteContent.query();
+    var sections = await SiteContent.all();
     sections.forEach(function (section) {
       dbMeta[section.section_key] = section.content;
     });

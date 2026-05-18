@@ -9,7 +9,7 @@ var fakeSections = [
 ];
 
 var siteQb;
-var SiteContentStub = { query: sinon.stub() };
+var SiteContentStub = { query: sinon.stub(), invalidateCache: sinon.stub() };
 
 var log4jsStub = {
     getLogger: sinon.stub().returns({
