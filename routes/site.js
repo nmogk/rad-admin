@@ -72,6 +72,7 @@ router.post('/:key', async function (req, res, next) {
                 updated_by: req.user.email
             });
         }
+        SiteContent.invalidateCache();
         auditLogger.info(req.user.email + ' edited site content: ' + key);
         req.flash('yay', 'Site content updated successfully.');
         res.json({ redirect: '/site' });
@@ -123,6 +124,7 @@ router.post('/:key/reset', async function (req, res, next) {
                 updated_by: email
             });
         }
+        SiteContent.invalidateCache();
         auditLogger.info(email + ' reset site content from file: ' + key);
         res.json({ content: content, updated_at: now, updated_by: email });
     } catch (err) {

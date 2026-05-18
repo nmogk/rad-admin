@@ -35,6 +35,43 @@ function RefViewModel(data) {
 
     this.cache = function() {};
 
+    // Cached promise for the lazy abstract fetch. The home-page list query
+    // omits `abstract` (it's the largest stored field) so we hydrate it on
+    // demand — accordion expand, CSV download, "Save reference". null
+    // means "no in-flight or completed fetch yet"; a resolved promise
+    // means we already have whatever Solr returned (which may be empty).
+    self._abstractPromise = null;
+    self._abstractLoaded = false;
+
+    self.ensureAbstract = function () {
+        if (self._abstractPromise) return self._abstractPromise;
+        if (self._abstractLoaded) {
+            self._abstractPromise = $.Deferred().resolve().promise();
+            return self._abstractPromise;
+        }
+        self._abstractPromise = $.ajax({
+            url: "/solr/rad/refs?",
+            dataType: "json",
+            data: $.param({ q: 'id:' + self.id(), fl: 'abstract', rows: 1 })
+        }).then(function (data) {
+            var doc = data && data.response && data.response.docs && data.response.docs[0];
+            var raw = doc && doc.abstract;
+            self.abst(htmlDecode(raw));
+            self._abstractLoaded = true;
+            // Seed cache.latestData so revert() (the Cancel button on the
+            // admin edit modal) doesn't snap the abstract back to empty.
+            // cache.latestData was captured at construct time from the
+            // list-query response, which excluded abstract.
+            if (self.cache && self.cache.latestData) {
+                self.cache.latestData.abstract = raw;
+            }
+        }, function () {
+            // Allow retry on the next user gesture by clearing the cache.
+            self._abstractPromise = null;
+        });
+        return self._abstractPromise;
+    };
+
     this.update(data);
 
     // Opens a modal dialog with the source information
@@ -67,6 +104,11 @@ ko.utils.extend(RefViewModel.prototype, {
         this.page(htmlDecode(data.page));
         this.type(htmlDecode(data.type) || '');
         this.abst(htmlDecode(data.abstract));
+        // Whether we have the full abstract for this doc. The admin editor
+        // pushes full docs through here, so it flips back to true after an
+        // edit even though the public flow originally loaded without it.
+        this._abstractLoaded = data.abstract !== undefined;
+        this._abstractPromise = null;
         this.rev_author(htmlDecode(data.rev_author));
         this.rev_title(htmlDecode(data.rev_title));
         this.rev_source(htmlDecode(data.rev_source));

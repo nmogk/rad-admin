@@ -2,6 +2,7 @@ var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var morgan = require('morgan');
+var compression = require('compression');
 var cookieParser = require('cookie-parser');
 var hbs = require('hbs');
 var flash = require('./server/flash');
@@ -53,6 +54,24 @@ morgan.token('statusColor', (req, res, args) => {
 });
 
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`)); // log every request to the console
+
+// Gzip/deflate text responses. Mounted before static + the Solr proxy so
+// HTML, JS, CSS, and proxied JSON all flow through it; compression skips
+// responses that already have a Content-Encoding header so a gzipped
+// Solr response isn't re-encoded.
+app.use(compression());
+
+// Mount the Solr proxy and public static files ahead of the session/auth
+// stack: neither needs cookies, sessions, Passport, or flash, and parking
+// them here keeps every public read from paying a MySQL session lookup +
+// Passport deserialization round-trip.
+app.use('/solr/*', proxyLogic);
+// maxAge sets the Cache-Control: max-age on static assets so repeat
+// visitors don't refetch them. ETag/Last-Modified are on by default, so
+// even when the TTL expires we get cheap 304s. 1d is a conservative
+// floor (no hashed filenames yet); a deploy that changes a file may
+// take up to a day to propagate.
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -125,21 +144,20 @@ app.use(expressCspHeader({
     }
 }));
 
-app.use(function (request, response, next){
-    hbs.registerHelper('nonce', function(opts){
-        return request.nonce;
-    });
-    // Generate (or reuse, when overwrite:false) a CSRF token for this request
-    // and expose it to templates via both res.locals (auto-merged) and a
-    // `{{csrf}}` helper that emits the hidden form input.
-    var token = generateCsrfToken(request, response);
-    response.locals.csrfToken = token;
-    hbs.registerHelper('csrf', function () {
-        return new hbs.SafeString('<input type="hidden" name="_csrf" value="' + token + '">');
-    });
-    next();
-})
-
+// Helpers are registered once at startup. The previous implementation
+// re-registered `nonce` and `csrf` inside a per-request middleware, which
+// mutated the global hbs singleton on every request — under concurrency
+// that lets one request's token end up in another request's HTML. Now the
+// helpers read per-request state from the render context: Express merges
+// res.locals into the template's root data, so `options.data.root.nonce`
+// / `.csrfToken` resolve to whatever the request middleware below set.
+hbs.registerHelper('nonce', function (options) {
+    return options.data.root.nonce || '';
+});
+hbs.registerHelper('csrf', function (options) {
+    var token = options.data.root.csrfToken || '';
+    return new hbs.SafeString('<input type="hidden" name="_csrf" value="' + token + '">');
+});
 // Serialise a value for embedding in a <script type="application/json"> tag.
 // Escapes `</` so a literal `</script>` in the data can't break out.
 hbs.registerHelper('json', function (value) {
@@ -147,26 +165,62 @@ hbs.registerHelper('json', function (value) {
     return new hbs.SafeString(s.replace(/</g, '\\u003c'));
 });
 
+// Per-request: surface the CSP nonce and a CSRF token via res.locals so the
+// helpers above (and templates that reference {{csrfToken}} directly) can
+// pick them up. generateCsrfToken reuses the cookie when one exists, so the
+// HMAC cost is bounded.
+app.use(function (request, response, next) {
+    response.locals.nonce = request.nonce;
+    response.locals.csrfToken = generateCsrfToken(request, response);
+    next();
+});
+
 // routes ======================================================================
 
-app.use('/solr/*', proxyLogic);
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(forceSsl);
 app.use(flashMessageCenter);
 
-// The position of these logs should not pick up requests to URLs that need to be re-queried as https or calls to the SOLR proxy
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: logFilters.accessLogSkip,
-    stream: accessLog
-})); // Log legitimate requests to a file - Unlogged in attempts to read protected files should show up here
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: logFilters.botLogSkip,
-    stream: botLog
-})); // And random bot attacks to a separate file
-app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`, {
-    skip: logFilters.queryLogSkip,
-    stream: queryLog
-}));
+// File-bound request logs. Mounted below forceSsl + the /solr/* proxy so
+// HTTPS redirects and Solr proxy traffic don't end up in these files (the
+// console Morgan above still catches them). A single middleware formats
+// the line once and fans it out to whichever rolling streams accept it,
+// replacing three separate Morgan instances that each ran the same format
+// pipeline independently.
+var fileLogStreams = [
+    { stream: accessLog, skip: logFilters.accessLogSkip }, // legitimate requests against known routes
+    { stream: botLog,    skip: logFilters.botLogSkip },    // probes against unknown paths / unusual verbs
+    { stream: queryLog,  skip: logFilters.queryLogSkip }   // home-page search interactions
+];
+
+app.use(function fileRequestLogger(req, res, next) {
+    var startNs = process.hrtime.bigint();
+    var emitted = false;
+    function emit() {
+        if (emitted) return;
+        emitted = true;
+        var destinations = [];
+        for (var i = 0; i < fileLogStreams.length; i++) {
+            if (!fileLogStreams[i].skip(req)) destinations.push(fileLogStreams[i].stream);
+        }
+        if (destinations.length === 0) return;
+
+        var elapsedMs = Number(process.hrtime.bigint() - startNs) / 1e6;
+        var status = res.statusCode;
+        var color = status >= 500 ? 31 : status >= 400 ? 33 : status >= 300 ? 36 : status >= 200 ? 32 : 0;
+        var len = res.getHeader('content-length');
+        var line = new Date().toISOString()
+            + ' ' + (req.ip || '-')
+            + ' \x1b[33m' + req.method + '\x1b[0m'
+            + ' \x1b[' + color + 'm' + status + '\x1b[0m'
+            + ' \x1b[36m' + (req.originalUrl || req.url) + '\x1b[0m'
+            + ' ' + elapsedMs.toFixed(3) + ' ms - len|' + (len == null ? '-' : len)
+            + '\n';
+        for (var j = 0; j < destinations.length; j++) destinations[j].write(line);
+    }
+    res.on('finish', emit);
+    res.on('close', emit);
+    next();
+});
 
 
 // Proxy set up
@@ -177,7 +231,7 @@ if (process.env.PROXY_URL) {
 
 // Private directory is for scripts that will only be transferred if the user is logged in.
 app.all('/private/*', isLoggedIn); // This must come before the next line
-app.use('/private', express.static(path.join(__dirname, 'private')));
+app.use('/private', express.static(path.join(__dirname, 'private'), { maxAge: '1d' }));
 
 // Mount CSRF validation just before route handlers so the Solr proxy
 // (GET-only) and the /tracker reverse proxy above are not subject to it.

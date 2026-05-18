@@ -147,7 +147,7 @@
                   <a class="stretched-link" data-bs-toggle="collapse" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                 </div>
               </div>
-              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}, event: { 'show.bs.collapse': function () { $data.ensureAbstract(); return true; } }" role="tabpanel">
                 <div class="card-body">
                   <div class="row">
                     <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
@@ -225,11 +225,12 @@
 
       {{!<script> src="private/ajax-form.js"</script>}}
       <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
+      <script nonce="{{nonce}}" src="private/datePicker.js"></script>
       <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
       <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
-      <script nonce="{{nonce}}" src="javascripts/srcViewModel.js"></script>
-      <script nonce="{{nonce}}" src="javascripts/campaignViewModel.js"></script>
+      <script nonce="{{nonce}}" src="private/srcViewModel.js"></script>
+      <script nonce="{{nonce}}" src="private/campaignViewModel.js"></script>
       <script nonce="{{nonce}}" src="javascripts/searchHistory.js"></script>
       <script nonce="{{nonce}}" src="private/refs.js"></script>
     {{/inline}}

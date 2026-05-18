@@ -1,3 +1,4 @@
+var http = require('http');
 var proxy = require('httpxy');
 var log4js = require('log4js');
 var appLog = log4js.getLogger('default');
@@ -13,7 +14,24 @@ var proxyOptions = {
   }
 };
 
-var proxyServer = proxy.createProxyServer({target: proxyOptions.backend});
+// Dedicated keep-alive agent for the Node↔Solr hop. httpxy's defaults
+// already enable keep-alive on its shared agent, but it also forwards the
+// incoming `Connection` header verbatim — so a browser sending
+// `Connection: close` (e.g. on page unload) makes Solr tear down the
+// socket we'd otherwise return to the pool. Override the outgoing
+// Connection header below to detach the upstream socket lifecycle from
+// whatever the browser sent.
+var solrAgent = new http.Agent({
+    keepAlive: true,
+    maxSockets: 256,
+    maxFreeSockets: 64
+});
+
+var proxyServer = proxy.createProxyServer({
+    target: proxyOptions.backend,
+    agent: solrAgent,
+    headers: { connection: 'keep-alive' }
+});
 
 /*
  * Returns true if the request satisfies the following conditions:
@@ -30,14 +48,16 @@ var validateRequest = function(request, options) {
       });
 };
 
-// Returns the highest numeric `rows` value present in the URL, or 0 if none
-// is present or all values are non-numeric. Used to enforce the page-size
-// cap so a public caller can't request an arbitrarily large page (issue #16).
-// Silent clamping was rejected because Solr clients compute pagination from
-// the request's `rows`, which would diverge from what was actually returned.
-var maxRequestedRows = function (originalUrl) {
-  var u = new URL(originalUrl, 'http://placeholder');
-  return u.searchParams.getAll('rows').reduce(function (max, v) {
+// Returns the highest numeric value from the parsed `rows` query parameter
+// (string for `?rows=10`, array for `?rows=10&rows=20`), or 0 if missing or
+// all values are non-numeric. Used to enforce the page-size cap so a public
+// caller can't request an arbitrarily large page (issue #16). Silent
+// clamping was rejected because Solr clients compute pagination from the
+// request's `rows`, which would diverge from what was actually returned.
+var maxRequestedRows = function (rowsParam) {
+  if (rowsParam === undefined || rowsParam === null) return 0;
+  var values = Array.isArray(rowsParam) ? rowsParam : [rowsParam];
+  return values.reduce(function (max, v) {
       var n = parseInt(v, 10);
       return !isNaN(n) && n > max ? n : max;
   }, 0);
@@ -53,7 +73,7 @@ var proxyLogic = function (request, response){
       return;
   }
 
-  if (maxRequestedRows(request.originalUrl) > proxyOptions.maxRows) {
+  if (maxRequestedRows(request.query.rows) > proxyOptions.maxRows) {
       appLog.info(`Solr request exceeds rows limit: ${request.originalUrl}`)
       response.writeHead(400, 'Bad Request');
       response.write(`solrProxy: rows parameter exceeds limit (${proxyOptions.maxRows})\n`);

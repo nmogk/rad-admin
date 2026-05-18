@@ -1,23 +1,17 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var proxyquire = require('proxyquire').noCallThru();
-var { mockReq, mockRes, mockUser, mockQueryBuilder } = require('./helpers');
+var { mockReq, mockRes, mockUser } = require('./helpers');
 
-var siteQb;
-var SiteContentStub = { query: sinon.stub() };
+var SiteContentStub = { all: sinon.stub() };
 
-var fsStub = {
-    readFileSync: sinon.stub().returns(JSON.stringify({
-        numRecords: 1234,
-        highestId: 9999,
-        latest: '2026-04-10',
-        updated: '2026-05-01'
-    }))
+var dbJsonStub = {
+    read: sinon.stub()
 };
 
 var indexRouter = proxyquire('../routes/index', {
     '../models/site-content': SiteContentStub,
-    'fs': fsStub
+    '../server/database-json': dbJsonStub
 });
 
 function findHandler(router, method, path) {
@@ -31,14 +25,12 @@ function findHandler(router, method, path) {
 describe('Index Route', function () {
 
     beforeEach(function () {
-        siteQb = mockQueryBuilder();
-        siteQb.resolves([]);
-        SiteContentStub.query.reset();
-        SiteContentStub.query.returns(siteQb);
-        fsStub.readFileSync.resetHistory();
-        fsStub.readFileSync.returns(JSON.stringify({
+        SiteContentStub.all.reset();
+        SiteContentStub.all.resolves([]);
+        dbJsonStub.read.reset();
+        dbJsonStub.read.resolves({
             numRecords: 1234, highestId: 9999, latest: '2026-04-10', updated: '2026-05-01'
-        }));
+        });
     });
 
     describe('GET / randomSeed forwarding', function () {

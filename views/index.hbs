@@ -93,7 +93,7 @@
                   <a class="stretched-link" data-bs-toggle="collapse" href="#collapse1" data-bind="attr: {href: '#'+colId}" aria-label="Toggle details"></a>
                 </div>
               </div>
-              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}" role="tabpanel">
+              <div class="collapse" data-bs-parent="#accordion" data-bind="attr: {id: colId, 'aria-labelledby': ariaLab}, event: { 'show.bs.collapse': function () { $data.ensureAbstract(); return true; } }" role="tabpanel">
                 <div class="card-body">
                   <div class="row">
                     <div class="col-sm-5"><h4>Reference</h4><span data-bind="textPretty: reference"></span></div>
@@ -154,14 +154,17 @@
     {{/inline}}
     
     {{#*inline "scripts-block"}}
-        <script nonce="{{nonce}}" src="javascripts/FileSaver.min.js"></script>
-        <script nonce="{{nonce}}" src="javascripts/Blob.js"></script>
+        {{!-- FileSaver.min.js + Blob.js (~9 KB raw) are pulled in on
+              demand by index.js when the user clicks the CSV download
+              button — they aren't needed for the initial render. --}}
         <script nonce="{{nonce}}" src="javascripts/utils.js"></script>
         <script nonce="{{nonce}}" src="javascripts/refGridView.js"></script>
         <script nonce="{{nonce}}" src="javascripts/refViewModel.js"></script>
         <script nonce="{{nonce}}" src="javascripts/sourceViewModel.js"></script>
-        <script nonce="{{nonce}}" src="javascripts/humanparser.js"></script>
-        <script nonce="{{nonce}}" src="javascripts/citations.js"></script>
+        {{!-- citations.js + humanparser.js (~39 KB raw) are pulled in on
+              demand by index.js when the user opens the citation modal —
+              they aren't needed for the initial search render. The print
+              aggregator page loads its own copies. --}}
         <script nonce="{{nonce}}" src="javascripts/searchHistory.js"></script>
         {{! This script refers to specific elements on the page, so must be loaded last}}
         <script nonce="{{nonce}}" src="javascripts/index.js"></script>
