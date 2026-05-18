@@ -2,6 +2,7 @@ var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var morgan = require('morgan');
+var compression = require('compression');
 var cookieParser = require('cookie-parser');
 var hbs = require('hbs');
 var flash = require('./server/flash');
@@ -53,6 +54,12 @@ morgan.token('statusColor', (req, res, args) => {
 });
 
 app.use(morgan(`:date[iso] :remote-addr \x1b[33m:method\x1b[0m :statusColor \x1b[36m:url\x1b[0m :response-time ms - len|:res[content-length]`)); // log every request to the console
+
+// Gzip/deflate text responses. Mounted before static + the Solr proxy so
+// HTML, JS, CSS, and proxied JSON all flow through it; compression skips
+// responses that already have a Content-Encoding header so a gzipped
+// Solr response isn't re-encoded.
+app.use(compression());
 
 // Mount the Solr proxy and public static files ahead of the session/auth
 // stack: neither needs cookies, sessions, Passport, or flash, and parking
