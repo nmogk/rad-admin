@@ -158,19 +158,19 @@ describe('Solr Proxy', function () {
     describe('maxRequestedRows', function () {
 
         it('returns 0 when rows is missing', function () {
-            expect(maxRequestedRows('/solr/rad/refs?q=*:*')).to.equal(0);
+            expect(maxRequestedRows(undefined)).to.equal(0);
         });
 
         it('returns the rows value when present', function () {
-            expect(maxRequestedRows('/solr/rad/refs?q=foo&rows=500')).to.equal(500);
+            expect(maxRequestedRows('500')).to.equal(500);
         });
 
         it('returns 0 for a non-numeric rows', function () {
-            expect(maxRequestedRows('/solr/rad/refs?rows=abc')).to.equal(0);
+            expect(maxRequestedRows('abc')).to.equal(0);
         });
 
         it('returns the largest value when rows appears more than once', function () {
-            expect(maxRequestedRows('/solr/rad/refs?rows=10&rows=99999')).to.equal(99999);
+            expect(maxRequestedRows(['10', '99999'])).to.equal(99999);
         });
     });
 
