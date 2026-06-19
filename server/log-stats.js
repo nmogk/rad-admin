@@ -13,9 +13,14 @@ var DAYS = 365;
 var DAY_MS = 86400000;
 var CACHE_TTL_MS = 5 * 60 * 1000;
 var MAX_RECENT_QUERIES = 50;
-// Visitors with HISTOGRAM_CAP or more queries collapse into the trailing
-// 'N+' bin (so the last two columns aren't routinely both single-digit).
-var HISTOGRAM_CAP = 10;
+// "Queries per visitor" bin layout (#161):
+//   1..9 -> single-count bins labelled '1'..'9'
+//   10..99 -> tens bins labelled '10', '20', ..., '90' (each covers 10-19, 20-29, ...)
+//   >=100 -> trailing '100+' bin
+// Visitors with 0 queries are intentionally dropped — there are so many
+// of them they flatten everything else.
+var HISTOGRAM_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9',
+    '10', '20', '30', '40', '50', '60', '70', '80', '90', '100+'];
 
 // Morgan format (app.js:55,158): `:date[iso] :remote-addr :method :statusColor
 // :url :response-time ms - len|:res[content-length]`. Method/status/URL are
@@ -82,8 +87,10 @@ function decodeQ(url) {
 }
 
 function binIndex(count) {
-    if (count >= HISTOGRAM_CAP) return HISTOGRAM_CAP;
-    return count;
+    if (count < 1) return -1;
+    if (count < 10) return count - 1;
+    if (count < 100) return 8 + Math.floor(count / 10);
+    return HISTOGRAM_LABELS.length - 1;
 }
 
 // Read a single rotated log file line-by-line. Resolves with
@@ -176,12 +183,11 @@ async function compute() {
     recentQueries.sort(function (a, b) { return b.t.localeCompare(a.t); });
     recentQueries = recentQueries.slice(0, MAX_RECENT_QUERIES);
 
-    var histogramBins = [];
-    for (var b = 0; b < HISTOGRAM_CAP; b++) histogramBins.push(String(b));
-    histogramBins.push(HISTOGRAM_CAP + '+');
+    var histogramBins = HISTOGRAM_LABELS.slice();
     var histogramCounts = new Array(histogramBins.length).fill(0);
     publicVisitors.forEach(function (ip) {
-        histogramCounts[binIndex(queriesPerIp.get(ip) || 0)]++;
+        var idx = binIndex(queriesPerIp.get(ip) || 0);
+        if (idx >= 0) histogramCounts[idx]++;
     });
 
     var pageLoads = labels.map(function (d) { return dayBucket[d].loads; });
