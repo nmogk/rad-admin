@@ -22,6 +22,7 @@ var solrProxy = proxyquire('../config/solr-proxy', {
 
 var validateRequest = solrProxy.validateRequest;
 var maxRequestedRows = solrProxy.maxRequestedRows;
+var rewriteBoost = solrProxy.rewriteBoost;
 var proxyOptions = solrProxy.proxyOptions;
 
 describe('Solr Proxy', function () {
@@ -245,7 +246,7 @@ describe('Solr Proxy', function () {
             expect(webStub.called).to.be.false;
         });
 
-        it('forwards a valid request unchanged when rows is under the limit', function () {
+        it('forwards a valid request and injects boost=1 when rows is under the limit', function () {
             var req = mockReq({
                 method: 'GET',
                 baseUrl: '/solr/rad/refs',
@@ -257,10 +258,12 @@ describe('Solr Proxy', function () {
             solrProxy(req, res);
 
             expect(webStub.calledOnce).to.be.true;
-            expect(req.url).to.equal('/solr/rad/refs?q=foo&rows=10');
+            // Proxy now always sends an explicit boost on refs paths (#160);
+            // absence in the incoming URL means "off" -> boost=1.
+            expect(req.url).to.equal('/solr/rad/refs?q=foo&rows=10&boost=1');
         });
 
-        it('forwards a valid request unchanged when rows equals the limit', function () {
+        it('forwards a valid request and injects boost=1 when rows equals the limit', function () {
             var req = mockReq({
                 method: 'GET',
                 baseUrl: '/solr/rad/refs',
@@ -272,10 +275,10 @@ describe('Solr Proxy', function () {
             solrProxy(req, res);
 
             expect(webStub.calledOnce).to.be.true;
-            expect(req.url).to.equal('/solr/rad/refs?q=foo&rows=1000');
+            expect(req.url).to.equal('/solr/rad/refs?q=foo&rows=1000&boost=1');
         });
 
-        it('forwards a valid request when rows is missing', function () {
+        it('forwards a valid request and injects boost=1 when rows is missing', function () {
             var req = mockReq({
                 method: 'GET',
                 baseUrl: '/solr/rad/refs',
@@ -287,7 +290,88 @@ describe('Solr Proxy', function () {
             solrProxy(req, res);
 
             expect(webStub.calledOnce).to.be.true;
-            expect(req.url).to.equal('/solr/rad/refs?q=foo');
+            expect(req.url).to.equal('/solr/rad/refs?q=foo&boost=1');
+        });
+    });
+
+    describe('rewriteBoost (#160)', function () {
+
+        var clock;
+
+        beforeEach(function () {
+            // Pin Date so the recip() year embedded in the rewritten URL is
+            // deterministic. 2026-06-15 -> currentYear + margin (3) = 2029.
+            clock = sinon.useFakeTimers(new Date('2026-06-15T00:00:00Z').getTime());
+        });
+
+        afterEach(function () {
+            clock.restore();
+        });
+
+        it('rewrites boost=1 on /solr/rad/refs to a recip() function using the current year + margin', function () {
+            var out = rewriteBoost('/solr/rad/refs?q=foo&boost=1', '/solr/rad/refs');
+            // recip(sub(2029,year),0.3,1,1) URL-encoded.
+            expect(out).to.contain('boost=recip%28sub%282029%2Cyear%29%2C0.3%2C1%2C1%29');
+            expect(out).to.contain('q=foo');
+        });
+
+        it('injects boost=1 when the incoming URL has no boost param', function () {
+            var out = rewriteBoost('/solr/rad/refs?q=mendel&rows=30', '/solr/rad/refs');
+            expect(out).to.equal('/solr/rad/refs?q=mendel&rows=30&boost=1');
+        });
+
+        it('treats any non-"1" boost value as "off" and rewrites to boost=1', function () {
+            var out = rewriteBoost('/solr/rad/refs?q=foo&boost=0', '/solr/rad/refs');
+            expect(out).to.contain('boost=1');
+            expect(out).to.not.contain('boost=0');
+            expect(out).to.not.contain('recip');
+        });
+
+        it('applies the same rewrite to /solr/rad/refs/csv', function () {
+            var withBoost = rewriteBoost('/solr/rad/refs/csv?q=foo&boost=1', '/solr/rad/refs/csv');
+            expect(withBoost).to.contain('boost=recip%28sub%282029%2Cyear%29%2C0.3%2C1%2C1%29');
+
+            var withoutBoost = rewriteBoost('/solr/rad/refs/csv?q=foo', '/solr/rad/refs/csv');
+            expect(withoutBoost).to.equal('/solr/rad/refs/csv?q=foo&boost=1');
+        });
+
+        it('leaves /solr/source/select untouched regardless of boost value', function () {
+            var u1 = '/solr/source/select?q=Answers';
+            expect(rewriteBoost(u1, '/solr/source/select')).to.equal(u1);
+
+            var u2 = '/solr/source/select?q=Answers&boost=1';
+            expect(rewriteBoost(u2, '/solr/source/select')).to.equal(u2);
+        });
+
+        it('preserves repeated and multi-valued query params (e.g. type, fq)', function () {
+            var out = rewriteBoost(
+                '/solr/rad/refs?q=foo&fq=type%3A%22book%22&fq=year%3A%5B2000+TO+%2A%5D',
+                '/solr/rad/refs'
+            );
+            // Both fq values still present after re-serialisation. URLSearchParams
+            // leaves * alone (form-urlencoded "safe" char) and emits + for spaces.
+            expect(out).to.match(/fq=type%3A%22book%22/);
+            expect(out).to.match(/fq=year%3A%5B2000(\+|%20)TO(\+|%20)(\*|%2A)%5D/);
+            expect(out).to.contain('boost=1');
+        });
+
+        it('uses the first boost value when the param is repeated', function () {
+            var out = rewriteBoost('/solr/rad/refs?boost=1&boost=0', '/solr/rad/refs');
+            // First value wins -> treated as "1" -> recip()
+            expect(out).to.contain('boost=recip');
+            expect(out).to.not.contain('boost=0');
+        });
+
+        it('uses Date().getFullYear() so the boost year advances automatically', function () {
+            clock.restore();
+            // Mid-year pin so getFullYear() returns the same year in every
+            // local timezone (UTC midnight on Jan 1 can fall in the prior
+            // year for negative-offset zones).
+            clock = sinon.useFakeTimers(new Date('2031-06-15T00:00:00Z').getTime());
+
+            var out = rewriteBoost('/solr/rad/refs?q=foo&boost=1', '/solr/rad/refs');
+            // 2031 + 3 = 2034.
+            expect(out).to.contain('boost=recip%28sub%282034%2Cyear%29%2C0.3%2C1%2C1%29');
         });
     });
 });

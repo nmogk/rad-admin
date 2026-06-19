@@ -7,10 +7,6 @@
  */
 function RefsGridViewModel(qString) {
     "use strict";
-    // Set a reminder for updating the hard coded constants in the search configuration.
-    if (new Date().getFullYear() >= 2028) {
-        console.log("Warning: automatic date prioritization of documents is hard coded for a certain time in the future. Update or search functionality may break soon.");
-    }
 
     var self = this;
     self.refsURI = "/solr/rad/refs?";
