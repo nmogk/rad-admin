@@ -1,7 +1,9 @@
 // Hints recent search queries via a native <datalist>. Reads/writes per-page
-// history in localStorage so the index, refs, and sources pages each keep
+// history in sessionStorage so the index, refs, and sources pages each keep
 // their own list — a Solr power query like *:* AND -author:[* TO *] makes
 // sense as a hint on /refs but not on the public index page. (#130)
+// Hints are per-tab and cleared when the tab closes (#162) — they're a
+// session aid, not a long-term saved-search feature.
 (function () {
     "use strict";
     var input = document.getElementById('searchInput');
@@ -17,7 +19,7 @@
 
     function read() {
         try {
-            var raw = localStorage.getItem(storageKey);
+            var raw = sessionStorage.getItem(storageKey);
             if (!raw) { return []; }
             var arr = JSON.parse(raw);
             return Array.isArray(arr) ? arr : [];
@@ -25,7 +27,7 @@
     }
 
     function write(arr) {
-        try { localStorage.setItem(storageKey, JSON.stringify(arr)); }
+        try { sessionStorage.setItem(storageKey, JSON.stringify(arr)); }
         catch (e) { /* quota exceeded or storage unavailable */ }
     }
 
