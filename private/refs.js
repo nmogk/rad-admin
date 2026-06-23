@@ -893,6 +893,12 @@ RefViewModel.prototype.removeFromActiveCampaign = function () {
                     ctx.refs.remove(function (r) { return r.id() === self.id(); });
                 }
                 updateActiveCampaignCount(data && data.refCount);
+                // Rewrite the URL so a subsequent reload (e.g. after the user
+                // edits another ref, whose submit handler redirects back here
+                // with the same query) doesn't re-fetch the just-removed id
+                // from Solr — that's the bug in #164. The URL pattern built
+                // by openInRefs is q=id:(N OR M OR …); drop this id from it.
+                dropIdFromUrlQuery(self.id());
             },
             error: function (jqXHR) {
                 var msg = 'Error removing reference from campaign.';
@@ -902,6 +908,29 @@ RefViewModel.prototype.removeFromActiveCampaign = function () {
         });
     });
 };
+
+// Rewrites the current URL's `q` param when it's the id:(N OR M OR …) shape
+// that openInRefs produces, removing the given id. No-op if the query
+// doesn't match that shape (e.g. the user typed their own query while in
+// a campaign — we can't safely edit arbitrary Solr syntax). When the last
+// id is dropped, sets q to `-*:*` so the next reload renders an empty
+// grid instead of re-fetching the same stale list. (#164)
+function dropIdFromUrlQuery(idToRemove) {
+    try {
+        var u = new URL(window.location.href);
+        var q = u.searchParams.get('q');
+        if (!q) return;
+        var m = q.match(/^id:\(([^)]*)\)$/);
+        if (!m) return;
+        var ids = m[1].split(/\s+OR\s+/)
+            .map(function (s) { return s.trim(); })
+            .filter(function (s) { return s !== '' && s !== String(idToRemove); });
+        var newQ = ids.length ? 'id:(' + ids.join(' OR ') + ')' : '-*:*';
+        if (newQ === q) return;
+        u.searchParams.set('q', newQ);
+        history.replaceState(null, '', u.toString());
+    } catch (e) { /* old browser or malformed URL — silently skip */ }
+}
 
 // Updates the "(N refs)" count in the campaign banner. Called after add or
 // remove operations that change the active campaign's ref list.
