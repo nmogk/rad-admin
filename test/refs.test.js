@@ -776,6 +776,107 @@ describe('Refs Routes', function () {
             expect(doc.year).to.equal(1980);
         });
 
+        it('should skip source validation when body.source matches oldDoc.source (#163)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { source: 'Defunct Journal', title: 'New Title' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            // Source no longer in the source index (numFound 0). Old code
+            // would 400; new code skips the check because the value didn't
+            // change.
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', source: 'Defunct Journal' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(sourceClientStub.get.called).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(solrClientStub.add.firstCall.args[0].source).to.equal('Defunct Journal');
+            expect(solrClientStub.add.firstCall.args[0].title).to.equal('New Title');
+        });
+
+        it('should still validate source when the value changes on edit (#163)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { source: 'Different Bad Source', title: 'Edit' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', source: 'Old Source' }] } });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
+        it('should skip publisher validation when body.publisher matches oldDoc.publisher (#163)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { publisher: 'Defunct Pub', title: 'New Title' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', publisher: 'Defunct Pub' }] } });
+            solrClientStub.add.resolves();
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.false;
+            expect(sourceClientStub.get.called).to.be.false;
+            expect(solrClientStub.add.calledOnce).to.be.true;
+            expect(solrClientStub.add.firstCall.args[0].publisher).to.equal('Defunct Pub');
+        });
+
+        it('should still validate publisher when the value changes on edit (#163)', async function () {
+            var req = mockReq({
+                method: 'POST',
+                params: { id: '42' },
+                query: {},
+                body: { publisher: 'Different Bad Pub' },
+                user: mockUser(),
+                flash: sinon.stub()
+            });
+            var res = mockRes();
+            var next = sinon.spy();
+
+            sourceClientStub.get.resolves({ response: { numFound: 0, docs: [] } });
+            solrClientStub.get.resolves({ response: { docs: [{ id: '42', publisher: 'Old Pub' }] } });
+
+            var handler = findHandler(refsRouter, 'post', '/:id(\\d+)');
+            await handler(req, res, next);
+
+            expect(res.status.calledWith(400)).to.be.true;
+            expect(res._json.error).to.include('Publisher');
+            expect(res._json.error).to.include('not found');
+            expect(solrClientStub.add.called).to.be.false;
+        });
+
         it('should skip rev_date validation when unchanged from oldDoc', async function () {
             var req = mockReq({
                 method: 'POST',
