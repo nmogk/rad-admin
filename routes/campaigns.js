@@ -29,10 +29,17 @@ router.get('/', async function (req, res, next) {
 });
 
 // Lightweight JSON listing for the picker modal on /refs. We don't return the
-// full refs array — just enough for the user to choose a campaign.
+// full refs array — just enough for the user to choose a campaign. Ordered by
+// updated_at desc so the campaign the user just touched (added refs, renamed,
+// etc.) surfaces at the top (#165). The column is MySQL-managed via
+// ON UPDATE CURRENT_TIMESTAMP — see migration.js — so any UPDATE bumps it
+// without app-side bookkeeping. id desc breaks ties (notably the migration-
+// time tie for rows that existed before the column was added).
 router.get('/list.json', async function (req, res, next) {
     try {
-        var collection = await Campaign.query();
+        var collection = await Campaign.query()
+            .orderBy('updated_at', 'desc')
+            .orderBy('id', 'desc');
         var list = collection.map(function (m) {
             var refs = m.refs || [];
             return { id: m.id, name: m.name, refCount: refs.length };
@@ -52,6 +59,9 @@ router.post('/new', async function (req, res, next) {
     }
 
     try {
+        // updated_at is auto-populated by MySQL's DEFAULT CURRENT_TIMESTAMP
+        // on insert, so a freshly-created campaign naturally sorts to the
+        // top of the picker (#165).
         var saved = await Campaign.query().insertAndFetch({
             name: name,
             description: req.body.description || '',
@@ -162,6 +172,15 @@ router.post('/:id(\\d+)/refs', async function (req, res, next) {
         numericIds.forEach(function (n) {
             if (!seen[n]) { seen[n] = true; existing.push(n); added.push(n); }
         });
+        // Skip the patch entirely when every requested id was already in the
+        // campaign. MySQL's ON UPDATE CURRENT_TIMESTAMP would otherwise bump
+        // updated_at on a no-op write and shuffle the picker order for what
+        // is effectively a duplicate request (#165). The audit log is also
+        // skipped — nothing was actually added.
+        if (added.length === 0) {
+            res.json({ added: 0, refCount: existing.length });
+            return;
+        }
         await campaign.$query().patch({ refs: existing });
         auditLogger.info(req.user.email + " added refs to campaign " + req.params.id + ": " + JSON.stringify(added));
         res.json({ added: added.length, refCount: existing.length });

@@ -90,6 +90,7 @@ function mockQueryBuilder() {
     qb.findById = sinon.stub().returns(qb);
     qb.findOne = sinon.stub().returns(qb);
     qb.where = sinon.stub().returns(qb);
+    qb.orderBy = sinon.stub().returns(qb);
     qb.withGraphFetched = sinon.stub().returns(qb);
     qb.throwIfNotFound = sinon.stub().returns(qb);
     qb.patch = sinon.stub().resolves(1);
