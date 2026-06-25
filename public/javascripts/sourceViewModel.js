@@ -40,7 +40,11 @@ function SourceViewModel(name) {
     $.ajax({
         url: "/solr/source/select?",
         dataType: "json",
-        data: $.param({"q": name}),
+        // Exact-phrase match on name so the contact panel never lands on a
+        // longer-named record that happens to outscore the real match under
+        // BM25 length-norm (#166). escapeSolrPhrase wraps `name` in quotes
+        // and escapes embedded `"` / `\`.
+        data: $.param({ q: 'name:' + escapeSolrPhrase(name), rows: 1 }),
         success: function (data) {
             var find = data.response.docs[0]; // update information to first result
             self.name(self.refP(find.name));
