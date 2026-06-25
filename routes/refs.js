@@ -237,7 +237,13 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         return;
     }
 
-    if (doc.source) {
+    // Skip source/publisher existence checks when the submitted value matches
+    // what's already on the doc (#163) — same shape as the date-validation
+    // skip above. Lets editors fix unrelated fields on legacy refs whose
+    // source/publisher has since been removed from the sources index, without
+    // them needing to repair the orphan first. New refs and any change to
+    // these fields still go through validation (POST /new is untouched).
+    if (doc.source && doc.source !== oldDoc.source) {
         try {
             if (!(await sourceExists(doc.source))) {
                 res.status(400).json({ error: 'Source "' + doc.source + '" not found. Please enter an existing source.' });
@@ -248,7 +254,7 @@ router.post("/:id(\\d+)", async function (req, res, next) {
         }
     }
 
-    if (doc.publisher) {
+    if (doc.publisher && doc.publisher !== oldDoc.publisher) {
         try {
             if (!(await sourceExists(doc.publisher))) {
                 res.status(400).json({ error: 'Publisher "' + doc.publisher + '" not found. Please enter an existing source.' });

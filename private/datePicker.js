@@ -8,6 +8,23 @@
  * under /private/ so it's served behind isLoggedIn and isn't shipped to
  * public search visitors.
  */
+// Season -> month component of the stored ISO date. Day is always 21
+// (start of season). Order in this list controls the season <select> order.
+// "Autumn" is accepted as a synonym for Fall by parseISO but the canonical
+// stored/displayed name is "Fall". (#167)
+var SEASONS = [
+    ['Spring', '03'],
+    ['Summer', '06'],
+    ['Fall',   '09'],
+    ['Winter', '12']
+];
+var SEASON_TO_MONTH = {};
+var MONTH_TO_SEASON = {};
+SEASONS.forEach(function (pair) {
+    SEASON_TO_MONTH[pair[0]] = pair[1];
+    MONTH_TO_SEASON[pair[1]] = pair[0];
+});
+
 ko.bindingHandlers.datePicker = {
     init: function (element, valueAccessor) {
         var observable = valueAccessor();
@@ -24,7 +41,7 @@ ko.bindingHandlers.datePicker = {
         var precisionSelect = document.createElement('select');
         precisionSelect.className = 'form-control';
         precisionSelect.style.marginRight = '8px';
-        [['year', 'Year'], ['month', 'Year-Month'], ['date', 'Full Date']].forEach(function (pair) {
+        [['year', 'Year'], ['season', 'Season'], ['month', 'Year-Month'], ['date', 'Full Date']].forEach(function (pair) {
             var opt = document.createElement('option');
             opt.value = pair[0];
             opt.textContent = pair[1];
@@ -62,7 +79,20 @@ ko.bindingHandlers.datePicker = {
         dateInput.type = 'date';
         dateInput.className = 'form-control';
 
+        // Season picker shown only in 'season' precision; pairs with yearInput
+        // so the visible row reads "Season ▼  YYYY". (#167)
+        var seasonSelect = document.createElement('select');
+        seasonSelect.className = 'form-control';
+        seasonSelect.style.marginRight = '8px';
+        SEASONS.forEach(function (pair) {
+            var opt = document.createElement('option');
+            opt.value = pair[0];
+            opt.textContent = pair[0];
+            seasonSelect.appendChild(opt);
+        });
+
         row.appendChild(precisionSelect);
+        row.appendChild(seasonSelect);
         row.appendChild(yearInput);
         row.appendChild(monthInput);
         row.appendChild(dateInput);
@@ -102,14 +132,16 @@ ko.bindingHandlers.datePicker = {
             row.style.display = standard ? '' : 'none';
             rawWrapper.style.display = standard ? 'none' : '';
             if (standard) {
-                yearInput.style.display = precision === 'year' ? '' : 'none';
+                // yearInput is shared between 'year' and 'season' precisions.
+                yearInput.style.display = (precision === 'year' || precision === 'season') ? '' : 'none';
+                seasonSelect.style.display = precision === 'season' ? '' : 'none';
                 monthInput.style.display = precision === 'month' ? '' : 'none';
                 dateInput.style.display = precision === 'date' ? '' : 'none';
             }
         }
 
         function parseISO(val) {
-            if (!val) return { precision: 'date', year: '', month: '', date: '', raw: '' };
+            if (!val) return { precision: 'date', year: '', season: 'Spring', month: '', date: '', raw: '' };
             val = String(val).trim();
             // Populate year/month/date for ALL precisions, padding missing
             // pieces with -01 (Jan / day 1). When the user switches the
@@ -117,7 +149,46 @@ ko.bindingHandlers.datePicker = {
             // filled in, so writeValue writes a sensible value rather than
             // an empty string that the subscribe would parse back to the
             // default and snap the dropdown around. (#134)
-            //
+
+            // Free-text season literal: "Spring 2012", "2012 Fall", case-
+            // insensitive. "Autumn" is recognised as a synonym for Fall and
+            // normalised on parse so the picker dropdown shows the canonical
+            // "Fall" label. Must run before the full-date branch so a legacy
+            // free-text string is preferred over (impossible) ISO parsing. (#167)
+            var seasonRgx = '(Spring|Summer|Fall|Autumn|Winter)';
+            var m;
+            if ((m = val.match(new RegExp('^' + seasonRgx + '\\s+(\\d{1,4})$', 'i'))) ||
+                (m = val.match(new RegExp('^(\\d{1,4})\\s+' + seasonRgx + '$', 'i')))) {
+                var seasonName = m[1].match(/^\d+$/) ? m[2] : m[1];
+                var rawYear = m[1].match(/^\d+$/) ? m[1] : m[2];
+                var seasonCap = seasonName.charAt(0).toUpperCase() + seasonName.slice(1).toLowerCase();
+                if (seasonCap === 'Autumn') { seasonCap = 'Fall'; }
+                var year4 = ('0000' + rawYear).slice(-4);
+                return {
+                    precision: 'season',
+                    year: rawYear,
+                    season: seasonCap,
+                    month: year4 + '-' + SEASON_TO_MONTH[seasonCap],
+                    date: year4 + '-' + SEASON_TO_MONTH[seasonCap] + '-21',
+                    raw: ''
+                };
+            }
+
+            // ISO season-day pivot: yyyy-{03|06|09|12}-21. Round-trips season
+            // entries so a ref saved as season Fall 2025 (stored 2025-09-21)
+            // reopens in season mode. Must run before the full-date branch.
+            // (#167)
+            if ((m = val.match(/^(\d{4})-(03|06|09|12)-21$/))) {
+                return {
+                    precision: 'season',
+                    year: m[1],
+                    season: MONTH_TO_SEASON[m[2]],
+                    month: m[1] + '-' + m[2],
+                    date: m[1] + '-' + m[2] + '-21',
+                    raw: ''
+                };
+            }
+
             // Full date: 2025-06-15 or longer (with time)
             if (/^\d{4}-\d{2}-\d{2}/.test(val)) {
                 return {
@@ -170,6 +241,15 @@ ko.bindingHandlers.datePicker = {
             var val = '';
             if (p === 'year') {
                 val = yearInput.value;
+            } else if (p === 'season') {
+                // Season -> yyyy-MM-21 with MM from SEASON_TO_MONTH. Both year
+                // and season must be populated; otherwise emit '' so the
+                // observable falls back to null. (#167)
+                var y = yearInput.value;
+                var s = seasonSelect.value;
+                if (y && s && SEASON_TO_MONTH[s]) {
+                    val = ('0000' + y).slice(-4) + '-' + SEASON_TO_MONTH[s] + '-21';
+                }
             } else if (p === 'month') {
                 val = monthInput.value; // yyyy-MM
             } else {
@@ -196,6 +276,7 @@ ko.bindingHandlers.datePicker = {
             } else {
                 precisionSelect.value = parsed.precision;
                 yearInput.value = parsed.year;
+                seasonSelect.value = parsed.season || 'Spring';
                 monthInput.value = parsed.month;
                 dateInput.value = parsed.date;
                 showForPrecision(parsed.precision);
@@ -227,6 +308,7 @@ ko.bindingHandlers.datePicker = {
 
         precisionSelect.addEventListener('change', onPrecisionChange);
         yearInput.addEventListener('input', onYearInput);
+        seasonSelect.addEventListener('change', writeValue);
         monthInput.addEventListener('change', writeValue);
         dateInput.addEventListener('change', writeValue);
         rawInput.addEventListener('input', writeRawValue);
@@ -250,6 +332,7 @@ ko.bindingHandlers.datePicker = {
         ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
             precisionSelect.removeEventListener('change', onPrecisionChange);
             yearInput.removeEventListener('input', onYearInput);
+            seasonSelect.removeEventListener('change', writeValue);
             monthInput.removeEventListener('change', writeValue);
             dateInput.removeEventListener('change', writeValue);
             rawInput.removeEventListener('input', writeRawValue);

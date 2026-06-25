@@ -23,6 +23,16 @@ function SrcGridViewModel(qString) {
     qString.q = qString.q.replace(/&/g, "&amp;").replace(/'/g, "&apos;");
     qString.rows = parseInt(qString.rows) || 10;
 
+    // Force per-field BM25 scoring with name heavily preferred so well-populated
+    // records aren't penalised by aggregate _text_ length-norm (#166). qf still
+    // includes city/address/state so the admin's advertised "search by city,
+    // website, or any other field" UX keeps working; pf gives the full phrase
+    // in name a 10x multiplicative boost so exact-name matches dominate.
+    // Guards respect power-user URLs that override these explicitly.
+    if (!qString.defType) { qString.defType = 'edismax'; }
+    if (!qString.qf)      { qString.qf      = 'name^10 city address state'; }
+    if (!qString.pf)      { qString.pf      = 'name^10'; }
+
     $.ajax({
         url: self.sourcesURI,
         dataType: "json",

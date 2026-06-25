@@ -49,7 +49,18 @@ async function createTables() {
   }
 }
 
+// Auto-managed picker recency timestamp for campaigns (#165). Lives outside
+// the generic Schema loop above because the loop has no way to express
+// MySQL's ON UPDATE CURRENT_TIMESTAMP. Live deployments run the same SQL via
+// tools/addCampaignUpdatedAt.js.
+var CAMPAIGN_UPDATED_AT_DDL =
+  'ALTER TABLE campaigns ADD COLUMN updated_at TIMESTAMP NOT NULL ' +
+  'DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP';
+
 createTables()
+  .then(function () {
+    return knex.raw(CAMPAIGN_UPDATED_AT_DDL);
+  })
   .then(function () {
     return User.query().insert({
       email: process.env.BOOTSTRAP_ADMIN,

@@ -29,38 +29,42 @@
         </ul>
 
         <div class="tab-content" style="padding-top: 20px;">
-            <!-- ko with: currentSection -->
+            <!-- ko if: currentSection -->
             <div class="section-editor">
+                <div class="alert alert-secondary py-2 mb-3" role="status">
+                    Editing section <strong data-bind="text: selectedLabel"></strong>
+                    (<code data-bind="text: selectedKey"></code>)
+                </div>
                 <div class="mb-3">
                     <label>Section Title</label>
-                    <input type="text" class="form-control" data-bind="value: title" placeholder="Section title">
+                    <input type="text" class="form-control" data-bind="textInput: currentSection().title" placeholder="Section title">
                 </div>
                 <div class="mb-3">
                     <label>Content (HTML)</label>
-                    <textarea class="form-control" data-bind="value: content"></textarea>
+                    <textarea class="form-control" data-bind="textInput: currentSection().content"></textarea>
                 </div>
-                <div class="section-meta" data-bind="visible: updated_by">
-                    Last updated by <span data-bind="text: updated_by"></span>
-                    on <span data-bind="text: updated_at_display"></span>
+                <div class="section-meta" data-bind="visible: currentSection().updated_by">
+                    Last updated by <span data-bind="text: currentSection().updated_by"></span>
+                    on <span data-bind="text: currentSection().updated_at_display"></span>
                 </div>
                 {{#if editable}}
-                <button class="btn btn-primary" data-bind="click: $root.save">
-                    <span class="bi bi-floppy2-fill"></span> Save
+                <button class="btn btn-primary" data-bind="click: save">
+                    <span class="bi bi-floppy2-fill"></span> <span data-bind="text: 'Save ' + selectedLabel()"></span>
                 </button>
-                <button class="btn btn-secondary" data-bind="click: $root.togglePreview">
+                <button class="btn btn-secondary" data-bind="click: togglePreview">
                     <span class="bi bi-eye"></span>
-                    <span data-bind="text: $root.showPreview() ? 'Hide Preview' : 'Show Preview'"></span>
+                    <span data-bind="text: showPreview() ? 'Hide Preview' : 'Show Preview'"></span>
                 </button>
-                <button class="btn btn-warning" data-bind="click: $root.resetFromFile">
+                <button class="btn btn-warning" data-bind="click: resetFromFile">
                     <span class="bi bi-arrow-counterclockwise"></span> Reset from file
                 </button>
                 {{/if}}
             </div>
-            <!-- ko if: $root.showPreview -->
+            <!-- ko if: showPreview -->
             <div class="card card-body" style="margin-top: 15px;">
-                <h4>Preview</h4>
+                <h4>Preview of <span data-bind="text: selectedLabel"></span></h4>
                 <hr>
-                <div data-bind="html: content"></div>
+                <div data-bind="html: currentSection().content"></div>
             </div>
             <!-- /ko -->
             <!-- /ko -->

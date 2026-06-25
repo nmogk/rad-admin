@@ -8,6 +8,13 @@ var proxyOptions = {
     validPaths: ['/solr/rad/refs', '/solr/rad/refs/csv', '/solr/source/select'],
     invalidParams: ['qt', 'stream'],
     maxRows: 1000,
+    // Paths whose `boost` query param the proxy rewrites (#160). Other
+    // proxied paths (source autocomplete) pass through untouched.
+    boostPaths: ['/solr/rad/refs', '/solr/rad/refs/csv'],
+    // Year offset added to the current year inside recip(sub(YEAR, year),…).
+    // Matches the legacy hard-coded constant 2029 against a 2026 base, so
+    // results when boost is on are identical to the old config.
+    boostYearMargin: 3,
     backend: {
         host: 'localhost',
         port: process.env.SOLRPORT
@@ -63,6 +70,35 @@ var maxRequestedRows = function (rowsParam) {
   }, 0);
 };
 
+// Rewrites the `boost` query param on rad refs requests so the boost
+// function is constructed server-side instead of relying on a hard-coded
+// recip(sub(YEAR, year),…) default baked into the Solr request handler
+// (#160). The public URL stays simple — `?boost=1` means "user wants the
+// date boost on", absence means "off". The proxy translates:
+//   boost=1     -> recip(sub(<currentYear+margin>, year),0.3,1,1)
+//   anything else / absent -> 1 (constant, overrides the Solr-side default)
+// Paths outside boostPaths (e.g. /solr/source/select) pass through
+// untouched so source autocomplete isn't disturbed. We always send an
+// explicit boost on the refs paths, which means the Solr-side default
+// is dead code — that's intentional; removing it would require a Config
+// API delta against the live core.
+var rewriteBoost = function (originalUrl, baseUrl, options) {
+    options = options || proxyOptions;
+    if (options.boostPaths.indexOf(baseUrl) === -1) return originalUrl;
+    var qIdx = originalUrl.indexOf('?');
+    var path = qIdx === -1 ? originalUrl : originalUrl.slice(0, qIdx);
+    var params = new URLSearchParams(qIdx === -1 ? '' : originalUrl.slice(qIdx + 1));
+    var requested = params.get('boost'); // first value wins if repeated
+    params.delete('boost');
+    if (requested === '1') {
+        var year = new Date().getFullYear() + options.boostYearMargin;
+        params.append('boost', 'recip(sub(' + year + ',year),0.3,1,1)');
+    } else {
+        params.append('boost', '1');
+    }
+    return path + '?' + params.toString();
+};
+
 var proxyLogic = function (request, response){
 
   if (!validateRequest(request, proxyOptions)) {
@@ -81,13 +117,14 @@ var proxyLogic = function (request, response){
       return;
   }
 
-  request.url = request.originalUrl;
+  request.url = rewriteBoost(request.originalUrl, request.baseUrl);
   proxyServer.web(request, response);
 };
 
 proxyLogic.backend = proxyOptions.backend;
 proxyLogic.validateRequest = validateRequest;
 proxyLogic.maxRequestedRows = maxRequestedRows;
+proxyLogic.rewriteBoost = rewriteBoost;
 proxyLogic.proxyOptions = proxyOptions;
 
 module.exports = proxyLogic;

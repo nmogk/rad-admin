@@ -198,7 +198,7 @@ describe('server/log-stats', function () {
             expect(s.aggregatorTotal).to.equal(0);
         });
 
-        it('builds histogram with visitors who made 0 queries', async function () {
+        it('drops 0-query visitors and bins single-digit counts directly (#161)', async function () {
             var t = isoDaysAgo(0);
             // Two visitors loaded the public site; only one ran a query.
             fakeFiles['access.log'] = [
@@ -212,36 +212,62 @@ describe('server/log-stats', function () {
             ].join('\n');
 
             var s = await logStats.getStats();
-            // 1.1.1.2 made 0 queries -> bin '0'; 1.1.1.1 made 3 -> bin '3'.
-            expect(s.histogramBins[0]).to.equal('0');
-            expect(s.histogramBins[s.histogramBins.length - 1]).to.equal('10+');
-            expect(s.histogramCounts[0]).to.equal(1);
-            expect(s.histogramCounts[3]).to.equal(1);
-            expect(s.histogramCounts[1]).to.equal(0);
+            // First bin is '1' (no zero bin); 1.1.1.2 (0 queries) dropped;
+            // 1.1.1.1 made 3 -> bin index 2 (label '3').
+            expect(s.histogramBins[0]).to.equal('1');
+            expect(s.histogramBins[s.histogramBins.length - 1]).to.equal('100+');
+            expect(s.histogramBins[2]).to.equal('3');
+            expect(s.histogramCounts[2]).to.equal(1);
+            expect(s.histogramCounts.reduce(function (a, b) { return a + b; }, 0)).to.equal(1);
         });
 
-        it('puts visitors with 10+ queries into the trailing bin', async function () {
+        it('uses tens bins for 10-99 queries (#161)', async function () {
+            var t = isoDaysAgo(0);
+            // Three visitors that all loaded the public site.
+            fakeFiles['access.log'] = [
+                morganLine(t, '1.1.1.1', 'GET', '200', '/'),
+                morganLine(t, '1.1.1.2', 'GET', '200', '/'),
+                morganLine(t, '1.1.1.3', 'GET', '200', '/')
+            ].join('\n');
+            var lines = [];
+            // 1.1.1.1 = 10 queries -> bin '10'
+            for (var i = 0; i < 10; i++) lines.push(morganLine(t, '1.1.1.1', 'GET', '200', '/?q=a' + i));
+            // 1.1.1.2 = 25 queries -> bin '20' (covers 20-29)
+            for (var j = 0; j < 25; j++) lines.push(morganLine(t, '1.1.1.2', 'GET', '200', '/?q=b' + j));
+            // 1.1.1.3 = 99 queries -> bin '90' (covers 90-99)
+            for (var k = 0; k < 99; k++) lines.push(morganLine(t, '1.1.1.3', 'GET', '200', '/?q=c' + k));
+            fakeFiles['queries.log'] = lines.join('\n');
+
+            var s = await logStats.getStats();
+            // 19 bins total: 1..9, 10..90, 100+
+            expect(s.histogramBins).to.have.lengthOf(19);
+            expect(s.histogramBins[9]).to.equal('10');
+            expect(s.histogramBins[10]).to.equal('20');
+            expect(s.histogramBins[17]).to.equal('90');
+            expect(s.histogramCounts[9]).to.equal(1);   // 10 queries
+            expect(s.histogramCounts[10]).to.equal(1);  // 25 queries
+            expect(s.histogramCounts[17]).to.equal(1);  // 99 queries
+            expect(s.histogramCounts[18]).to.equal(0);  // 100+ empty
+        });
+
+        it('puts visitors with 100+ queries into the trailing bin (#161)', async function () {
             var t = isoDaysAgo(0);
             fakeFiles['access.log'] = [
                 morganLine(t, '1.1.1.1', 'GET', '200', '/'),
                 morganLine(t, '1.1.1.2', 'GET', '200', '/')
             ].join('\n');
             var lines = [];
-            for (var i = 0; i < 15; i++) {
-                lines.push(morganLine(t, '1.1.1.1', 'GET', '200', '/?q=q' + i));
-            }
-            // 1.1.1.2 sits exactly at the cap — verifies the cap is inclusive
-            // (10 is no longer a separate bin from 10+).
-            for (var j = 0; j < 10; j++) {
-                lines.push(morganLine(t, '1.1.1.2', 'GET', '200', '/?q=z' + j));
-            }
+            // 100 queries -> trailing bin (cap is inclusive at 100)
+            for (var i = 0; i < 100; i++) lines.push(morganLine(t, '1.1.1.1', 'GET', '200', '/?q=q' + i));
+            // 250 queries -> also trailing bin
+            for (var j = 0; j < 250; j++) lines.push(morganLine(t, '1.1.1.2', 'GET', '200', '/?q=z' + j));
             fakeFiles['queries.log'] = lines.join('\n');
 
             var s = await logStats.getStats();
-            expect(s.histogramBins).to.have.lengthOf(11);
-            expect(s.histogramBins[10]).to.equal('10+');
-            expect(s.histogramCounts[10]).to.equal(2);
-            for (var b = 0; b < 10; b++) expect(s.histogramCounts[b]).to.equal(0);
+            expect(s.histogramBins[18]).to.equal('100+');
+            expect(s.histogramCounts[18]).to.equal(2);
+            // No spillover into the 90 bin.
+            expect(s.histogramCounts[17]).to.equal(0);
         });
 
         it('returns the most recent 50 queries with q= decoded, newest first', async function () {
@@ -273,7 +299,13 @@ describe('server/log-stats', function () {
                 morganLine(recent, '1.1.1.1', 'GET', '200', '/'),
                 morganLine(ancient, '1.1.1.99', 'GET', '200', '/')
             ].join('\n');
-            fakeFiles['queries.log'] = '';
+            // Give the recent visitor a query so they land in the histogram —
+            // 0-query visitors are dropped from the histogram (#161) so the
+            // ancient-cutoff check needs a query to have something to count.
+            fakeFiles['queries.log'] = [
+                morganLine(recent, '1.1.1.1', 'GET', '200', '/?q=darwin'),
+                morganLine(ancient, '1.1.1.99', 'GET', '200', '/?q=mendel')
+            ].join('\n');
 
             var s = await logStats.getStats();
             // Only the recent visitor is counted; the ancient one was outside

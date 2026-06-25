@@ -42,17 +42,23 @@ function SiteViewModel() {
         return self.sections[self.selectedKey()] || null;
     });
 
+    self.selectedLabel = ko.computed(function () {
+        var item = self.sectionList.find(function (s) { return s.key === self.selectedKey(); });
+        return item ? item.label : self.selectedKey();
+    });
+
     self.selectSection = function (key) {
         self.selectedKey(key);
         self.showPreview(false);
     };
 
     self.togglePreview = function () {
-        var section = self.currentSection();
+        var key = self.selectedKey();
+        var section = self.sections[key];
         if (!section) return;
 
         // Help sections contain full modal HTML — render as a modal popup
-        if (section.section_key === 'search_help' || section.section_key === 'rest_help') {
+        if (key === 'search_help' || key === 'rest_help') {
             var container = $('#previewContainer');
             container.empty();
             container.html(section.content());
@@ -72,11 +78,16 @@ function SiteViewModel() {
     };
 
     self.save = function () {
-        var section = self.currentSection();
+        // Capture the section_key from selectedKey (the same observable the
+        // tab nav and "Editing X" banner read from) instead of dereferencing
+        // currentSection. This guarantees the AJAX URL and the section the
+        // user sees in the UI are the same — issue #159.
+        var key = self.selectedKey();
+        var section = self.sections[key];
         if (!section) return;
 
         $.ajax({
-            url: "https://" + window.location.host + "/site/" + section.section_key,
+            url: "https://" + window.location.host + "/site/" + encodeURIComponent(key),
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify({
@@ -93,17 +104,18 @@ function SiteViewModel() {
     };
 
     self.resetFromFile = function () {
-        var section = self.currentSection();
+        var key = self.selectedKey();
+        var section = self.sections[key];
         if (!section) return;
 
         confirmDialog({
             title: 'Reset from file?',
-            body: 'This overwrites the "' + section.section_key + '" content in the database with the current contents of views/partials/. Any saved or unsaved DB edits to this section will be lost.',
+            body: 'This overwrites the "' + key + '" content in the database with the current contents of views/partials/. Any saved or unsaved DB edits to this section will be lost.',
             confirmText: 'Reset',
             confirmClass: 'btn-danger'
         }, function () {
             $.ajax({
-                url: "https://" + window.location.host + "/site/" + section.section_key + "/reset",
+                url: "https://" + window.location.host + "/site/" + encodeURIComponent(key) + "/reset",
                 method: "POST",
                 success: function (data) {
                     section.content(data.content);

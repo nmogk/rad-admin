@@ -81,6 +81,21 @@ describe('Campaigns Routes', function () {
                 { id: 2, name: 'B', refCount: 0 }
             ]);
         });
+
+        it('orders by updated_at desc then id desc (#165)', async function () {
+            campaignQb.resolves([]);
+            var req = mockReq({ user: mockUser() });
+            var res = mockRes();
+            var handler = findHandler(campaignsRouter, 'get', '/list.json');
+            await handler(req, res, sinon.spy());
+
+            // Both orderBy calls on the same builder; assert their args.
+            var orderCalls = campaignQb.orderBy.getCalls().map(function (c) { return c.args; });
+            expect(orderCalls).to.deep.equal([
+                ['updated_at', 'desc'],
+                ['id', 'desc']
+            ]);
+        });
     });
 
     describe('POST /new', function () {
@@ -122,6 +137,18 @@ describe('Campaigns Routes', function () {
             await handler(req, res, sinon.spy());
 
             expect(res._json.campaign).to.deep.equal({ id: 99, name: 'Fix dates', refCount: 0 });
+        });
+
+        it('does not set updated_at in the insert payload — MySQL DEFAULT handles it (#165)', async function () {
+            campaignQb.insertAndFetch.resolves({ id: 99, name: 'Fresh' });
+            var req = mockReq({ method: 'POST', body: { name: 'Fresh' }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(campaignsRouter, 'post', '/new');
+            await handler(req, res, sinon.spy());
+
+            expect(campaignQb.insertAndFetch.calledOnce).to.be.true;
+            var args = campaignQb.insertAndFetch.firstCall.args[0];
+            expect(args).to.not.have.property('updated_at');
         });
     });
 
@@ -235,6 +262,23 @@ describe('Campaigns Routes', function () {
 
             expect(res._json.added).to.equal(1);
             expect(res._json.refCount).to.equal(1);
+        });
+
+        it('does not patch when every id is a duplicate so MySQL ON UPDATE does not shuffle the picker (#165)', async function () {
+            // With ON UPDATE CURRENT_TIMESTAMP, even a patch({refs: existing})
+            // would bump updated_at on a no-op write. Skip the patch (and the
+            // audit-log noise) when nothing actually changed.
+            fetchedCampaign = makeCampaign({ id: 5, refs: [10, 20] });
+            campaignQb.resolves(fetchedCampaign);
+            var req = mockReq({ method: 'POST', params: { id: '5' }, body: { ids: [10, 20] }, user: mockUser(), flash: sinon.stub() });
+            var res = mockRes();
+            var handler = findHandler(campaignsRouter, 'post', '/:id(\\d+)/refs');
+            await handler(req, res, sinon.spy());
+
+            expect(fetchedCampaign._qb.patch.called).to.be.false;
+            expect(auditLoggerStub.info.called).to.be.false;
+            expect(res._json.added).to.equal(0);
+            expect(res._json.refCount).to.equal(2);
         });
 
         it('writes audit log with the added IDs', async function () {

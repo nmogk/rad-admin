@@ -14,6 +14,10 @@ var schema = {
         name: {type: 'string', maxlength: 150, nullable: false},
         description: {type: 'text', fieldType: 'text'},
         refs: {type: 'longtext'}
+        // updated_at is added by migration.js via raw SQL after the table is
+        // created — see the ALTER TABLE there. It needs MySQL's
+        // ON UPDATE CURRENT_TIMESTAMP clause for the picker order (#165), which
+        // this generic schema-to-knex loop can't express.
     },
     invitations: {
         token: {type: 'string', maxlength: 150, primary: true},
