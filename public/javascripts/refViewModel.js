@@ -30,7 +30,7 @@ function RefViewModel(data) {
     }, self);
 
     self.isReview = ko.pureComputed(function () {
-        return this.type() === 'reviews';
+        return this.type() === 'review';
     }, self);
 
     this.cache = function() {};
